@@ -21,7 +21,7 @@
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -32,7 +32,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text) 
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -43,7 +43,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -54,7 +54,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -65,7 +65,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -76,7 +76,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -87,7 +87,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -98,7 +98,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -109,7 +109,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text, ev_data8 text)
 	returns bigint
-	as '$libdir/slony1_funcs', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
 	language C
 	called on null input;
 
@@ -126,7 +126,7 @@ Create an sl_event entry';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.denyAccess ()
 	returns trigger
-	as '$libdir/slony1_funcs', '_Slony_I_denyAccess'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_denyAccess'
 	language C
 	security definer;
 
@@ -144,7 +144,7 @@ grant execute on function @NAMESPACE@.denyAccess () to public;
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.lockedSet ()
 	returns trigger
-	as '$libdir/slony1_funcs', '_Slony_I_lockedSet'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_lockedSet'
 	language C;
 
 comment on function @NAMESPACE@.lockedSet () is 
@@ -156,7 +156,7 @@ comment on function @NAMESPACE@.lockedSet () is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getLocalNodeId (p_cluster name) returns int4
-    as '$libdir/slony1_funcs', '_Slony_I_getLocalNodeId'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getLocalNodeId'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getLocalNodeId (p_cluster name) to public;
@@ -171,7 +171,7 @@ comment on function @NAMESPACE@.getLocalNodeId (p_cluster name) is
 --	object.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getModuleVersion () returns text
-    as '$libdir/slony1_funcs', '_Slony_I_getModuleVersion'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getModuleVersion'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getModuleVersion () to public;
@@ -181,7 +181,7 @@ comment on function @NAMESPACE@.getModuleVersion () is
 
 
 create or replace function @NAMESPACE@.resetSession() returns text
-	   as '$libdir/slony1_funcs','_Slony_I_resetSession'
+	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_resetSession'
 	   language C;
 
 create or replace function @NAMESPACE@.checkmoduleversion () returns text as $$
@@ -204,7 +204,7 @@ schema/functions.';
 select @NAMESPACE@.checkmoduleversion();
 
 create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
-'$libdir/slony1_funcs','_slon_decode_tgargs' language C security definer;
+'$libdir/slony1_funcs.@MODULEVERSION@','_slon_decode_tgargs' language C security definer;
 
 comment on function @NAMESPACE@.decode_tgargs(bytea) is 
 'Translates the contents of pg_trigger.tgargs to an array of text arguments';
@@ -243,7 +243,7 @@ drop function @NAMESPACE@.check_namespace_validity();
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logTrigger () returns trigger
-    as '$libdir/slony1_funcs', '_Slony_I_logTrigger'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logTrigger'
 	language C
 	security definer;
 
@@ -286,7 +286,7 @@ comment on function @NAMESPACE@.terminateNodeConnections (p_failed_node int4) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.killBackend (p_pid int4, p_signame text) returns int4
-    as '$libdir/slony1_funcs', '_Slony_I_killBackend'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_killBackend'
 	language C;
 
 comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
@@ -298,7 +298,7 @@ comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.seqtrack (p_seqid int4, p_seqval int8) returns int8
-    as '$libdir/slony1_funcs', '_Slony_I_seqtrack'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_seqtrack'
 	strict language C;
 
 comment on function @NAMESPACE@.seqtrack(p_seqid int4, p_seqval int8) is
@@ -779,8 +779,8 @@ begin
 		-- New node, insert the sl_node row
 		-- ----
 		insert into @NAMESPACE@.sl_node
-				(no_id, no_active, no_comment) values
-				(p_no_id, 'f', p_no_comment);
+				(no_id, no_active, no_comment,no_failed) values
+				(p_no_id, 'f', p_no_comment,false);
 	end if;
 
 	return p_no_id;
@@ -1052,6 +1052,92 @@ comment on function @NAMESPACE@.dropNode_int(p_no_id int4) is
 
 
 -- ----------------------------------------------------------------------
+-- FUNCTION preFailover (failed_node)
+--
+-- Called on all nodes before the failover.
+-- Failover candidates are direct subscribers of the failed node.
+-- This function ensures that nodes identified as failover candidates
+-- meet the criteria for such a node.
+-- For all nodes this function will blank the paths to the failed node and
+-- restarts slon.
+-- This ensures that slonik will have a stable state to determine 
+-- which node is the most-ahead.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.preFailover(p_failed_node int4,p_is_candidate boolean)
+returns int4
+as $$
+declare
+	v_row				record;
+	v_row2				record;
+	v_n					int4;
+begin
+	-- ----
+	-- All consistency checks first
+
+	if p_is_candidate then
+	   -- ----
+	   -- Check all sets originating on the failed node
+	   -- ----
+	   for v_row in select set_id
+			from @NAMESPACE@.sl_set
+			where set_origin = p_failed_node
+		loop
+				-- ----
+				-- Check that the backup node is subscribed to all sets
+				-- that originate on the failed node
+				-- ----
+				select into v_row2 sub_forward, sub_active
+					   from @NAMESPACE@.sl_subscribe
+					   where sub_set = v_row.set_id
+					and sub_receiver = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+				if not found then
+				   raise exception 'Slony-I: cannot failover - node % is not subscribed to set %',
+					@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'), v_row.set_id;
+				end if;
+
+				-- ----
+				-- Check that the subscription is active
+				-- ----
+				if not v_row2.sub_active then
+				   raise exception 'Slony-I: cannot failover - subscription for set % is not active',
+					v_row.set_id;
+				end if;
+
+				-- ----
+				-- If there are other subscribers, the backup node needs to
+				-- be a forwarder too.
+				-- ----
+				select into v_n count(*)
+					   from @NAMESPACE@.sl_subscribe
+					   where sub_set = v_row.set_id
+					   and sub_receiver <> @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+				if v_n > 0 and not v_row2.sub_forward then
+				raise exception 'Slony-I: cannot failover - node % is not a forwarder of set %',
+					 @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'), v_row.set_id;
+				end if;
+			end loop;
+	end if;
+
+	-- ----
+	-- Terminate all connections of the failed node the hard way
+	-- ----
+	perform @NAMESPACE@.terminateNodeConnections(p_failed_node);
+
+	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
+	   		  pa_server=p_failed_node;	
+	notify "_@CLUSTERNAME@_Restart";
+	-- ----
+	-- That is it - so far.
+	-- ----
+	return p_failed_node;
+end;
+$$ language plpgsql;
+comment on function @NAMESPACE@.preFailover(p_failed_node int4,is_failover_candidate boolean) is
+'Prepare for a failover.  This function is called on all candidate nodes.
+It blanks the paths to the failed node
+and then restart of all node daemons.';
+
+-- ----------------------------------------------------------------------
 -- FUNCTION failedNode (failed_node, backup_node)
 --
 --	Initiate a failover. This function must be called on all nodes
@@ -1063,182 +1149,45 @@ as $$
 declare
 	v_row				record;
 	v_row2				record;
-	v_n					int4;
+	v_failed					boolean;
 begin
-	-- ----
-	-- All consistency checks first
-	-- Check that every node that has a path to the failed node
-	-- also has a path to the backup node.
-	-- ----
-	for v_row in select P.pa_client
-			from @NAMESPACE@.sl_path P
-			where P.pa_server = p_failed_node
-				and P.pa_client <> p_backup_node
-				and not exists (select true from @NAMESPACE@.sl_path PP
-							where PP.pa_server = p_backup_node
-								and PP.pa_client = P.pa_client)
-	loop
-		raise exception 'Slony-I: cannot failover - node % has no path to the backup node',
-				v_row.pa_client;
-	end loop;
-
-	-- ----
-	-- Check all sets originating on the failed node
-	-- ----
-	for v_row in select set_id
-			from @NAMESPACE@.sl_set
-			where set_origin = p_failed_node
-	loop
-		-- ----
-		-- Check that the backup node is subscribed to all sets
-		-- that originate on the failed node
-		-- ----
-		select into v_row2 sub_forward, sub_active
-				from @NAMESPACE@.sl_subscribe
-				where sub_set = v_row.set_id
-					and sub_receiver = p_backup_node;
-		if not found then
-			raise exception 'Slony-I: cannot failover - node % is not subscribed to set %',
-					p_backup_node, v_row.set_id;
-		end if;
-
-		-- ----
-		-- Check that the subscription is active
-		-- ----
-		if not v_row2.sub_active then
-			raise exception 'Slony-I: cannot failover - subscription for set % is not active',
-					v_row.set_id;
-		end if;
-
-		-- ----
-		-- If there are other subscribers, the backup node needs to
-		-- be a forwarder too.
-		-- ----
-		select into v_n count(*)
-				from @NAMESPACE@.sl_subscribe
-				where sub_set = v_row.set_id
-					and sub_receiver <> p_backup_node;
-		if v_n > 0 and not v_row2.sub_forward then
-			raise exception 'Slony-I: cannot failover - node % is not a forwarder of set %',
-					p_backup_node, v_row.set_id;
-		end if;
-	end loop;
+	
+	--
+	-- any nodes other than the backup receiving
+	-- ANY subscription from a failed node
+	-- will now get that data from the backup node.
+	update @NAMESPACE@.sl_subscribe set 
+		   sub_provider=p_backup_node
+		   where sub_provider=p_failed_node
+		   and sub_receiver<>p_backup_node;
 
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
 	perform @NAMESPACE@.terminateNodeConnections(p_failed_node);
 
-	-- ----
-	-- Move the sets
-	-- ----
-	for v_row in select S.set_id, (select count(*)
-					from @NAMESPACE@.sl_subscribe SUB
-					where S.set_id = SUB.sub_set
-						and SUB.sub_receiver <> p_backup_node
-						and SUB.sub_provider = p_failed_node)
-					as num_direct_receivers 
-			from @NAMESPACE@.sl_set S
-			where S.set_origin = p_failed_node
-			for update
-	loop
-		-- ----
-		-- If the backup node is the only direct subscriber ...
-		-- ----
-		if v_row.num_direct_receivers = 0 then
-		        raise notice 'failedNode: set % has no other direct receivers - move now', v_row.set_id;
-			-- ----
-			-- backup_node is the only direct subscriber, move the set
-			-- right now. On the backup node itself that includes restoring
-			-- all user mode triggers, removing the protection trigger,
-			-- adding the log trigger, removing the subscription and the
-			-- obsolete setsync status.
-			-- ----
-			if p_backup_node = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
-				update @NAMESPACE@.sl_set set set_origin = p_backup_node
-						where set_id = v_row.set_id;
+	-- Clear out the paths for the failed node.
+	-- This ensures that *this* node won't be pulling data from
+	-- the failed node even if it *does* become accessible
 
-				delete from @NAMESPACE@.sl_setsync
-						where ssy_setid = v_row.set_id;
-
-				for v_row2 in select * from @NAMESPACE@.sl_table
-						where tab_set = v_row.set_id
-						order by tab_id
-				loop
-					perform @NAMESPACE@.alterTableConfigureTriggers(v_row2.tab_id);
-				end loop;
-			end if;
-
-			delete from @NAMESPACE@.sl_subscribe
-					where sub_set = v_row.set_id
-						and sub_receiver = p_backup_node;
-		else
-			raise notice 'failedNode: set % has other direct receivers - change providers only', v_row.set_id;
-			-- ----
-			-- Backup node is not the only direct subscriber or not
-			-- a direct subscriber at all. 
-			-- This means that at this moment, we redirect all possible
-			-- direct subscribers to receive from the backup node, and the
-			-- backup node itself to receive from another one.
-			-- The admin utility will wait for the slon engine to
-			-- restart and then call failedNode2() on the node with
-			-- the highest SYNC and redirect this to it on
-			-- backup node later.
-			-- ----
-			update @NAMESPACE@.sl_subscribe
-					set sub_provider = (select min(SS.sub_receiver)
-							from @NAMESPACE@.sl_subscribe SS
-							where SS.sub_set = v_row.set_id
-								and SS.sub_receiver <> p_backup_node
-								and SS.sub_forward
-								and exists (
-									select 1 from @NAMESPACE@.sl_path
-										where pa_server = SS.sub_receiver
-										  and pa_client = p_backup_node
-								))
-					where sub_set = v_row.set_id
-						and sub_receiver = p_backup_node;		
-			  update @NAMESPACE@.sl_subscribe
-                   set sub_provider = (select min(SS.sub_receiver)
-                           from @NAMESPACE@.sl_subscribe SS
-                           where SS.sub_set = v_row.set_id
-                               and SS.sub_receiver <> p_failed_node
-                               and SS.sub_forward
-                               and exists (
-                                   select 1 from @NAMESPACE@.sl_path
-                                       where pa_server = SS.sub_receiver
-                                         and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
-                               ))
-                   where sub_set = v_row.set_id
-                       and sub_receiver <> p_backup_node;
-
-			update @NAMESPACE@.sl_subscribe
-					set sub_provider = p_backup_node
-					where sub_set = v_row.set_id
-						and sub_receiver <> p_backup_node
-						and exists (
-							select 1 from @NAMESPACE@.sl_path
-								where pa_server = p_backup_node
-								  and pa_client = @NAMESPACE@.sl_subscribe.sub_receiver
-						);						
-			delete from @NAMESPACE@.sl_subscribe
-                   where sub_set = v_row.set_id
-                       and sub_receiver = p_backup_node;
-
-		end if;
-	end loop;
+	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
+	   		  pa_server=p_failed_node;
 	
+	v_failed := exists (select 1 from @NAMESPACE@.sl_node 
+		   where no_failed=true and no_id=p_failed_node);
 
-	-- Rewrite sl_listen table
-	perform @NAMESPACE@.RebuildListenEntries();
+        if not v_failed then
+	   	
+		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
+		and no_failed=false;
+	   -- Rewrite sl_listen table
+	   perform @NAMESPACE@.RebuildListenEntries();	   
 
-	-- Run addPartialLogIndices() to try to add indices to unused sl_log_? table
-	perform @NAMESPACE@.addPartialLogIndices();
-
-	-- ----
-	-- Make sure the node daemon will restart
-	-- ----
-	notify "_@CLUSTERNAME@_Restart";
+	   -- ----
+	   -- Make sure the node daemon will restart
+	   -- ----
+	   notify "_@CLUSTERNAME@_Restart";
+	end if;
 
 	-- ----
 	-- That is it - so far.
@@ -1250,17 +1199,20 @@ comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int
 'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
 and then waited for the restart of all node daemons.';
 
+
+
 -- ----------------------------------------------------------------------
 -- FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
 --
 --	On the node that has the highest sequence number of the failed node,
 --	fake the FAILED_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_set_id int4, p_ev_seqno int8, p_ev_seqfake int8)
+create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8)
 returns bigint
 as $$
 declare
 	v_row				record;
+	v_new_event			bigint;
 begin
 	select * into v_row
 			from @NAMESPACE@.sl_event
@@ -1271,86 +1223,152 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
-	insert into @NAMESPACE@.sl_event
-			(ev_origin, ev_seqno, ev_timestamp,
-			ev_snapshot, 
-			ev_type, ev_data1, ev_data2, ev_data3)
-			values 
-			(p_failed_node, p_ev_seqfake, CURRENT_TIMESTAMP,
-			v_row.ev_snapshot, 
-			'FAILOVER_SET', p_failed_node::text, p_backup_node::text,
-			p_set_id::text);
-	insert into @NAMESPACE@.sl_confirm
-			(con_origin, con_received, con_seqno, con_timestamp)
-			values
-			(p_failed_node, @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'),
-			p_ev_seqfake, CURRENT_TIMESTAMP);
+	update @NAMESPACE@.sl_node set no_failed=true  where no_id=p_failed_node
+		and no_failed=false;
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();
+	-- ----
+	-- Make sure the node daemon will restart
+	-- ----
+	raise notice 'calling restart node %',p_failed_node;
+
 	notify "_@CLUSTERNAME@_Restart";
 
-	perform @NAMESPACE@.failoverSet_int(p_failed_node,
-			p_backup_node, p_set_id, p_ev_seqfake);
+	select @NAMESPACE@.createEvent('_@CLUSTERNAME@','FAILOVER_NODE',
+								p_failed_node::text,p_ev_seqno::text)
+			into v_new_event;
+		
 
-	return p_ev_seqfake;
+	return v_new_event;
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_set_id int4, p_ev_seqno int8, p_ev_seqfake int8) is
+comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8) is
 'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
 
 On the node that has the highest sequence number of the failed node,
 fake the FAILOVER_SET event.';
+
+create or replace function @NAMESPACE@.failedNode3 (p_failed_node int4, p_backup_node int4,p_seq_no bigint)
+returns int4
+as $$
+declare
+
+begin
+		perform @NAMESPACE@.failoverSet_int(p_failed_node,
+			p_backup_node,p_seq_no);
+
+	notify "_@CLUSTERNAME@_Restart";
+    return 0;
+end;
+$$ language plpgsql;
 
 -- ----------------------------------------------------------------------
 -- FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 --
 --	Finish failover for one set.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4, p_set_id int4, p_wait_seqno int8)
+create or replace function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4,p_last_seqno bigint)
 returns int4
 as $$
 declare
 	v_row				record;
 	v_last_sync			int8;
+	v_set				int4;
 begin
+	SELECT max(ev_seqno) into v_last_sync FROM @NAMESPACE@.sl_event where
+		   ev_origin=p_failed_node;
+	if v_last_sync > p_last_seqno then
+	   -- this node is ahead of the last sequence number from the
+	   -- failed node that the backup node has.
+	   -- this node must unsubscribe from all sets from the origin.
+	   for v_set in select set_id from @NAMESPACE@.sl_set where 
+		set_origin=p_failed_node
+		loop
+			raise warning 'Slony is dropping the subscription of set % found sync %s bigger than %s '
+			, v_set, v_last_sync::text, p_last_seqno::text;
+			perform @NAMESPACE@.unsubscribeSet(v_set,
+				   @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'),
+				   true);
+		end loop;
+		delete from @NAMESPACE@.sl_event where ev_origin=p_failed_node
+			   and ev_seqno > p_last_seqno;
+	end if;
 	-- ----
 	-- Change the origin of the set now to the backup node.
 	-- On the backup node this includes changing all the
 	-- trigger and protection stuff
+	for v_set in select set_id from @NAMESPACE@.sl_set where 
+		set_origin=p_failed_node
+	loop
 	-- ----
-	if p_backup_node = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
-		delete from @NAMESPACE@.sl_setsync
-				where ssy_setid = p_set_id;
-		delete from @NAMESPACE@.sl_subscribe
-				where sub_set = p_set_id
+	   if p_backup_node = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+	   	  	delete from @NAMESPACE@.sl_setsync
+				where ssy_setid = v_set;
+			delete from @NAMESPACE@.sl_subscribe
+				where sub_set = v_set
 					and sub_receiver = p_backup_node;
-		update @NAMESPACE@.sl_set
+			update @NAMESPACE@.sl_set
 				set set_origin = p_backup_node
-				where set_id = p_set_id;
+				where set_id = v_set;
+			 update @NAMESPACE@.sl_subscribe
+				 		set sub_provider=p_backup_node
+					   where sub_set = v_set;
 
-		for v_row in select * from @NAMESPACE@.sl_table
-				where tab_set = p_set_id
+			for v_row in select * from @NAMESPACE@.sl_table
+				where tab_set = v_set
 				order by tab_id
-		loop
-			perform @NAMESPACE@.alterTableConfigureTriggers(v_row.tab_id);
-		end loop;
-		insert into @NAMESPACE@.sl_event
-				(ev_origin, ev_seqno, ev_timestamp,
-				ev_snapshot, 
-				ev_type, ev_data1, ev_data2, ev_data3, ev_data4)
-				values
-				(p_backup_node, "pg_catalog".nextval('@NAMESPACE@.sl_event_seq'), CURRENT_TIMESTAMP,
-				pg_catalog.txid_current_snapshot(),
-				'ACCEPT_SET', p_set_id::text,
-				p_failed_node::text, p_backup_node::text,
-				p_wait_seqno::text);
+			loop
+				perform @NAMESPACE@.alterTableConfigureTriggers(v_row.tab_id);
+			end loop;
 	else
-		delete from @NAMESPACE@.sl_subscribe
-				where sub_set = p_set_id
-					and sub_receiver = p_backup_node;
-		update @NAMESPACE@.sl_set
-				set set_origin = p_backup_node
-				where set_id = p_set_id;
-	end if;
+		raise notice 'deleting from sl_subscribe all rows with receiver %',
+		p_backup_node;
+		
+			delete from @NAMESPACE@.sl_subscribe
+					  where sub_set = v_set
+					  and sub_receiver = p_backup_node;
+			update @NAMESPACE@.sl_subscribe
+				 		set sub_provider=p_backup_node
+					   where sub_set = v_set;
+			update @NAMESPACE@.sl_set
+					   set set_origin = p_backup_node
+				where set_id = v_set;
+			-- ----
+			-- If we are a subscriber of the set ourself, change our
+			-- setsync status to reflect the new set origin.
+			-- ----
+			if exists (select true from @NAMESPACE@.sl_subscribe
+			   where sub_set = v_set
+			   	and sub_receiver = @NAMESPACE@.getLocalNodeId(
+						'_@CLUSTERNAME@'))
+			then
+				delete from @NAMESPACE@.sl_setsync
+					   where ssy_setid = v_set;
+
+				select coalesce(max(ev_seqno), 0) into v_last_sync
+					   from @NAMESPACE@.sl_event
+					   where ev_origin = p_backup_node
+					   and ev_type = 'SYNC';
+				if v_last_sync > 0 then
+				   insert into @NAMESPACE@.sl_setsync
+					(ssy_setid, ssy_origin, ssy_seqno,
+					ssy_snapshot, ssy_action_list)
+					select v_set, p_backup_node, v_last_sync,
+					ev_snapshot, NULL
+					from @NAMESPACE@.sl_event
+					where ev_origin = p_backup_node
+						and ev_seqno = v_last_sync;
+				else
+					insert into @NAMESPACE@.sl_setsync
+					(ssy_setid, ssy_origin, ssy_seqno,
+					ssy_snapshot, ssy_action_list)
+					values (v_set, p_backup_node, '0',
+					'1:1:', NULL);
+				end if;	
+			end if;
+		end if;
+	end loop;
 
 	update @NAMESPACE@.sl_node
 		   set no_active=false WHERE 
@@ -1359,45 +1377,11 @@ begin
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 
-	-- ----
-	-- If we are a subscriber of the set ourself, change our
-	-- setsync status to reflect the new set origin.
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_subscribe
-			where sub_set = p_set_id
-				and sub_receiver = @NAMESPACE@.getLocalNodeId(
-						'_@CLUSTERNAME@'))
-	then
-		delete from @NAMESPACE@.sl_setsync
-				where ssy_setid = p_set_id;
-
-		select coalesce(max(ev_seqno), 0) into v_last_sync
-				from @NAMESPACE@.sl_event
-				where ev_origin = p_backup_node
-					and ev_type = 'SYNC';
-		if v_last_sync > 0 then
-			insert into @NAMESPACE@.sl_setsync
-					(ssy_setid, ssy_origin, ssy_seqno,
-					ssy_snapshot, ssy_action_list)
-					select p_set_id, p_backup_node, v_last_sync,
-					ev_snapshot, NULL
-					from @NAMESPACE@.sl_event
-					where ev_origin = p_backup_node
-						and ev_seqno = v_last_sync;
-		else
-			insert into @NAMESPACE@.sl_setsync
-					(ssy_setid, ssy_origin, ssy_seqno,
-					ssy_snapshot, ssy_action_list)
-					values (p_set_id, p_backup_node, '0',
-					'1:1:', NULL);
-		end if;
-				
-	end if;
 
 	return p_failed_node;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4, p_set_id int4, p_wait_seqno int8) is
+comment on function @NAMESPACE@.failoverSet_int (p_failed_node int4, p_backup_node int4,p_seqno bigint) is
 'FUNCTION failoverSet_int (failed_node, backup_node, set_id, wait_seqno)
 
 Finish failover for one set.';
@@ -1458,8 +1442,8 @@ returns int4
 as $$
 begin
 	insert into @NAMESPACE@.sl_node
-		(no_id, no_active, no_comment)
-		select p_no_id, no_active, p_no_comment
+		(no_id, no_active, no_comment,no_failed)
+		select p_no_id, no_active, p_no_comment,no_failed
 		from @NAMESPACE@.sl_node
 		where no_id = p_no_provider;
 
@@ -3728,6 +3712,7 @@ as $$
 declare
 	v_set_origin		int4;
 	v_ev_seqno			int8;
+	v_ev_seqno2			int8;
 	v_rec			record;
 begin
 	--
@@ -3795,8 +3780,12 @@ begin
 	-- ----
 	-- Call the internal procedure to store the subscription
 	-- ----
-	perform @NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
+	v_ev_seqno2:=@NAMESPACE@.subscribeSet_int(p_sub_set, p_sub_provider,
 			p_sub_receiver, p_sub_forward, p_omit_copy);
+	
+	if v_ev_seqno2 is not null then
+	   v_ev_seqno:=v_ev_seqno2;
+	 end if;
 
 	return v_ev_seqno;
 end;
@@ -3814,12 +3803,21 @@ If omit_copy is true, then no data copy will be done.
 -- -------------------------------------------------------------------------------------------
 -- FUNCTION subscribeSet_int (sub_set, sub_provider, sub_receiver, sub_forward, omit_copy)
 -- -------------------------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS @NAMESPACE@.subscribeSet_int(int4,int4,int4,bool,bool);
+--
+-- TODO MONDAY.
+--    When this function adds in the subscribe line as a result of a failover
+--   it needs the subscription to be enabled so slon pays attention to it.
+--   add a parameter to this function for this purpose?
+--
+--  Also remember to look at the interview questions
 create or replace function @NAMESPACE@.subscribeSet_int (p_sub_set int4, p_sub_provider int4, p_sub_receiver int4, p_sub_forward bool, p_omit_copy bool)
 returns int4
 as $$
 declare
 	v_set_origin		int4;
 	v_sub_row			record;
+	v_seq_id			bigint;
 begin
 	-- ----
 	-- Provider change is only allowed for active sets
@@ -3845,6 +3843,7 @@ begin
 			where sub_set = p_sub_set
 			and sub_receiver = p_sub_receiver;
 	if found then
+	  
 		-- ----
 		-- Rewrite sl_listen table
 		-- ----
@@ -3882,15 +3881,15 @@ begin
 	end if;
 
 	if v_set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
-		perform @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
+		select @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'ENABLE_SUBSCRIPTION', 
 				p_sub_set::text, p_sub_provider::text, p_sub_receiver::text, 
 				case p_sub_forward when true then 't' else 'f' end,
 				case p_omit_copy when true then 't' else 'f' end
-				);
+				) into v_seq_id;
 		perform @NAMESPACE@.enableSubscription(p_sub_set, 
 				p_sub_provider, p_sub_receiver);
 	end if;
-
+	
 	-- ----
 	-- Rewrite sl_listen table
 	-- ----
@@ -3905,11 +3904,11 @@ comment on function @NAMESPACE@.subscribeSet_int (p_sub_set int4, p_sub_provider
 
 Internal actions for subscribing receiver sub_receiver to subscription
 set sub_set.';
-
+drop function IF EXISTS @NAMESPACE@.unsubscribeSet(int4,int4,boolean);
 -- ----------------------------------------------------------------------
--- FUNCTION unsubscribeSet (sub_set, sub_receiver)
+-- FUNCTION unsubscribeSet (sub_set, sub_receiver,force)
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4)
+create or replace function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4,p_force boolean)
 returns bigint
 as $$
 declare
@@ -3922,15 +3921,29 @@ begin
 		raise exception 'Slony-I: unsubscribeSet() must be called on receiver';
 	end if;
 
+
+
 	-- ----
 	-- Check that this does not break any chains
 	-- ----
-	if exists (select true from @NAMESPACE@.sl_subscribe
-			where sub_set = p_sub_set
+	if p_force=false and exists (select true from @NAMESPACE@.sl_subscribe
+			 where sub_set = p_sub_set
 				and sub_provider = p_sub_receiver)
 	then
 		raise exception 'Slony-I: Cannot unsubscribe set % while being provider',
 				p_sub_set;
+	end if;
+
+	if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_set = p_sub_set
+				and sub_provider = p_sub_receiver)
+	then
+		--delete the receivers of this provider.
+		--unsubscribeSet_int() will generate the event
+		--when it runs on the receiver.
+		delete from @NAMESPACE@.sl_subscribe 
+			   where sub_set=p_sub_set
+			   and sub_provider=p_sub_receiver;
 	end if;
 
 	-- ----
@@ -3976,7 +3989,7 @@ begin
 			p_sub_set::text, p_sub_receiver::text);
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4) is
+comment on function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4,boolean) is
 'unsubscribeSet (sub_set, sub_receiver) 
 
 Unsubscribe node sub_receiver from subscription set sub_set.  This is
@@ -3992,11 +4005,25 @@ node to publish that the node is being dropped.';
 create or replace function @NAMESPACE@.unsubscribeSet_int (p_sub_set int4, p_sub_receiver int4)
 returns int4
 as $$
+declare
 begin
 	-- ----
 	-- All the real work is done before event generation on the
 	-- subscriber.
 	-- ----
+
+	--if this event unsubscribes the provider of this node
+	--then this node should unsubscribe itself from the set as well.
+	
+	if exists (select true from 
+		   @NAMESPACE@.sl_subscribe where 
+		   sub_set=p_sub_set and sub_provider=p_sub_receiver
+		   and sub_receiver=@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
+	then
+	   perform @NAMESPACE@.unsubscribeSet(p_sub_set,@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'),true);
+	end if;
+	
+
 	delete from @NAMESPACE@.sl_subscribe
 			where sub_set = p_sub_set
 				and sub_receiver = p_sub_receiver;
@@ -4461,6 +4488,7 @@ begin
 				from @NAMESPACE@.sl_listen, @NAMESPACE@.sl_path
 				where li_receiver = pa_server
 				  and li_origin <> pa_client
+				  and pa_conninfo<>'<event pending>'
 			except
 			select li_origin, li_provider, li_receiver
 				from @NAMESPACE@.sl_listen;
@@ -4475,7 +4503,8 @@ begin
 	-- a node before the data provider actually has the data ready.
 
 	-- Loop over every possible pair of receiver and event origin
-	for v_row in select N1.no_id as receiver, N2.no_id as origin
+	for v_row in select N1.no_id as receiver, N2.no_id as origin,
+			  N2.no_failed as failed
 			from @NAMESPACE@.sl_node as N1, @NAMESPACE@.sl_node as N2
 			where N1.no_id <> N2.no_id
 	loop
@@ -4498,33 +4527,60 @@ begin
 				  and li_receiver = v_row.receiver;
 			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
 				values (v_row.origin, v_row.origin, v_row.receiver);
-			continue;
-		end if;
-
+		
 		-- 2nd choice:
 		-- If we are subscribed to any set originating on this
 		-- event origin, we want to listen on all data providers
 		-- we use for this origin. We are a cascaded subscriber
 		-- for sets from this node.
-		if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+		else
+				if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
 						where set_origin = v_row.origin
 						  and sub_set = set_id
 						  and sub_receiver = v_row.receiver
 						  and sub_active)
-		then
-			delete from @NAMESPACE@.sl_listen
-					where li_origin = v_row.origin
-					  and li_receiver = v_row.receiver;
-			insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
-					select distinct set_origin, sub_provider, v_row.receiver
-						from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+				then
+						delete from @NAMESPACE@.sl_listen
+							   where li_origin = v_row.origin
+					  		   and li_receiver = v_row.receiver;
+						insert into @NAMESPACE@.sl_listen (li_origin, li_provider, li_receiver)
+						select distinct set_origin, sub_provider, v_row.receiver
+							   from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
 						where set_origin = v_row.origin
 						  and sub_set = set_id
 						  and sub_receiver = v_row.receiver
 						  and sub_active;
-			continue;
+				end if;
 		end if;
 
+		if v_row.failed then
+		
+		--for every failed node we delete all sl_listen entries
+		--except via providers (listed in sl_subscribe).
+		--we do this to prevent a non-failover candidate
+		--that is more ahead of the failover candidate from
+		--sending events to the failover candidate that
+		--are 'too far ahead'
+		delete from @NAMESPACE@.sl_listen where
+			   li_origin=v_row.origin and
+			   li_receiver=v_row.receiver
+			   and li_provider not in 
+			   	   (select sub_provider from
+				   @NAMESPACE@.sl_subscribe,
+				   @NAMESPACE@.sl_set where	
+				   sub_set=set_id
+				   and set_origin=v_row.origin);
+		end if;
+--		   insert into @NAMESPACE@.sl_listen
+--		   		  (li_origin,li_provider,li_receiver)
+--				  SELECT v_row.origin, pa_server
+--				  ,v_row.receiver
+--				  FROM @NAMESPACE@.sl_path where
+--				  	   pa_client=v_row.receiver
+--				  and (v_row.origin,pa_server,v_row.receiver) not in
+--				  	  		(select li_origin,li_provider,li_receiver
+--					  		from @NAMESPACE@.sl_listen);
+--		end if;
 	end loop ;
 
 	return null ;
@@ -5533,10 +5589,10 @@ $$
 		select last_value into c_log from @NAMESPACE@.sl_log_status;
 		if c_log in (0, 2) then
 		   insert into @NAMESPACE@.sl_log_1 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('"_@CLUSTERNAME@".sl_action_seq'), 'T', c_command);
 		else   -- (1, 3) 
 		   insert into @NAMESPACE@.sl_log_2 (log_origin, log_txid, log_tableid, log_actionseq, log_cmdtype, log_cmddata)
-		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('_@CLUSTERNAME@.sl_action_seq'), 'T', c_command);
+		      values (c_node, pg_catalog.txid_current(), c_tabid, nextval('"_@CLUSTERNAME@".sl_action_seq'), 'T', c_command);
 		end if;
 		return NULL;
     end
@@ -5680,3 +5736,35 @@ tables that are already exclusivly locked by the current transaction are
 repaired. Otherwise all replicated tables with outdated trigger arguments
 are recreated.';
 
+create or replace function @NAMESPACE@.unsubscribe_abandoned_sets(p_failed_node int4) returns bigint
+as $$
+declare
+v_row record;
+v_seq_id bigint;
+v_local_node int4;
+begin
+
+	select @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') into
+			   v_local_node;
+
+	if found then
+		   --abandon all subscriptions from this origin.
+		for v_row in select sub_set,sub_receiver from
+			@NAMESPACE@.sl_subscribe, @NAMESPACE@.sl_set
+			where sub_set=set_id and set_origin=p_failed_node
+			and sub_receiver=v_local_node
+		loop
+				raise notice 'Slony-I: failover_abandon_set() is abandoning subscription to set % on node % because it is too far ahead', v_row.sub_set,
+				v_local_node;
+				--If this node is a provider for the set
+				--then the receiver needs to be unsubscribed.
+				--
+			select @NAMESPACE@.unsubscribeSet(v_row.sub_set,
+												v_local_node,true)
+				   into v_seq_id;
+		end loop;
+	end if;
+
+	return v_seq_id;
+end
+$$ language plpgsql;

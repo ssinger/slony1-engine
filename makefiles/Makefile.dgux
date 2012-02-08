@@ -2,7 +2,7 @@ AROPT = crs
 DLSUFFIX = .so
 CFLAGS_SL = -fpic
 
-%.so: %.o
+%.so: $(SO_OBJS)
 	$(CC) -shared -o $@ $<
 
 sqlmansect = 5

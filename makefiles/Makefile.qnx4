@@ -10,7 +10,7 @@ enable_shared = no
 DLSUFFIX = .so
 CFLAGS_SL =
 
-%$(DLSUFFIX): %.o
+%$(DLSUFFIX): $(SO_OBJS)
 	@echo 'cannot make shared object $@ from $<'
 
 sqlmansect = 7

@@ -1,5 +1,4 @@
-/**
- * Tests the failover() command.
+/** Tests the failover() command.
  * 
  *  
  * 
@@ -52,11 +51,13 @@ Failover.prototype.runTest = function() {
 	 * Node 5 is not a provider.
 	 * This should go off smoothly.
 	 */
-	this.failNode(5,1,true);
+	this.failNode(5,1,false);
+  
 	var lag1 = this.measureLag(1,5);
 	java.lang.Thread.sleep(10*1000);
 	var lag2 = this.measureLag(1,5);	
 	this.testResults.assertCheck('lag on node 5 is increasing',lag2 > lag1 ,true);
+		
 	
 	/**
 	 * DROP node 5.
@@ -67,7 +68,8 @@ Failover.prototype.runTest = function() {
 	//make it elsewhere.
 	this.slonikSync(1,1);
 	this.reAddNode(5,1,3);
-	this.subscribeSet(1,1,3,[5]);
+   	this.subscribeSet(1,1,3,[5]);
+
 	
 
 	
@@ -149,7 +151,7 @@ Failover.prototype.runTest = function() {
 	this.reAddNode(1,3,3);
 	
 	
-	this.slonikSync(1,1);
+	this.slonikSync(1,3);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
@@ -198,7 +200,7 @@ Failover.prototype.runTest = function() {
 
 	this.dropNode(1,3);
 	this.reAddNode(1,3,3);	
-		this.slonikSync(1,1);
+	this.slonikSync(1,3);
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
@@ -229,21 +231,45 @@ Failover.prototype.runTest = function() {
 	this.testResults.assertCheck('drop path from 1 to 4',slonik.getReturnCode(),0);
 	   
 	this.slonikSync(1,1);
+	 /**
+	  * fail from 1--->4.  
+	  * 4 is not a direct subscriber
+	  * but the failover still works because 3
+	  * can be used as a intermediate node.
+	  */
 	this.failNode(1,4,true);
-	
+		//this.dropNode(1,4);
+	this.slonikSync(1,4);
 	this.compareDb('db2','db4');
-	this.compareDb('db3','db4');
+	this.compareDb('db3','db4');		
 	java.lang.Thread.sleep(30*1000);
+
+	this.coordinator.log('PROGRESS: About to re-add node 1');
 	this.dropNode(1,4);
-	this.coordinator.log('PROGRESS: About to re-add node 4');
 	this.reAddNode(1,4,4);
 	
 	
-	this.slonikSync(1,1);	
-	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
-		this.slonArray[idx - 1].stop();
-		this.coordinator.join(this.slonArray[idx - 1]);
-	}
+	this.slonikSync(1,4);	
+	this.compareDb('db1','db2');
+	this.compareDb('db1', 'db3');
+	this.compareDb('db1', 'db4');
+	this.compareDb('db4','db3');
+	this.compareDb('db3','db2');
+	this.compareDb('db4','db2');
+	this.moveSet(1,4,1);
+	//make nodes 2,3 receive from 1 directly
+	this.addCompletePaths();
+	this.subscribeSet(1,1,1,[2,3]);
+		//
+		// create a SECOND replication set
+		// on the same origin as the first set.
+		// Fail this over and make sure we can
+		// failover both sets.
+	this.createSecondSet(1);
+	this.subscribeSet(2,1, 1, [ 2, 3 ]);
+	this.slonikSync(1,1);
+	this.failNode(1,2,true);	
+    this.slonikSync(1,2);
 
 	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
@@ -251,6 +277,11 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db4','db3');
 	this.compareDb('db3','db2');
 	this.compareDb('db4','db2');
+
+	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
+		this.slonArray[idx - 1].stop();
+		this.coordinator.join(this.slonArray[idx - 1]);
+	}
 
 }
 

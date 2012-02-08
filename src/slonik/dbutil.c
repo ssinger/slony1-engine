@@ -191,7 +191,7 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	} else {
 			PQclear(res);
 			dstring_init(&query);
-			slon_mkquery(&query,"SET application_name TO 'slon'; ");
+			slon_mkquery(&query,"SET application_name TO 'slonik'; ");
 			adminfo->dbconn = dbconn;
 			if (db_exec_command(stmt, adminfo, &query) < 0)
 			{
@@ -662,7 +662,7 @@ db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustern
 	/*
 	 * Check loading of slony1_funcs module
 	 */
-	slon_mkquery(&query, "load '$libdir/slony1_funcs'; ");
+	slon_mkquery(&query, "load '$libdir/slony1_funcs.%s'; ",SLONY_I_VERSION_STRING);
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
 		printf("%s:%d: Error: the extension for the Slony-I C functions "

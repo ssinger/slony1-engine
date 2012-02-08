@@ -33,7 +33,7 @@ MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 %.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-%$(DLSUFFIX): %.o %$(EXPSUFF)
+%.$(VERSION)$(DLSUFFIX): %.o %$(EXPSUFF)
 	@echo Making shared library $@ from $<,  $*$(EXPSUFF) and postgres.imp
 	$(CC) $(LDFLAGS_SL) -o $@ $< -Wl,-bI:$(POSTGRES_IMP) -Wl,-bE:$(NAME)$(EXPSUFF) $(LIBS)
 

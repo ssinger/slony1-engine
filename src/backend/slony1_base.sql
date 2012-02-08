@@ -22,6 +22,7 @@ create table @NAMESPACE@.sl_node (
 	no_id				int4,
 	no_active			bool,
 	no_comment			text,
+	no_failed			bool,
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
 ) WITHOUT OIDS;
@@ -444,9 +445,67 @@ create view @NAMESPACE@.sl_seqlastvalue as
 		where S.set_id = SQ.seq_set
 			and PGC.oid = SQ.seq_reloid and PGN.oid = PGC.relnamespace;
 		
+
+create view @NAMESPACE@.sl_failover_targets as
+select  set_id,
+	set_origin as set_origin,
+	sub1.sub_receiver as backup_id
+
+FROM
+	@NAMESPACE@.sl_subscribe sub1
+	,@NAMESPACE@.sl_set set1
+	where
+ 	sub1.sub_set=set_id
+	and sub1.sub_forward=true
+	--exclude candidates where the set_origin
+	--has a path a node but the failover
+	--candidate has no path to that node
+	and sub1.sub_receiver not in
+	    (select p1.pa_client from
+	    @NAMESPACE@.sl_path p1 
+	    left outer join @NAMESPACE@.sl_path p2 on
+	    (p2.pa_client=p1.pa_client 
+	    and p2.pa_server=sub1.sub_receiver)
+	    where p2.pa_client is null
+	    and p1.pa_server=set_origin
+	    and p1.pa_client<>sub1.sub_receiver
+	    )
+	and sub1.sub_provider=set_origin
+	--exclude any subscribers that are not
+	--direct subscribers of all sets on the
+	--origin
+	and sub1.sub_receiver not in
+	(select direct_recv.sub_receiver
+		from
+			
+		(--all direct receivers of the first set
+		select subs2.sub_receiver
+		from @NAMESPACE@.sl_subscribe subs2
+		where subs2.sub_provider=set1.set_origin
+		      and subs2.sub_set=set1.set_id) as
+		      direct_recv
+		inner join
+		(--all other sets from the origin
+		select set_id from @NAMESPACE@.sl_set set2
+		where set2.set_origin=set1.set_origin
+		and set2.set_id<>sub1.sub_set)
+		as othersets on(true)
+		left outer join @NAMESPACE@.sl_subscribe subs3
+		on(subs3.sub_set=othersets.set_id
+		   and subs3.sub_forward=true
+		   and subs3.sub_provider=set1.set_origin
+		   and direct_recv.sub_receiver=subs3.sub_receiver)
+	    where subs3.sub_receiver is null
+	    );
+
+		      
+	
+
+	    
+
 -- **********************************************************************
 -- * Sequences
--- **********************************************************************
+-- *********************************************************************
 
 
 -- ----------------------------------------------------------------------

@@ -57,6 +57,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 	option_list	*opt_list;
 	SlonikAdmInfo	*adm_info;
 	SlonikStmt	*statement;
+	failed_node_entry * failed_node_entry;
 }
 
 %type <ival>		id
@@ -119,6 +120,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <opt_list>	option_item_id
 %type <opt_list>	option_item_literal
 %type <opt_list>	option_item_yn
+%type <failed_node_entry> fail_node_list
 
 
 /*
@@ -617,6 +619,7 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 					{
 						SlonikStmt_drop_node *new;
 						statement_option opt[] = {
+							STMT_OPTION_STR( O_ID, NULL ),
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_END
@@ -631,8 +634,37 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 
 						if (assign_options(opt, $4) == 0)
 						{
-							new->no_id			= opt[0].ival;
-							new->ev_origin		= opt[1].ival;
+							if(opt[0].ival > -1 )
+							{
+								new->no_id_list=malloc(sizeof(int)*2);
+								new->no_id_list[0]=opt[0].ival;
+								new->no_id_list[1]=-1;
+							}
+							else 
+							{
+								char * token;
+								char * saveptr=NULL;
+								int cnt;
+								char * option_copy=strdup(opt[0].str);
+								for(cnt=0,token=strtok_r(option_copy,",",
+														 &saveptr);
+									token != NULL; cnt++, 
+										token=strtok_r(NULL,",",&saveptr));
+								free(option_copy);
+								new->no_id_list=malloc(sizeof(int)*(cnt+1));
+								cnt=0;
+								option_copy=strdup(opt[0].str);
+								for(token=strtok_r(option_copy,",",&saveptr);
+									token!=NULL;
+									token=strtok_r(NULL,",",&saveptr))
+								{
+									new->no_id_list[cnt++]=atoi(token);
+								}
+								free(option_copy);
+								new->no_id_list[cnt]=-1;
+							}
+							new->ev_origin		= opt[2].ival;
+							
 						}
 						else
 							parser_errors++;
@@ -640,8 +672,22 @@ stmt_drop_node		: lno K_DROP K_NODE option_list
 						$$ = (SlonikStmt *)new;
 					}
 					;
+stmt_failed_node    : lno K_FAILOVER '(' fail_node_list  ')' ';'
+					{
+						SlonikStmt_failed_node *new;
+					
+						new = (SlonikStmt_failed_node *)
+								malloc(sizeof(SlonikStmt_failed_node));
+						memset(new, 0, sizeof(SlonikStmt_failed_node));
+						new->hdr.stmt_type		= STMT_FAILED_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
 
-stmt_failed_node	: lno K_FAILOVER option_list
+						new->nodes=$4;
+
+						$$ = (SlonikStmt *)new;
+					}
+					| lno K_FAILOVER option_list
 					{
 						SlonikStmt_failed_node *new;
 						statement_option opt[] = {
@@ -656,11 +702,14 @@ stmt_failed_node	: lno K_FAILOVER option_list
 						new->hdr.stmt_type		= STMT_FAILED_NODE;
 						new->hdr.stmt_filename	= current_file;
 						new->hdr.stmt_lno		= $1;
+						new->nodes=(failed_node_entry*)
+							malloc(sizeof(failed_node_entry)*1);
+						memset(new->nodes,0, sizeof(failed_node_entry));
 
 						if (assign_options(opt, $3) == 0)
 						{
-							new->no_id			= opt[0].ival;
-							new->backup_node	= opt[1].ival;
+							new->nodes->no_id			= opt[0].ival;
+							new->nodes->backup_node	= opt[1].ival;
 						}
 						else
 							parser_errors++;
@@ -668,6 +717,53 @@ stmt_failed_node	: lno K_FAILOVER option_list
 						$$ = (SlonikStmt *)new;
 					}
 					;
+
+fail_node_list      :   K_NODE '=' '(' option_list_items ')'
+{
+						failed_node_entry *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (failed_node_entry *)
+								malloc(sizeof(failed_node_entry));
+						memset(new, 0, sizeof(failed_node_entry));
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->backup_node	= opt[1].ival;
+						}
+						else
+							parser_errors++;
+
+						$$ = new;
+
+}
+|    K_NODE '=' '(' option_list_items ')' ',' fail_node_list
+{
+					failed_node_entry *new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ID, -1 ),
+							STMT_OPTION_INT( O_BACKUP_NODE, -1 ),
+							STMT_OPTION_END
+						};
+
+						new = (failed_node_entry *)
+								malloc(sizeof(failed_node_entry));
+						memset(new, 0, sizeof(failed_node_entry));
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_id			= opt[0].ival;
+							new->backup_node	= opt[1].ival;
+						}
+						else
+							parser_errors++;
+						new->next=$7;
+						$$ = new;
+
+};
 
 stmt_uninstall_node	: lno K_UNINSTALL K_NODE option_list
 					{
@@ -1534,6 +1630,11 @@ option_list_item	: K_ID '=' option_item_id
 					{
 						$3->opt_code	= O_ID;
 						$$ = $3;
+					}
+					| K_ID '=' option_item_literal
+					{
+						$3->opt_code= O_ID;
+						$$=$3;
 					}
 					| K_BACKUP K_NODE '=' option_item_id
 					{
