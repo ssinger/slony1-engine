@@ -1,9 +1,6 @@
 Creating a sample database with application
 -----------------------------------------------------------------
 
-
-
-
 As a first test scenario, the pgbench test program that is shipped with
 PostgreSQL in the ./contrib directory and produces a not too light load
 of concurrent transactions will satisfy our needs.
