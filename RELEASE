@@ -12,3 +12,6 @@
 
 - Bug #256 :: set_conf_option() has an extra elevel parameter on PG 9.2
 
+- The slony1_funcs.so and .sql files that get installed are now versioned.
+  This allows multiple versions of slony to be installed in the same postgresql lib
+  directory.
