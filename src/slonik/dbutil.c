@@ -191,7 +191,7 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	} else {
 			PQclear(res);
 			dstring_init(&query);
-			slon_mkquery(&query,"SET application_name TO 'slon'; ");
+			slon_mkquery(&query,"SET application_name TO 'slonik'; ");
 			adminfo->dbconn = dbconn;
 			if (db_exec_command(stmt, adminfo, &query) < 0)
 			{

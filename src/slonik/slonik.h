@@ -197,16 +197,25 @@ struct SlonikStmt_store_node_s
 struct SlonikStmt_drop_node_s
 {
 	SlonikStmt	hdr;
-	int			no_id;
+	int			* no_id_list;
 	int			ev_origin;
 };
 
+struct failed_node_entry_s {
+	int no_id;
+	int backup_node;
+	int temp_backup_node;
+	struct failed_node_entry_s * next;
+	int num_sets;
+	int num_nodes;
+};
+
+typedef struct failed_node_entry_s failed_node_entry;
 
 struct SlonikStmt_failed_node_s
 {
 	SlonikStmt	hdr;
-	int			no_id;
-	int			backup_node;
+	failed_node_entry * nodes;
 };
 
 
@@ -426,6 +435,7 @@ struct SlonikStmt_wait_event_s
 	int			wait_confirmed;
 	int			wait_on;
 	int			wait_timeout;
+	int			*ignore_nodes;
 };
 
 

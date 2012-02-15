@@ -631,6 +631,8 @@ remoteWorkerThread_main(void *cdata)
 				 * specified timeout.
 				 */
 				archive_terminate(node);
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: rollback SYNC"
+					 " transaction\n",node->no_id);
 				(void) slon_mkquery(&query2, "rollback transaction");
 				if (query_execute(node, local_dbconn, &query2) < 0)
 					slon_retry();
@@ -649,6 +651,8 @@ remoteWorkerThread_main(void *cdata)
 			sg_last_grouping = 0;
 			for (i = 0; i < sync_group_size; i++)
 			{
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: before query_append_event"
+					 " transaction\n",node->no_id);
 					query_append_event(&query1, sync_group[i]);
 					if (i < (sync_group_size - 1))
 							free(sync_group[i]);
@@ -661,6 +665,8 @@ remoteWorkerThread_main(void *cdata)
 					node->no_id, wd->duration_buf);
 			strcpy(wd->duration_buf, "0 s");
 
+			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: committing SYNC"
+					 " transaction\n",node->no_id);
 			slon_appendquery(&query1, "commit transaction;");
 
 			if (query_execute(node, local_dbconn, &query1) < 0)
@@ -1017,12 +1023,13 @@ remoteWorkerThread_main(void *cdata)
 
 				/*
 				 * If we're a remote node, and haven't yet received the
-				 * MOVE/FAILOVER_SET event from the new origin, then we'll
+				 * MOVE_SET event from the new origin, then we'll
 				 * need to sleep a bit...  This avoids a race condition where
 				 * new SYNCs take place on the new origin, and are ignored on
 				 * some subscribers (and their children) because the MOVE_SET
 				 * wasn't yet received and processed
 				 */
+				
 
 				if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin))
 				{
@@ -1035,25 +1042,17 @@ remoteWorkerThread_main(void *cdata)
 										"      ev_type = 'MOVE_SET' and "
 										"      ev_data1 = '%d' and "
 										"      ev_data2 = '%d' and "
-										"      ev_data3 = '%d') "
-										"or "
-										"     (ev_origin = %d and "
-										"      ev_seqno = %s and "
-										"      ev_type = 'FAILOVER_SET' and "
-										"      ev_data1 = '%d' and "
-										"      ev_data2 = '%d' and "
-										"      ev_data3 = '%d'); ",
+										"      ev_data3 = '%d') ",
 
 										rtcfg_namespace,
-					  old_origin, wait_seqno, set_id, old_origin, new_origin,
-					 old_origin, wait_seqno, old_origin, new_origin, set_id);
+					  old_origin, wait_seqno, set_id, old_origin, new_origin);
 
 					res = PQexec(local_dbconn, dstring_data(&query2));
 					while (PQntuples(res) == 0)
 					{
 						PQclear(res);
 
-						slon_log(SLON_INFO, "ACCEPT_SET - MOVE_SET or FAILOVER_SET not received yet - sleep\n");
+						slon_log(SLON_INFO, "ACCEPT_SET - MOVE_SET not received yet - sleep\n");
 
 						/* Rollback the transaction for now */
 						(void) slon_mkquery(&query3, "rollback transaction");
@@ -1079,7 +1078,7 @@ remoteWorkerThread_main(void *cdata)
 						res = PQexec(local_dbconn, dstring_data(&query2));
 					}
 					PQclear(res);
-					slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET or FAILOVER_SET exists - adjusting setsync status\n");
+					slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET exists - adjusting setsync status\n");
 
 					/*
 					 * Finalize the setsync status to mave the ACCEPT_SET's
@@ -1174,22 +1173,90 @@ remoteWorkerThread_main(void *cdata)
 
 				need_reloadListen = true;
 			}
-			else if (strcmp(event->ev_type, "FAILOVER_SET") == 0)
+			else if (strcmp(event->ev_type, "FAILOVER_NODE") == 0)
 			{
 				int			failed_node = (int) strtol(event->ev_data1, NULL, 10);
-				int			backup_node = (int) strtol(event->ev_data2, NULL, 10);
-				int			set_id = (int) strtol(event->ev_data3, NULL, 10);
+				char*		seq_no_c = event->ev_data2;
+				PGresult *res;
+				
+				/**
+				 * call failNode() to make sure this node listens for
+				 * events from the failed node from all other nodes.
+				 * If this node is not a direct subscriber then slonik
+				 * might not have done so.
+				 *
+				 * The most-ahead failover canidate is the node that
+				 * created the FAILOVER_NODE event (node->id)
+				 */
+				slon_mkquery(&query2,"select %s.failedNode(%d,%d);"
+							 ,rtcfg_namespace,							 
+							 failed_node, node->no_id);
+				
+				res=PQexec(local_dbconn,dstring_data(&query2));
+				if(PQresultStatus(res) != PGRES_TUPLES_OK )
+				{
+					slon_log(SLON_FATAL, "remoteWorkerThread_%d: \"%s\" %s",
+							 node->no_id, dstring_data(&query2),
+							 PQresultErrorMessage(res));
+					PQclear(res);
+					slon_retry();
+				}
+				slon_mkquery(&query2,"commit transaction;start transaction");
+				res=PQexec(local_dbconn,dstring_data(&query2));
+				if(PQresultStatus(res) != PGRES_COMMAND_OK )
+				{
+					slon_log(SLON_FATAL, "remoteWorkerThread_%d: \"%s\" %s",
+							 node->no_id, dstring_data(&query2),
+							 PQresultErrorMessage(res));
+					PQclear(res);
+					slon_retry();
+				}
 
-				rtcfg_storeSet(set_id, backup_node, NULL);
+				slon_mkquery(&query2," select * FROM %s.sl_event "
+							 " where "
+							 "       ev_origin=%d and "
+							 "       ev_seqno>=%s"
+							 ,	 rtcfg_namespace, failed_node,
+							 seq_no_c);
+				res=PQexec(local_dbconn,dstring_data(&query2));
+				while (PQntuples(res) == 0)
+				{
+					slon_log(SLON_INFO, "remoteWorkerThread_%d FAILOVER_NODE waiting for event %d,%s\n"
+							 ,node->no_id,
+							 failed_node,seq_no_c);
+					PQclear(res);
+						(void) slon_mkquery(&query3, "rollback transaction");
+						if (query_execute(node, local_dbconn, &query3) < 0)
+							slon_retry();
+
+						/* Sleep */
+						if (sched_msleep(node, 10000) != SCHED_STATUS_OK)
+							slon_retry();
+
+						/* Start the transaction again */
+						(void) slon_mkquery(&query3,
+							"begin transaction; "
+							"set transaction isolation level read committed; ");
+						slon_appendquery(&query1,
+										 "lock table %s.sl_event_lock,%s.sl_config_lock;",
+										 rtcfg_namespace,
+										 rtcfg_namespace);
+						if (query_execute(node, local_dbconn, &query3) < 0)
+							slon_retry();
+
+						/* See if we have the missing event now */
+						res = PQexec(local_dbconn, dstring_data(&query2));
+
+				}
+				PQclear(res);
 
 				slon_appendquery(&query1,
-								 "lock table %s.sl_event_lock, %s.sl_config_lock;"
-								 "select %s.failoverSet_int(%d, %d, %d, %s); ",
+								 "lock %s.sl_config_lock;"
+								 "select %s.failoverSet_int(%d, %d,'%s'); ",
 								 rtcfg_namespace,
-								 rtcfg_namespace,
-								 rtcfg_namespace,
-								 failed_node, backup_node, set_id, seqbuf);
-
+								 rtcfg_namespace, 
+								 failed_node, node->no_id,seq_no_c);
+				
 				need_reloadListen = true;
 			}
 			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)

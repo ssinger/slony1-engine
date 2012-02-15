@@ -582,10 +582,10 @@ localListenThread_main(/* @unused@ */ void *dummy)
 
 				rtcfg_reloadListen(dbconn);
 			}
-			else if (strcmp(ev_type, "FAILOVER_SET") == 0)
+			else if (strcmp(ev_type, "FAILOVER_NODE") == 0)
 			{
 				/*
-				 * FAILOVER_SET
+				 * FAILOVER_NODE
 				 */
 
 				/*

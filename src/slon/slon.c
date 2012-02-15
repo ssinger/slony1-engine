@@ -611,7 +611,8 @@ SlonMain(void)
      */
     slon_mkquery(&query,
                  "select pa_server, pa_conninfo, pa_connretry "
-                 "from %s.sl_path where pa_client = %d",
+                 "from %s.sl_path where pa_client = %d"
+				 " and pa_conninfo<>'<event pending>'",
                  rtcfg_namespace, rtcfg_nodeid);
     res = PQexec(startup_conn, dstring_data(&query));
     if (PQresultStatus(res) != PGRES_TUPLES_OK)

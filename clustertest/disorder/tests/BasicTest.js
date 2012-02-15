@@ -10,6 +10,11 @@ function BasicTest(coordinator, results) {
 	this.tableIdCounter=1;
 	this.sequenceIdCounter=1;
 	this.currentOrigin='db1';
+	this.compareQueryList = [
+	                 ['SELECT c_id,c_name,c_total_orders,c_total_value FROM disorder.do_customer order by c_id','c_id']
+	                 ,['SELECT i_id,i_name,i_price,i_in_production FROM disorder.do_item order by i_id','i_id']
+	                 ,['SELECT ii_id, ii_in_stock,ii_reserved,ii_total_sold FROM disorder.do_inventory order by ii_id','ii_id']
+	                 ];
 }
 
 /**
@@ -367,7 +372,7 @@ BasicTest.prototype.dropDb = function(dbnames) {
  * 
  */
 BasicTest.prototype.getSyncWaitTime = function() {
-	return 60;
+	return 3*60;
 }
 
 /**
@@ -480,11 +485,13 @@ BasicTest.prototype.subscribeSetBackground = function(setid, origin_node,
 		slonikScript += ' subscribe set(id=' + setid + ', provider='
 				+ provider_node + ', receiver=' + subscriber_node
 				+ ', forward=yes);\n';
+		//comment out in 2.1
 		//slonikScript += this.generateSlonikWait(origin_node);
 		//slonikScript += ' echo \'syncing\';\n';
 		//slonikScript += ' sync(id=' + provider_node + ');\n';
 		//slonikScript += ' echo \'waiting for event\';\n';
 		//slonikScript += this.generateSlonikWait(provider_node);
+		//EOF
 		slonikScript += ' echo \'finished subscribing ' + subscriber_node +'\' ;\n';
 
 		var slonik = this.coordinator.createSlonik('subscribe ', preamble,
@@ -603,11 +610,7 @@ BasicTest.prototype.seedData = function(scaling) {
 BasicTest.prototype.compareDb=function(lhs_db, rhs_db) {
 	//Compare the results.
         this.coordinator.log("BasicTest.prototype.compareDb ["+lhs_db + ","+rhs_db + "] - begin");
-	var queryList = [
-	                 ['SELECT c_id,c_name,c_total_orders,c_total_value FROM disorder.do_customer order by c_id','c_id']
-	                 ,['SELECT i_id,i_name,i_price,i_in_production FROM disorder.do_item order by i_id','i_id']
-	                 ,['SELECT ii_id, ii_in_stock,ii_reserved,ii_total_sold FROM disorder.do_inventory order by ii_id','ii_id']
-	                 ];
+
 	
 	compareFinished = {
 			onEvent : function(object, event) {			
@@ -622,9 +625,9 @@ BasicTest.prototype.compareDb=function(lhs_db, rhs_db) {
 
 
 	
-	for(var idx=0; idx < queryList.length; idx++) {
-		var compareOp = this.coordinator.createCompareOperation(lhs_db,rhs_db,queryList[idx][0],
-				queryList[idx][1]);
+	for(var idx=0; idx < this.compareQueryList.length; idx++) {
+		var compareOp = this.coordinator.createCompareOperation(lhs_db,rhs_db,this.compareQueryList[idx][0],
+				this.compareQueryList[idx][1]);
 		this.coordinator.registerObserver(compareOp, Packages.info.slony.clustertest.testcoordinator.Coordinator.EVENT_FINISHED,
 				new Packages.info.slony.clustertest.testcoordinator.script.ExecutionObserver(compareFinished));
 
@@ -781,3 +784,29 @@ BasicTest.prototype.populateReviewTable=function(node_id) {
 	}
 	this.coordinator.log('populating review table on ' + node_id + " - complete");	
 }
+
+BasicTest.prototype.updateReviewTable=function(node_id,text) {
+	this.coordinator.log('updating review table ' + node_id);
+	var connection=this.coordinator.createJdbcConnection('db' + node_id);
+	var stat = connection.createStatement();
+	try {
+		stat.execute("update disorder.do_item_review set comments='" +
+					 text + "';");
+		var count=stat.getUpdateCount();
+		this.testResults.assertCheck('items updated',count>0,true);
+		if(count==0) {
+			exit(-1);
+		}
+		   
+	}
+	catch(error) {
+		this.coordinator.log('error updating the review table:' + 
+							 error);
+		this.testResults.assertCheck('review update failed',true,false);
+		
+	}
+	finally {
+		stat.close();
+		connection.close();
+	}
+	this.coordinator.log('updating review table on ' + node_id + " - complete");}
