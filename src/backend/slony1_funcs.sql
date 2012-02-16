@@ -184,6 +184,40 @@ create or replace function @NAMESPACE@.resetSession() returns text
 	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_resetSession'
 	   language C;
 
+-- ----------------------------------------------------------------------
+-- FUNCTION logApply ()
+--
+--	A trigger function that is placed on the tables sl_log_1/2 that
+--	does the actual work of updating the user tables.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApply () returns trigger
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
+	language C
+	security definer;
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logApplySetCacheSize ()
+--
+--	A control function for the prepared query plan cache size used
+--	in the logApply() trigger.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApplySetCacheSize (p_size int4) 
+returns int4
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySetCacheSize'
+	language C;
+
+-- ----------------------------------------------------------------------
+-- FUNCTION logApplySaveStats ()
+--
+--	A function used by the remote worker to update sl_apply_stats after
+--	performing a SYNC.
+-- ----------------------------------------------------------------------
+create or replace function @NAMESPACE@.logApplySaveStats (p_cluster name, p_origin int4, p_duration interval) 
+returns int4
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySaveStats'
+	language C;
+
+
 create or replace function @NAMESPACE@.checkmoduleversion () returns text as $$
 declare
   moduleversion	text;
@@ -3322,7 +3356,7 @@ Set sequence seq_id to have new value last_value.
 ';
 
 -- ----------------------------------------------------------------------
--- FUNCTION ddlCapture (origin, statement)
+-- FUNCTION ddlCapture (statement, nodes)
 --
 --	Capture DDL into sl_log_script
 -- ----------------------------------------------------------------------
@@ -3368,10 +3402,10 @@ begin
 	execute p_statement;
 
 	insert into @NAMESPACE@.sl_log_script
-			(log_origin, log_txid, log_actionseq, log_cmdargs)
+			(log_origin, log_txid, log_actionseq, log_cmdtype, log_cmdargs)
 		values 
 			(c_local_node, pg_catalog.txid_current(), 
-			nextval('@NAMESPACE@.sl_action_seq'), c_cmdargs);
+			nextval('@NAMESPACE@.sl_action_seq'), 'S', c_cmdargs);
 
 	return currval('@NAMESPACE@.sl_action_seq');
 end;
@@ -3380,6 +3414,91 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.ddlCapture (p_statement text, p_nodes text) is
 'Capture an SQL statement (usually DDL) that is to be literally replayed on subscribers';
 
+
+-- ----------------------------------------------------------------------
+-- FUNCTION ddlScript_complete (p_nodes)
+--
+--	Actions to be performed after DDL script execution
+-- ----------------------------------------------------------------------
+drop function if exists @NAMESPACE@.ddlScript_complete (int4, text, int4);  -- Needed because function signature has changed!
+
+create or replace function @NAMESPACE@.ddlScript_complete (p_nodes text)
+returns bigint
+as $$
+declare
+	c_local_node	integer;
+	c_found_origin	boolean;
+	c_node			text;
+	c_cmdargs		text[];
+begin
+	c_local_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+
+	c_cmdargs = '{}'::text[];
+	if p_nodes is not null then
+		c_found_origin := 'f';
+		-- p_nodes list needs to consist of a list of nodes that exist
+		-- and that include the current node ID
+		for c_node in select trim(node) from
+				pg_catalog.regexp_split_to_table(p_nodes, ',') as node loop
+			if not exists 
+					(select 1 from @NAMESPACE@.sl_node 
+					where no_id = (c_node::integer)) then
+				raise exception 'ddlcapture(%,%) - node % does not exist!', 
+					p_statement, p_nodes, c_node;
+		   end if;
+
+		   if c_local_node = (c_node::integer) then
+		   	  c_found_origin := 't';
+		   end if;
+
+		   c_cmdargs = array_append(c_cmdargs, c_node);
+	   end loop;
+
+		if not c_found_origin then
+			raise exception 
+				'ddlScript_complete(%) - origin node % not included in ONLY ON list!',
+				p_nodes, c_local_node;
+       end if;
+    end if;
+
+	perform @NAMESPACE@.ddlScript_complete_int();
+
+	insert into @NAMESPACE@.sl_log_script
+			(log_origin, log_txid, log_actionseq, log_cmdtype, log_cmdargs)
+		values 
+			(c_local_node, pg_catalog.txid_current(), 
+			nextval('@NAMESPACE@.sl_action_seq'), 's', c_cmdargs);
+
+	return currval('@NAMESPACE@.sl_action_seq');
+end;
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.ddlScript_complete(p_nodes text) is
+'ddlScript_complete(set_id, script, only_on_node)
+
+After script has run on origin, this fixes up relnames and
+log trigger arguments and inserts the "fire ddlScript_complete_int()
+log row into sl_log_script.';
+
+-- ----------------------------------------------------------------------
+-- FUNCTION ddlScript_complete_int ()
+--
+--	Complete the DDL_SCRIPT event
+-- ----------------------------------------------------------------------
+drop function if exists @NAMESPACE@.ddlScript_complete_int(int4, int4);
+create or replace function @NAMESPACE@.ddlScript_complete_int ()
+returns int4
+as $$
+begin
+	perform @NAMESPACE@.updateRelname();
+	perform @NAMESPACE@.repair_log_triggers(true);
+	return 0;
+end;
+$$ language plpgsql;
+comment on function @NAMESPACE@.ddlScript_complete_int() is
+'ddlScript_complete_int()
+
+Complete processing the DDL_SCRIPT event.';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION alterTableAddTriggers (tab_id)
@@ -4614,7 +4733,8 @@ comment on function @NAMESPACE@.generate_sync_event(p_interval interval) is
 --
 --      Reset the relnames          
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.updateRelname (p_set_id int4, p_only_on_node int4)
+drop function if exists @NAMESPACE@.updateRelname(int4, int4);
+create or replace function @NAMESPACE@.updateRelname ()
 returns int4
 as $$
 declare
@@ -4626,33 +4746,6 @@ begin
         -- ----
         lock table @NAMESPACE@.sl_config_lock;
 
-        -- ----
-        -- Check that we either are the set origin or a current
-        -- subscriber of the set.
-        -- ----
-        v_no_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
-        select set_origin into v_set_origin
-                        from @NAMESPACE@.sl_set
-                        where set_id = p_set_id
-                        for update;
-        if not found then
-                raise exception 'Slony-I: set % not found', p_set_id;
-        end if;
-        if v_set_origin <> v_no_id
-                and not exists (select 1 from @NAMESPACE@.sl_subscribe
-                        where sub_set = p_set_id
-                        and sub_receiver = v_no_id)
-        then
-                return 0;
-        end if;
-    
-        -- ----
-        -- If execution on only one node is requested, check that
-        -- we are that node.
-        -- ----
-        if p_only_on_node > 0 and p_only_on_node <> v_no_id then
-                return 0;
-        end if;
         update @NAMESPACE@.sl_table set 
                 tab_relname = PGC.relname, tab_nspname = PGN.nspname
                 from pg_catalog.pg_class PGC, pg_catalog.pg_namespace PGN 
@@ -4665,12 +4758,12 @@ begin
                 where @NAMESPACE@.sl_sequence.seq_reloid = PGC.oid
                 and PGC.relnamespace = PGN.oid and
  		    (seq_relname <> PGC.relname or seq_nspname <> PGN.nspname);
-        return p_set_id;
+        return 0;
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.updateRelname(p_set_id int4, p_only_on_node int4) is
-'updateRelname(set_id, only_on_node)';
+comment on function @NAMESPACE@.updateRelname() is
+'updateRelname()';
 
 -- ----------------------------------------------------------------------
 -- FUNCTION updateReloid (set_id, only_on_node)
@@ -5977,40 +6070,6 @@ repair the log triggers as required.  If only_locked is true then only
 tables that are already exclusively locked by the current transaction are 
 repaired. Otherwise all replicated tables with outdated trigger arguments
 are recreated.';
-
-
--- ----------------------------------------------------------------------
--- FUNCTION logApply ()
---
---	A trigger function that is placed on the tables sl_log_1/2 that
---	does the actual work of updating the user tables.
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.logApply () returns trigger
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
-	language C
-	security definer;
-
--- ----------------------------------------------------------------------
--- FUNCTION logApplySetCacheSize ()
---
---	A control function for the prepared query plan cache size used
---	in the logApply() trigger.
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.logApplySetCacheSize (p_size int4) 
-returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySetCacheSize'
-	language C;
-
--- ----------------------------------------------------------------------
--- FUNCTION logApplySaveStats ()
---
---	A function used by the remote worker to update sl_apply_stats after
---	performing a SYNC.
--- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.logApplySaveStats (p_cluster name, p_origin int4, p_duration interval) 
-returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySaveStats'
-	language C;
 
 
 create or replace function @NAMESPACE@.unsubscribe_abandoned_sets(p_failed_node int4) returns bigint

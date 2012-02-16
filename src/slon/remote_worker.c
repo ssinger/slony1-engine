@@ -659,10 +659,13 @@ remoteWorkerThread_main(void *cdata)
 					sg_last_grouping++;
 			}
 
-			slon_appendquery(&query1, "select %s.logApplySaveStats("
-					"'_%s', %d, '%s'::interval); ",
-					rtcfg_namespace, rtcfg_cluster_name,
-					node->no_id, wd->duration_buf);
+			if (monitor_threads)
+			{
+				slon_appendquery(&query1, "select %s.logApplySaveStats("
+						"'_%s', %d, '%s'::interval); ",
+						rtcfg_namespace, rtcfg_cluster_name,
+						node->no_id, wd->duration_buf);
+			}
 			strcpy(wd->duration_buf, "0 s");
 
 			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: committing SYNC"
@@ -1452,10 +1455,6 @@ remoteWorkerThread_main(void *cdata)
 								 sub_set, sub_receiver);
 
 				need_reloadListen = true;
-			}
-			else if (strcmp(event->ev_type, "DDL_SCRIPT") == 0) 
-			{
-				/* don't need to do anything for this event */
 			}
 			else if (strcmp(event->ev_type, "RESET_CONFIG") == 0)
 			{
@@ -3840,7 +3839,7 @@ slon_log(SLON_DEBUG2,
 			slon_appendquery(provider_query,
 							 "select log_origin, log_txid, "
 							 "NULL::integer, log_actionseq, "
-							 "NULL::text, NULL::text, 'S'::\"char\", "
+							 "NULL::text, NULL::text, log_cmdtype, "
 							 "NULL::integer, log_cmdargs "
 							 "from %s.sl_log_script "
 							 "where log_origin = %d ",
@@ -3857,7 +3856,7 @@ slon_log(SLON_DEBUG2,
 							"union all "
 							 "select log_origin, log_txid, "
 							 "NULL::integer, log_actionseq, "
-							 "NULL::text, NULL::text, 'S'::\"char\", "
+							 "NULL::text, NULL::text, log_cmdtype, "
 							 "NULL::integer, log_cmdargs "
 							 "from %s.sl_log_script "
 							 "where log_origin = %d ",

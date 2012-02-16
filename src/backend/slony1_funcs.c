@@ -105,6 +105,14 @@ extern DLLIMPORT Node *newNodeMacroHolder;
 #define PLAN_INSERT_LOG_STATUS (1 << 2)
 #define PLAN_APPLY_QUERIES	(1 << 3)
 
+/*
+ * This OID definition is missing in 8.3, although the data type
+ * does exist.
+ */
+#ifndef TEXTARRAYOID
+#define TEXTARRAYOID 1009
+#endif
+
 
 /* ----
  * Slony_I_ClusterStatus -
@@ -351,7 +359,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
 	TriggerData *tg;
-	Datum		argv[6];
+	Datum		log_param[6];
 	text	   *cmdtype = NULL;
 	int32		cmdupdncols = 0;
 	int			rc;
@@ -745,18 +753,18 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 	cmddims[0] = cmdargselem - cmdargs;
 	cmdlbs[0] = 1;
 
-	argv[0] = Int32GetDatum(tab_id);
-	argv[1] = DirectFunctionCall1(textin, 
+	log_param[0] = Int32GetDatum(tab_id);
+	log_param[1] = DirectFunctionCall1(textin, 
 				CStringGetDatum(get_namespace_name(
 					RelationGetNamespace(tg->tg_relation))));
-	argv[2] = DirectFunctionCall1(textin,
+	log_param[2] = DirectFunctionCall1(textin,
 				CStringGetDatum(RelationGetRelationName(tg->tg_relation)));
-	argv[3] = PointerGetDatum(cmdtype);
-	argv[4] = Int32GetDatum(cmdupdncols);
-	argv[5] = PointerGetDatum(construct_md_array(cmdargs, cmdnulls, 1,
+	log_param[3] = PointerGetDatum(cmdtype);
+	log_param[4] = Int32GetDatum(cmdupdncols);
+	log_param[5] = PointerGetDatum(construct_md_array(cmdargs, cmdnulls, 1,
 			cmddims, cmdlbs, TEXTOID, -1, false, 'i'));
 
-	SPI_execp(cs->plan_active_log, argv, NULL, 0);
+	SPI_execp(cs->plan_active_log, log_param, NULL, 0);
 
 	SPI_finish();
 	return PointerGetDatum(NULL);
@@ -968,7 +976,7 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	{
 		char	   *ddl_script;
 		bool		localNodeFound = true;
-		Datum		script_insert_args[4];
+		Datum		script_insert_args[5];
 
 		apply_num_script++;
 
@@ -1038,6 +1046,96 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		script_insert_args[2] = SPI_getbinval(new_row, tupdesc, 
 				SPI_fnumber(tupdesc, "log_actionseq"), &isnull);
 		script_insert_args[3] = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_cmdtype"), &isnull);
+		script_insert_args[4] = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_cmdargs"), &isnull);
+		if (SPI_execp(cs->plan_insert_log_script, script_insert_args, NULL, 0) < 0)
+			elog(ERROR, "Execution of sl_log_script insert plan failed");
+
+		/*
+		 * Return NULL to suppress the insert into the original sl_log_N.
+		 */
+		SPI_finish();
+		return PointerGetDatum(NULL);
+	}
+
+	/*
+	 * Process the special ddlScript_complete row.
+	 */
+	if (cmdtype == 's')
+	{
+		bool		localNodeFound = true;
+		Datum		script_insert_args[4];
+
+		apply_num_script++;
+
+		/*
+		 * Turn the log_cmdargs into a plain array of Text Datums.
+		 */
+		dat = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_cmdargs"), &isnull);
+		if (isnull)
+			elog(ERROR, "Slony-I: log_cmdargs is NULL");
+
+		deconstruct_array(DatumGetArrayTypeP(dat), 
+				TEXTOID, -1, false, 'i', 
+				&cmdargs, &cmdargsnulls, &cmdargsn);
+		
+		/*
+		 * If there is an optional node ID list, check that we are in it.
+		 */
+		if (cmdargsn > 1) {
+			localNodeFound = false;
+			for (i = 1; i < cmdargsn; i++)
+			{
+				int32	nodeId = DatumGetInt32(
+									DirectFunctionCall1(int4in,
+									DirectFunctionCall1(textout, cmdargs[i])));
+				if (nodeId == cs->localNodeId)
+				{
+					localNodeFound = true;
+					break;
+				}
+			}
+		}
+
+		/*
+		 * Execute the ddlScript_complete_int() call if we have to.
+		 */
+		if (localNodeFound)
+		{
+			char	query[1024];
+
+			snprintf(query, sizeof(query),
+				"select %s.ddlScript_complete_int();",
+				cs->clusterident);
+
+			if (SPI_exec(query, 0) < 0)
+			{
+				elog(ERROR, "SPI_exec() failed for statement '%s'",
+					query);
+			}
+
+			/*
+			 * Set the currentXid to invalid to flush the apply
+			 * query cache.
+			 */
+			cs->currentXid = InvalidTransactionId;
+		}
+
+		/*
+		 * Build the parameters for the insert into sl_log_script
+		 * and execute the query.
+		 */
+		script_insert_args[0] = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_origin"), &isnull);
+		script_insert_args[1] = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_txid"), &isnull);
+		script_insert_args[2] = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_actionseq"), &isnull);
+		script_insert_args[3] = SPI_getbinval(new_row, tupdesc, 
+				SPI_fnumber(tupdesc, "log_cmdtype"), &isnull);
+		script_insert_args[4] = SPI_getbinval(new_row, tupdesc, 
 				SPI_fnumber(tupdesc, "log_cmdargs"), &isnull);
 		if (SPI_execp(cs->plan_insert_log_script, script_insert_args, NULL, 0) < 0)
 			elog(ERROR, "Execution of sl_log_script insert plan failed");
@@ -1059,9 +1157,13 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	tableid = DatumGetInt32(dat);
 	nspname = SPI_getvalue(new_row, tupdesc, 
 			SPI_fnumber(tupdesc, "log_tablenspname"));
+	if (nspname == NULL)
+		elog(ERROR, "Slony-I: log_tablenspname is NULL on INSERT/UPDATE/DELETE");
 
 	relname = SPI_getvalue(new_row, tupdesc,
 			SPI_fnumber(tupdesc, "log_tablerelname"));
+	if (relname == NULL)
+		elog(ERROR, "Slony-I: log_tablerelname is NULL on INSERT/UPDATE/DELETE");
 
 	dat = SPI_getbinval(new_row, tupdesc, 
 			SPI_fnumber(tupdesc, "log_cmdupdncols"), &isnull);
@@ -1100,7 +1202,8 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 
 			colname = DatumGetCString(DirectFunctionCall1(
 							textout, cmdargs[i]));
-			sprintf(applyQueryPos, ",%s", slon_quote_identifier(colname));
+			snprintf(applyQueryPos, applyQuerySize - (applyQueryPos - applyQuery),
+				",%s", slon_quote_identifier(colname));
 			applyQueryPos += strlen(applyQueryPos);
 		}
 	}
@@ -1629,6 +1732,12 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 }
 
 
+/*
+ * _Slony_I_logApplySetCacheSize()
+ *
+ *	Called by slon during startup to set the size of the log apply
+ *	query cache according to the config parameter apply_cache_size.
+ */
 Datum
 _Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS)
 {
@@ -1651,6 +1760,11 @@ _Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS)
 }
 
 
+/*
+ * _Slony_I_logApplySaveStats()
+ *
+ *	Save statistics at the end of SYNC processing.
+ */
 Datum
 _Slony_I_logApplySaveStats(PG_FUNCTION_ARGS)
 {
@@ -1771,7 +1885,7 @@ applyQueryIncrease(void)
 {
 	if (applyQueryPos - applyQuery + 1024 > applyQuerySize)
 	{
-		int offset = applyQueryPos - applyQuery;
+		size_t offset = applyQueryPos - applyQuery;
 		applyQuerySize *= 2;
 		applyQuery = realloc(applyQuery, applyQuerySize);
 		if (applyQuery == NULL)
@@ -2229,16 +2343,17 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		 * The plan to insert into sl_log_script.
 		 */
 		sprintf(query, "insert into %s.sl_log_script "
-				"(log_origin, log_txid, log_actionseq, log_cmdargs) "
-				"values ($1, $2, $3, $4);",
+				"(log_origin, log_txid, log_actionseq, log_cmdtype, log_cmdargs) "
+				"values ($1, $2, $3, $4, $5);",
 				slon_quote_identifier(NameStr(*cluster_name)));
 		plan_types[0] = INT4OID;
 		plan_types[1] = INT8OID;
 		plan_types[2] = INT8OID;
-		plan_types[3] = TEXTARRAYOID;
+		plan_types[3] = CHAROID;
+		plan_types[4] = TEXTARRAYOID;
 
 		cs->plan_insert_log_script = SPI_saveplan(
-				SPI_prepare(query, 4, plan_types));
+				SPI_prepare(query, 5, plan_types));
 		if (cs->plan_insert_log_script == NULL)
 			elog(ERROR, "Slony-I: SPI_prepare() failed");
 
@@ -2345,10 +2460,6 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
  * prepare the plan for the curren sl_log_x insert query.
  *
  */
-
-#ifndef TEXTARRAYOID
-#define TEXTARRAYOID 1009
-#endif
 
 int prepareLogPlan(Slony_I_ClusterStatus * cs,
 				int log_status)

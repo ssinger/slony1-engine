@@ -4628,6 +4628,7 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonDString query, equery;
 	SlonDString script;
+	PGresult   *res1;
 	int			rc;
 	int			num_statements = -1, stmtno;
 	char		buf[4096];
@@ -4693,7 +4694,6 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	for (stmtno=0; stmtno < num_statements;  stmtno++) {
 		int startpos, endpos;
 		char *dest;
-		PGresult   *res1;
 		if (stmtno == 0)
 			startpos = 0;
 		else
@@ -4722,6 +4722,39 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 		}
 		PQclear(res1);
 	}
+
+    /*
+	 * Finally call ddlScript_complete()
+	 */
+	if ((stmt->only_on_nodes == NULL) && (stmt->only_on_node < 0)) {
+			slon_mkquery(&query,
+						 "select \"_%s\".ddlScript_complete(NULL::text);",
+						 stmt->hdr.script->clustername);
+	} else {
+		if (stmt->only_on_node > 0) {
+			slon_mkquery(&query,
+						 "select \"_%s\".ddlScript_complete('%d');",
+						 stmt->hdr.script->clustername, stmt->only_on_node);
+		} else {  /* stmt->only_on_nodes is populated */
+			slon_mkquery(&query,
+						 "select \"_%s\".ddlScript_complete('%s');",
+						 stmt->hdr.script->clustername, stmt->only_on_nodes);
+		}
+	}
+	res1 = PQexec(adminfo1->dbconn, dstring_data(&query));
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+			fprintf(stderr, "%s [%s] - %s",
+					PQresStatus(PQresultStatus(res1)),
+					dstring_data(&query), PQresultErrorMessage(res1));
+			PQclear(res1);
+			dstring_free(&equery);
+			dstring_free(&script);
+			dstring_free(&query);
+			return -1;
+	}
+	PQclear(res1);
+
 	dstring_free(&equery);
 	dstring_free(&script);
 	dstring_free(&query);
