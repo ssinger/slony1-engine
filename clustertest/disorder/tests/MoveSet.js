@@ -6,7 +6,7 @@ coordinator.includeFile("disorder/tests/BasicTest.js");
 
 function MoveSet(coordinator,results) {
 	BasicTest.call(this,coordinator,results);
-	this.syncWaitTime = 60;
+	this.syncWaitTime = 3 * 60;
 	this.testDescription = 'This test exercises the move set command \n'
 		+ ' it does this by taking set 1 and moving it between different \n'
 		+ ' combinations of old origin/new origin.  After each move it verifies\n'
@@ -53,7 +53,7 @@ MoveSet.prototype.runTest = function() {
 	
 	this.syncWaitTime = 60*5;
 	this.slonikSync("1","1");
-	this.syncWaitTime=60;
+	this.syncWaitTime= 3 * 60;
         this.coordinator.log("MoveSet.prototype.runTest - sets subscribed, data synced");
 	var pairings=[
 	              [1,2]
