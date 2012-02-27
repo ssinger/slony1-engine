@@ -80,6 +80,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_date
 %type <statement>	stmt_exit
 %type <statement>	stmt_restart_node
+%type <statement>	stmt_resubscribe_node
 %type <statement>	stmt_error
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
@@ -182,6 +183,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_RECEIVER
 %token  K_REPAIR
 %token	K_RESTART
+%token  K_RESUBSCRIBE
 %token	K_SCRIPT
 %token  K_SECONDS
 %token	K_SEQUENCE
@@ -442,6 +444,8 @@ normal_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_repair_config
 						{ $$ = $1; }
+					| stmt_resubscribe_node
+						{ $$ = $1; }
 					| stmt_switch_log
 						{ $$ = $1; }
 					| stmt_error ';' 
@@ -535,7 +539,34 @@ stmt_restart_node	: lno K_RESTART K_NODE id ';'
 						$$ = (SlonikStmt *)new;
 					}
 					;
+stmt_resubscribe_node : lno K_RESUBSCRIBE K_NODE option_list 
+					{
+						SlonikStmt_resubscribe_node * new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_PROVIDER, -1 ),
+							STMT_OPTION_INT( O_RECEIVER, -1),
+							STMT_OPTION_END
+						};
 
+						new = (SlonikStmt_resubscribe_node *)
+								malloc(sizeof(SlonikStmt_resubscribe_node));
+						memset(new, 0, sizeof(SlonikStmt_resubscribe_node));
+						new->hdr.stmt_type		= STMT_RESUBSCRIBE_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_origin		= opt[0].ival;
+							new->no_provider	= opt[1].ival;
+							new->no_receiver	= opt[2].ival;
+						}
+						else
+							parser_errors++;
+						$$ = (SlonikStmt *)new;
+					}
+					;
 exit_code			: T_NUMBER
 						{ $$ = strtol(yytext, NULL, 10); }
 					| '-' exit_code
@@ -1399,9 +1430,9 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 					{
 						SlonikStmt_ddl_script *new;
 						statement_option opt[] = {
-							STMT_OPTION_INT( O_SET_ID, -1 ),
 							STMT_OPTION_STR( O_FILENAME, NULL ),
 							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
+							STMT_OPTION_STR( O_EXECUTE_ONLY_LIST, NULL ),
 							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
 							STMT_OPTION_END
 						};
@@ -1415,11 +1446,11 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 
 						if (assign_options(opt, $4) == 0)
 						{
-							new->ddl_setid		= opt[0].ival;
-							new->ddl_fname		= opt[1].str;
-							new->ev_origin		= opt[2].ival;
-							new->only_on_node	= opt[3].ival;
-							new->ddl_fd		= NULL;
+							new->ddl_fname		= opt[0].str;
+							new->ev_origin		= opt[1].ival;
+							new->only_on_nodes	= opt[2].str;
+							new->only_on_node   = opt[3].ival;
+							new->ddl_fd			= NULL;
 						}
 						else
 							parser_errors++;
@@ -1797,6 +1828,11 @@ option_list_item	: K_ID '=' option_item_id
 						$5->opt_code	= O_EXECUTE_ONLY_ON;
 						$$ = $5;
 					}
+					| K_EXECUTE K_ONLY K_ON '=' option_item_literal
+					{
+						$5->opt_code	= O_EXECUTE_ONLY_LIST;
+						$$ = $5;
+					}
 					| K_SECONDS '=' option_item_id
 					{
 						$3->opt_code	= O_SECONDS;
@@ -1943,6 +1979,7 @@ option_str(option_code opt_code)
 		case O_DATE_FORMAT:		return "format";
 		case O_EVENT_NODE:		return "event node";
 		case O_EXECUTE_ONLY_ON:	return "execute only on";
+		case O_EXECUTE_ONLY_LIST:	return "execute only on";
 		case O_FILENAME:		return "filename";
 		case O_FORWARD:			return "forward";
 		case O_FQNAME:			return "full qualified name";

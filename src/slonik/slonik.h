@@ -53,6 +53,7 @@ typedef struct SlonikStmt_wait_event_s SlonikStmt_wait_event;
 typedef struct SlonikStmt_switch_log_s SlonikStmt_switch_log;
 typedef struct SlonikStmt_sync_s SlonikStmt_sync;
 typedef struct SlonikStmt_sleep_s SlonikStmt_sleep;
+typedef struct SlonikStmt_resubscribe_node_s SlonikStmt_resubscribe_node;
 
 typedef enum
 {
@@ -76,6 +77,7 @@ typedef enum
 	STMT_MOVE_SET,
 	STMT_REPAIR_CONFIG,
 	STMT_RESTART_NODE,
+	STMT_RESUBSCRIBE_NODE,
 	STMT_SET_ADD_SEQUENCE,
 	STMT_SET_ADD_TABLE,
 	STMT_SET_DROP_SEQUENCE,
@@ -413,10 +415,10 @@ struct SlonikStmt_move_set_s
 struct SlonikStmt_ddl_script_s
 {
 	SlonikStmt	hdr;
-	int			ddl_setid;
 	char	   *ddl_fname;
 	int			ev_origin;
-	int			only_on_node;
+	char       *only_on_nodes;
+	int         only_on_node;
 	FILE	   *ddl_fd;
 };
 
@@ -458,7 +460,14 @@ struct SlonikStmt_sleep_s
 	int			num_secs;
 };
 
+struct SlonikStmt_resubscribe_node_s
+{
+	SlonikStmt	hdr;
+	int			no_origin;
+	int			no_provider;
+	int			no_receiver;
 
+};
 
 
 extern SlonikScript *parser_script;
@@ -654,6 +663,7 @@ typedef enum {
 	O_DATE_FORMAT,
 	O_EVENT_NODE,
 	O_EXECUTE_ONLY_ON,
+	O_EXECUTE_ONLY_LIST,
 	O_FILENAME,
 	O_FORWARD,
 	O_FQNAME,

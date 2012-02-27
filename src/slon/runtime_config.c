@@ -147,6 +147,7 @@ rtcfg_storeNode(int no_id, char *no_comment)
 	node->no_id = no_id;
 	node->no_active = false;
 	node->no_comment = strdup(no_comment);
+	node->last_snapshot = strdup("1:1:");
 	pthread_mutex_init(&(node->message_lock), NULL);
 	pthread_cond_init(&(node->message_cond), NULL);
 
@@ -215,6 +216,63 @@ rtcfg_getNodeLastEvent(int no_id)
 	}
 	else
 		retval = -1;
+
+	rtcfg_unlock();
+
+	return retval;
+}
+
+ 
+/* ----------
+ * rtcfg_setNodeLastSnapshot()
+ *
+ * Set the last_snapshot field in the node runtime structure.
+ * ----------
+ */
+void
+rtcfg_setNodeLastSnapshot(int no_id, char *snapshot)
+{
+	SlonNode   *node;
+
+	if (snapshot == NULL || strcmp(snapshot, "") == 0)
+		snapshot = "1:1:";
+
+	rtcfg_lock();
+	if ((node = rtcfg_findNode(no_id)) != NULL)
+	{
+		if (node->last_snapshot != NULL)
+			free (node->last_snapshot);
+
+		node->last_snapshot = strdup(snapshot);
+	}
+
+	rtcfg_unlock();
+
+	slon_log(SLON_DEBUG2,
+			 "setNodeLastSnapshot: no_id=%d snapshot='%s'\n",
+			 no_id, snapshot);
+}
+
+
+/* ----------
+ * rtcfg_getNodeLastSnapshot
+ *
+ * Read the nodes last_snapshot field 
+ * ----------
+ */
+char *
+rtcfg_getNodeLastSnapshot(int no_id)
+{
+	SlonNode   *node;
+	char	   *retval;
+
+	rtcfg_lock();
+	if ((node = rtcfg_findNode(no_id)) != NULL)
+	{
+		retval = node->last_snapshot;
+	}
+	else
+		retval = NULL;
 
 	rtcfg_unlock();
 

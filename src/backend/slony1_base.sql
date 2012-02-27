@@ -370,8 +370,11 @@ create table @NAMESPACE@.sl_log_1 (
 	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
-	log_cmdtype			char,
-	log_cmddata			text
+	log_tablenspname	text,
+	log_tablerelname	text,
+	log_cmdtype			"char",
+	log_cmdupdncols		int4,
+	log_cmdargs			text[]
 ) WITHOUT OIDS;
 create index sl_log_1_idx1 on @NAMESPACE@.sl_log_1
 	(log_origin, log_txid, log_actionseq);
@@ -384,8 +387,12 @@ comment on table @NAMESPACE@.sl_log_1 is 'Stores each change to be propagated to
 comment on column @NAMESPACE@.sl_log_1.log_origin is 'Origin node from which the change came';
 comment on column @NAMESPACE@.sl_log_1.log_txid is 'Transaction ID on the origin node';
 comment on column @NAMESPACE@.sl_log_1.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
-comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
-comment on column @NAMESPACE@.sl_log_1.log_cmddata is 'The data needed to perform the log action';
+comment on column @NAMESPACE@.sl_log_1.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+comment on column @NAMESPACE@.sl_log_1.log_tablenspname is 'The schema name of the table affected';
+comment on column @NAMESPACE@.sl_log_1.log_tablerelname is 'The table name of the table affected';
+comment on column @NAMESPACE@.sl_log_1.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+comment on column @NAMESPACE@.sl_log_1.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+comment on column @NAMESPACE@.sl_log_1.log_cmdargs is 'The data needed to perform the log action on the replica';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_log_2
@@ -395,15 +402,12 @@ create table @NAMESPACE@.sl_log_2 (
 	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
-	log_cmdtype			char,
-	log_cmddata			text
+	log_tablenspname	text,
+	log_tablerelname	text,
+	log_cmdtype			"char",
+	log_cmdupdncols		int4,
+	log_cmdargs			text[]
 ) WITHOUT OIDS;
-comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
-comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
-comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
-comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
-comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE';
-comment on column @NAMESPACE@.sl_log_2.log_cmddata is 'The data needed to perform the log action';
 create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 	(log_origin, log_txid, log_actionseq);
 
@@ -411,6 +415,36 @@ create index sl_log_2_idx1 on @NAMESPACE@.sl_log_2
 -- create index sl_log_2_idx2 on @NAMESPACE@.sl_log_2
 -- 	(log_txid);
 
+comment on table @NAMESPACE@.sl_log_2 is 'Stores each change to be propagated to subscriber nodes';
+comment on column @NAMESPACE@.sl_log_2.log_origin is 'Origin node from which the change came';
+comment on column @NAMESPACE@.sl_log_2.log_txid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_2.log_tableid is 'The table ID (from sl_table.tab_id) that this log entry is to affect';
+comment on column @NAMESPACE@.sl_log_2.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+comment on column @NAMESPACE@.sl_log_2.log_tablenspname is 'The schema name of the table affected';
+comment on column @NAMESPACE@.sl_log_2.log_tablerelname is 'The table name of the table affected';
+comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. U = Update, I = Insert, D = DELETE, T = TRUNCATE';
+comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
+comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_log_script
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_log_script (
+	log_origin			int4,
+	log_txid			bigint,
+	log_actionseq		int8,
+	log_cmdtype			"char",
+	log_cmdargs			text[]
+) WITHOUT OIDS;
+create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
+	(log_origin, log_txid, log_actionseq);
+
+comment on table @NAMESPACE@.sl_log_script is 'Captures SQL script queries to be propagated to subscriber nodes';
+comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
+comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
+comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. S = Script statement, s = Script complete';
+comment on column @NAMESPACE@.sl_log_script.log_cmdargs is 'The DDL statement, optionally followed by selected nodes to execute it on.';
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_registry
@@ -426,6 +460,44 @@ comment on column @NAMESPACE@.sl_registry.reg_key is 'Unique key of the runtime 
 comment on column @NAMESPACE@.sl_registry.reg_int4 is 'Option value if type int4';
 comment on column @NAMESPACE@.sl_registry.reg_text is 'Option value if type text';
 comment on column @NAMESPACE@.sl_registry.reg_timestamp is 'Option value if type timestamp';
+
+
+-- ----------------------------------------------------------------------
+-- TABLE sl_apply_stats
+-- ----------------------------------------------------------------------
+create table @NAMESPACE@.sl_apply_stats (
+	as_origin			int4,
+	as_num_insert		int8,
+	as_num_update		int8,
+	as_num_delete		int8,
+	as_num_truncate		int8,
+	as_num_script		int8,
+	as_num_total		int8,
+	as_duration			interval,
+	as_apply_first		timestamptz,
+	as_apply_last		timestamptz,
+	as_cache_prepare	int8,
+	as_cache_hit		int8,
+	as_cache_evict		int8,
+	as_cache_prepare_max int8
+) WITHOUT OIDS;
+
+create index sl_apply_stats_idx1 on @NAMESPACE@.sl_apply_stats
+	(as_origin);
+
+comment on table @NAMESPACE@.sl_apply_stats is 'Local SYNC apply statistics (running totals)';
+comment on column @NAMESPACE@.sl_apply_stats.as_origin is 'Origin of the SYNCs';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_insert is 'Number of INSERT operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_update is 'Number of UPDATE operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_delete is 'Number of DELETE operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_truncate is 'Number of TRUNCATE operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_script is 'Number of DDL operations performed';
+comment on column @NAMESPACE@.sl_apply_stats.as_num_total is 'Total number of operations';
+comment on column @NAMESPACE@.sl_apply_stats.as_duration is 'Processing time';
+comment on column @NAMESPACE@.sl_apply_stats.as_apply_first is 'Timestamp of first recorded SYNC';
+comment on column @NAMESPACE@.sl_apply_stats.as_apply_last is 'Timestamp of most recent recorded SYNC';
+comment on column @NAMESPACE@.sl_apply_stats.as_cache_evict is 'Number of apply query cache evict operations';
+comment on column @NAMESPACE@.sl_apply_stats.as_cache_prepare_max is 'Maximum number of apply queries prepared in one SYNC group';
 
 
 -- **********************************************************************

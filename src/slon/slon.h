@@ -120,6 +120,7 @@ struct SlonNode_s
     int			pa_connretry;	/* connection retry interval */
 
     int64		last_event;		/* last event we have received */
+	char	   *last_snapshot;	/* snapshot of last sync event */
 
     SlonThreadStatus listen_status;		/* status of the listen thread */
     pthread_t	listen_thread;	/* thread id of listen thread */
@@ -460,6 +461,8 @@ extern void rtcfg_disableNode(int no_id);
 extern SlonNode *rtcfg_findNode(int no_id);
 extern int64 rtcfg_setNodeLastEvent(int no_id, int64 event_seq);
 extern int64 rtcfg_getNodeLastEvent(int no_id);
+extern void rtcfg_setNodeLastSnapshot(int no_id, char *snapshot);
+extern char *rtcfg_getNodeLastSnapshot(int no_id);
 
 extern void rtcfg_storePath(int pa_server, char *pa_conninfo,
                 int pa_connretry);
@@ -557,8 +560,6 @@ extern void *remoteListenThread_main(void *cdata);
  * ----------
  */
 extern int	sync_group_maxsize;
-extern int	sync_max_rowsize;
-extern int	sync_max_largemem;
 extern int	explain_interval;
 
 
