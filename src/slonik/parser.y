@@ -80,6 +80,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %type <statement>	stmt_date
 %type <statement>	stmt_exit
 %type <statement>	stmt_restart_node
+%type <statement>	stmt_resubscribe_node
 %type <statement>	stmt_error
 %type <statement>	stmt_init_cluster
 %type <statement>	stmt_store_node
@@ -182,6 +183,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_RECEIVER
 %token  K_REPAIR
 %token	K_RESTART
+%token  K_RESUBSCRIBE
 %token	K_SCRIPT
 %token  K_SECONDS
 %token	K_SEQUENCE
@@ -442,6 +444,8 @@ normal_stmt			: stmt_echo
 						{ $$ = $1; }
 					| stmt_repair_config
 						{ $$ = $1; }
+					| stmt_resubscribe_node
+						{ $$ = $1; }
 					| stmt_switch_log
 						{ $$ = $1; }
 					| stmt_error ';' 
@@ -535,7 +539,34 @@ stmt_restart_node	: lno K_RESTART K_NODE id ';'
 						$$ = (SlonikStmt *)new;
 					}
 					;
+stmt_resubscribe_node : lno K_RESUBSCRIBE K_NODE option_list 
+					{
+						SlonikStmt_resubscribe_node * new;
+						statement_option opt[] = {
+							STMT_OPTION_INT( O_ORIGIN, -1 ),
+							STMT_OPTION_INT( O_PROVIDER, -1 ),
+							STMT_OPTION_INT( O_RECEIVER, -1),
+							STMT_OPTION_END
+						};
 
+						new = (SlonikStmt_resubscribe_node *)
+								malloc(sizeof(SlonikStmt_resubscribe_node));
+						memset(new, 0, sizeof(SlonikStmt_resubscribe_node));
+						new->hdr.stmt_type		= STMT_RESUBSCRIBE_NODE;
+						new->hdr.stmt_filename	= current_file;
+						new->hdr.stmt_lno		= $1;
+
+						if (assign_options(opt, $4) == 0)
+						{
+							new->no_origin		= opt[0].ival;
+							new->no_provider	= opt[1].ival;
+							new->no_receiver	= opt[2].ival;
+						}
+						else
+							parser_errors++;
+						$$ = (SlonikStmt *)new;
+					}
+					;
 exit_code			: T_NUMBER
 						{ $$ = strtol(yytext, NULL, 10); }
 					| '-' exit_code

@@ -245,6 +245,15 @@ was defined the data data for set 1 would still flow through node
 nodes 1 and 3 would be unable to talk to each other unless a path between
 nodes 1 and nodes 3 had been defined.
 </para>
+
+<para>
+&slony1; requires that all sets from a given origin cascade to each receiver
+in the same manner.  If node 1 was also the origin for set 2 then set 2
+would also need to go directly to node 2 and be cascaded from node 2 to node 3.
+Node 3 can not receive set 2 from node 1 directly if it is already receiving
+set 1 via node 2.
+</para>
+
 </sect2>
 
 <sect2><title> How do I use <link linkend="logshipping">Log Shipping?</link> </title> 
@@ -289,15 +298,16 @@ are using.
 <indexterm><primary>reshaping subscriptions</primary></indexterm>
 
 <para> For instance, you might want subscriber node 3 to draw data from node
-1, when it is presently drawing data from node 2. </para>
+4 (for all sets originating on node 1), when it is presently drawing data from node 2. </para>
 
 <para>The  <xref
-linkend="stmtsubscribeset"> command can be used to do this.
+linkend="stmtresubscribenode"> command can be used to do this.
 For existing subscriptions it can revise the subscription information.
 
 <programlisting>
-subscribe set(id=1,origin=1, provider=2,forward=yes);
+resubscribe node(origin=1, provider=4,receiver=3);
 </programlisting>
+
 
 </sect2>
 

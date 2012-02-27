@@ -53,6 +53,7 @@ typedef struct SlonikStmt_wait_event_s SlonikStmt_wait_event;
 typedef struct SlonikStmt_switch_log_s SlonikStmt_switch_log;
 typedef struct SlonikStmt_sync_s SlonikStmt_sync;
 typedef struct SlonikStmt_sleep_s SlonikStmt_sleep;
+typedef struct SlonikStmt_resubscribe_node_s SlonikStmt_resubscribe_node;
 
 typedef enum
 {
@@ -76,6 +77,7 @@ typedef enum
 	STMT_MOVE_SET,
 	STMT_REPAIR_CONFIG,
 	STMT_RESTART_NODE,
+	STMT_RESUBSCRIBE_NODE,
 	STMT_SET_ADD_SEQUENCE,
 	STMT_SET_ADD_TABLE,
 	STMT_SET_DROP_SEQUENCE,
@@ -458,7 +460,14 @@ struct SlonikStmt_sleep_s
 	int			num_secs;
 };
 
+struct SlonikStmt_resubscribe_node_s
+{
+	SlonikStmt	hdr;
+	int			no_origin;
+	int			no_provider;
+	int			no_receiver;
 
+};
 
 
 extern SlonikScript *parser_script;
