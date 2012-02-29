@@ -60,7 +60,7 @@ var tests =
      ,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
 
-//tests=[new MultinodeFailover(coordinator,results)];
+//tests=[new ExecuteScript(coordinator,results)];
 
 var basicTest = new BasicTest(coordinator,results);
 

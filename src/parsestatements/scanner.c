@@ -32,7 +32,7 @@ int scan_for_statements (const char *extended_statement) {
     cchar = extended_statement[cpos];
     switch (cchar) {
     case '\0':
-      STMTS[statements++] = ++cpos;
+      STMTS[statements++] = cpos;
       state = Q_DONE;
       break;
 
@@ -211,7 +211,7 @@ int scan_for_statements (const char *extended_statement) {
       break;
     case ';':
       if ((state == Q_NORMAL_STATE) && (nparens == 0) && (nbrokets == 0) && (nsquigb == 0)) {
-	STMTS[statements++] = ++cpos;
+	STMTS[statements++] = cpos + 1;
 	if (statements >= MAXSTATEMENTS) {
 	  return statements;
 	}
