@@ -2730,6 +2730,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			slon_appendquery(&failed_node_list,",%d",node_entry->no_id);
 		num_origins++;
 	}
+	dstring_terminate(&failed_node_list);
 	
 
 	
@@ -4968,6 +4969,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 					slon_appendquery(&ignore_condition,")");
 				else
 					slon_appendquery(&ignore_condition,"");
+				dstring_terminate(&ignore_condition);
 				slon_mkquery(&query,
 							 "select no_id, max(con_seqno) "
 						   "    from \"_%s\".sl_node N, \"_%s\".sl_confirm C"
@@ -4983,7 +4985,6 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 							 adminfo->no_id, dstring_data(&ignore_condition),
 							 adminfo->no_id,
 							 seqbuf);
-				dstring_terminate(&ignore_condition);
 			}
 			else
 			{
@@ -5024,6 +5025,7 @@ slonik_wait_event(SlonikStmt_wait_event * stmt)
 									 , node,last_event);
 					
 				}
+				dstring_terminate(&outstanding_nodes);
 			}
 			PQclear(res);
 
@@ -5837,7 +5839,7 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 		first_event=0;
 		wait_count++;
 	}
-
+	dstring_terminate(&node_list);
 	
 
 	dstring_init(&is_caughtup_query);
@@ -5951,10 +5953,10 @@ static int slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 					 }
 					 
 				 }
+				 dstring_terminate(&outstanding);
 				 printf("waiting for events %s to be confirmed on node %d\n",
 						dstring_data(&outstanding),adminfo1->no_id);
 				 fflush(stdout);
-				 dstring_terminate(&outstanding);
 			   
 			 }/* every 10 iterations */		   		 
 			 sleep(1);
