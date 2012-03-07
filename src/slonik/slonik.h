@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 #ifndef SLONIK_H
@@ -199,17 +199,18 @@ struct SlonikStmt_store_node_s
 struct SlonikStmt_drop_node_s
 {
 	SlonikStmt	hdr;
-	int			* no_id_list;
+	int		   *no_id_list;
 	int			ev_origin;
 };
 
-struct failed_node_entry_s {
-	int no_id;
-	int backup_node;
-	int temp_backup_node;
-	struct failed_node_entry_s * next;
-	int num_sets;
-	int num_nodes;
+struct failed_node_entry_s
+{
+	int			no_id;
+	int			backup_node;
+	int			temp_backup_node;
+	struct failed_node_entry_s *next;
+	int			num_sets;
+	int			num_nodes;
 };
 
 typedef struct failed_node_entry_s failed_node_entry;
@@ -217,7 +218,7 @@ typedef struct failed_node_entry_s failed_node_entry;
 struct SlonikStmt_failed_node_s
 {
 	SlonikStmt	hdr;
-	failed_node_entry * nodes;
+	failed_node_entry *nodes;
 };
 
 
@@ -417,8 +418,8 @@ struct SlonikStmt_ddl_script_s
 	SlonikStmt	hdr;
 	char	   *ddl_fname;
 	int			ev_origin;
-	char       *only_on_nodes;
-	int         only_on_node;
+	char	   *only_on_nodes;
+	int			only_on_node;
 	FILE	   *ddl_fd;
 };
 
@@ -437,7 +438,7 @@ struct SlonikStmt_wait_event_s
 	int			wait_confirmed;
 	int			wait_on;
 	int			wait_timeout;
-	int			*ignore_nodes;
+	int		   *ignore_nodes;
 };
 
 
@@ -592,7 +593,7 @@ extern int	slonik_switch_log(SlonikStmt_switch_log * stmt);
 extern int	slonik_sync(SlonikStmt_sync * stmt);
 extern int	slonik_sleep(SlonikStmt_sleep * stmt);
 
-extern int	slon_scanint64(char *str, int64 * result);
+extern int	slon_scanint64(char *str, int64 *result);
 
 
 /*
@@ -609,24 +610,24 @@ void		db_notice_recv(void *arg, const char *msg);
 int			db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_disconnect(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 
-int			db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+int db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
 				SlonDString * query);
-int			db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				SlonDString * query);
-int			db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				SlonDString * query, int nParams, const Oid *paramTypes, 
-				const char *const *paramValues, const int *paramLengths, 
-				const int *paramFormats, int resultFormat);
-PGresult   *db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				SlonDString * query);
+int db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				  SlonDString * query);
+int db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+					SlonDString * query, int nParams, const Oid *paramTypes,
+					const char *const * paramValues, const int *paramLengths,
+					const int *paramFormats, int resultFormat);
+PGresult *db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+			   SlonDString * query);
 int			db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
-int			db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				char *clustername);
-int			db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-				char *clustername);
+int db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+				   char *clustername);
+int db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+					  char *clustername);
 int			db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
-int			db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
-						  bool suppress_locking);
+int db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+			  bool suppress_locking);
 int			db_commit_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 int			db_rollback_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo);
 
@@ -652,7 +653,8 @@ extern int	yylex(void);
 /*
  * Common option types
  */
-typedef enum {
+typedef enum
+{
 	O_ADD_ID,
 	O_ADD_SEQUENCES,
 	O_BACKUP_NODE,
@@ -696,21 +698,21 @@ typedef enum {
 /*
  * Common given option list
  */
-typedef struct option_list {
-	option_code	opt_code;
+typedef struct option_list
+{
+	option_code opt_code;
 	int			lineno;
 	int32		ival;
 	char	   *str;
 
 	struct option_list *next;
-} option_list;
+}	option_list;
 
 
 #ifdef WIN32
 #define strtoll _strtoui64
 #define snprintf _snprintf
 #endif
-
 #endif
 /*
  * Local Variables:

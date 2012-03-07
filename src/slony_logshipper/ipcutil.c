@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -35,30 +35,31 @@
  * The daemonized logshipper keeps a sorted queue of archive
  * files that need processing.
  */
-typedef struct	queue_elem_s {
-	char				   *archive_path;
-	struct queue_elem_s	   *next;
-} queue_elem;
+typedef struct queue_elem_s
+{
+	char	   *archive_path;
+	struct queue_elem_s *next;
+}	queue_elem;
 
 
 /*
  * Static data
  */
-static char			   *ipc_archive_dir = NULL;
-static key_t			semkey;
-static key_t			msgkey;
-static int				semid;
-static int				msgid;
-static int				ipc_creator;
-static queue_elem	   *archive_queue_head = NULL;
-static queue_elem	   *archive_queue_tail = NULL;
+static char *ipc_archive_dir = NULL;
+static key_t semkey;
+static key_t msgkey;
+static int	semid;
+static int	msgid;
+static int	ipc_creator;
+static queue_elem *archive_queue_head = NULL;
+static queue_elem *archive_queue_tail = NULL;
 
 
 /*
  * Local functions
  */
 static int	ipc_generate_keys(char *archive_dir);
-static void	ipc_sighandler(int sig);
+static void ipc_sighandler(int sig);
 static int	ipc_add_path(char *path);
 static int	ipc_send_code(char *archive_dir, int code);
 
@@ -71,15 +72,14 @@ static int	ipc_send_code(char *archive_dir, int code);
 int
 ipc_init(char *archive_dir)
 {
-	struct sembuf	sops[2];
+	struct sembuf sops[2];
 
 	if (ipc_generate_keys(archive_dir) < 0)
 		return -1;
 
 	/*
-	 * We eventually have to start over again in case
-	 * the existing daemon destroys the semaphore set
-	 * after we attached and before we can lock it.
+	 * We eventually have to start over again in case the existing daemon
+	 * destroys the semaphore set after we attached and before we can lock it.
 	 */
 	while (true)
 	{
@@ -90,24 +90,22 @@ ipc_init(char *archive_dir)
 		if (semid < 0)
 		{
 			fprintf(stderr, "cannot create or attache to semaphore set\n"
-							"semget(): %s\n", strerror(errno));
+					"semget(): %s\n", strerror(errno));
 			return -1;
 		}
 
 		/*
-		 * We now do two initial operations with NOWAIT:
-		 *		wait for #1 =0
-		 *		inc sem  #1 +1
-		 * We never again touch semaphore #1, so this either succeeds, meaning
-		 * that we created the set and hold the current lock. Or it fails with
-		 * EAGAIN, meaning we attached to an existing set. Or it fails with
-		 * EIDRM, meaning the set was destroyed.
+		 * We now do two initial operations with NOWAIT: wait for #1 =0 inc
+		 * sem	#1 +1 We never again touch semaphore #1, so this either
+		 * succeeds, meaning that we created the set and hold the current
+		 * lock. Or it fails with EAGAIN, meaning we attached to an existing
+		 * set. Or it fails with EIDRM, meaning the set was destroyed.
 		 */
 		sops[0].sem_num = 1;
-		sops[0].sem_op  = 0;
+		sops[0].sem_op = 0;
 		sops[0].sem_flg = IPC_NOWAIT;
 		sops[1].sem_num = 1;
-		sops[1].sem_op  = 1;
+		sops[1].sem_op = 1;
 		sops[1].sem_flg = 0;
 
 		if (semop(semid, sops, 2) < 0)
@@ -128,8 +126,8 @@ ipc_init(char *archive_dir)
 			if (ipc_lock() < 0)
 			{
 				/*
-				 * Since theres a gap between attaching and locking, the
-				 * set could have been destroyed. In that case, start over.
+				 * Since theres a gap between attaching and locking, the set
+				 * could have been destroyed. In that case, start over.
 				 */
 				if (errno == EIDRM)
 					continue;
@@ -191,9 +189,9 @@ ipc_finish(bool force)
 		if (!force)
 		{
 			/*
-			 * We are the creator of the semaphore set, so if this isn't
-			 * a force operation, we lock it first, poll the message queue
-			 * and check that we have an empty queue.
+			 * We are the creator of the semaphore set, so if this isn't a
+			 * force operation, we lock it first, poll the message queue and
+			 * check that we have an empty queue.
 			 */
 			if (ipc_lock() < 0)
 			{
@@ -204,7 +202,7 @@ ipc_finish(bool force)
 
 			if (ipc_poll(false) < 0)
 				return -1;
-			
+
 			if (archive_queue_head != NULL)
 			{
 				if (ipc_unlock() < 0)
@@ -216,9 +214,10 @@ ipc_finish(bool force)
 				return 1;
 			}
 		}
+
 		/*
-		 * At this point, we are either forced to stop or we have a lock
-		 * and the queue is empty.
+		 * At this point, we are either forced to stop or we have a lock and
+		 * the queue is empty.
 		 */
 		if (msgctl(msgid, IPC_RMID, NULL) < 0)
 		{
@@ -248,16 +247,17 @@ ipc_finish(bool force)
 int
 ipc_poll(bool blocking)
 {
-	int		rc;
-	struct {
+	int			rc;
+	struct
+	{
 		long		mtype;
 		char		mtext[MSGMAX];
-	}	msg;
+	}			msg;
 
-	while(true)
+	while (true)
 	{
-		rc = msgrcv(msgid, &msg, sizeof(msg), 0, 
-				(blocking) ? 0 : IPC_NOWAIT);
+		rc = msgrcv(msgid, &msg, sizeof(msg), 0,
+					(blocking) ? 0 : IPC_NOWAIT);
 		if (rc < 0)
 		{
 			if (errno == ENOMSG)
@@ -276,9 +276,8 @@ ipc_poll(bool blocking)
 			wait_for_resume = false;
 		else if (msg.mtype == 5)
 			logfile_switch_requested = true;
-		else
-			if (ipc_add_path(msg.mtext) < 0)
-				return -1;
+		else if (ipc_add_path(msg.mtext) < 0)
+			return -1;
 
 		if (blocking)
 			break;
@@ -296,10 +295,10 @@ ipc_poll(bool blocking)
 static int
 ipc_add_path(char *path)
 {
-	queue_elem	  **elemp;
-	queue_elem	   *elem;
+	queue_elem **elemp;
+	queue_elem *elem;
 
-	if ((elem = (queue_elem *)malloc(sizeof(queue_elem))) == NULL)
+	if ((elem = (queue_elem *) malloc(sizeof(queue_elem))) == NULL)
 	{
 		fprintf(stderr, "out of memory in ipc_add_path()\n");
 		return -1;
@@ -323,7 +322,7 @@ ipc_add_path(char *path)
 			return 0;
 		}
 	}
-	
+
 
 	if (archive_queue_head == NULL)
 	{
@@ -349,10 +348,11 @@ ipc_add_path(char *path)
 int
 ipc_send_path(char *logfname)
 {
-	struct {
+	struct
+	{
 		long		mtype;
 		char		mtext[MSGMAX];
-	}	msg;
+	}			msg;
 
 	if (strlen(logfname) > (MSGMAX - 1))
 	{
@@ -361,8 +361,8 @@ ipc_send_path(char *logfname)
 	}
 
 	/*
-	 * As the creator, we are also the consumer, so we simply add the
-	 * file to the queue.
+	 * As the creator, we are also the consumer, so we simply add the file to
+	 * the queue.
 	 */
 	if (ipc_creator)
 		return ipc_add_path(logfname);
@@ -388,12 +388,13 @@ ipc_send_path(char *logfname)
 int
 ipc_recv_path(char *buf)
 {
-	queue_elem	   *elem;
-	int				rc;
-	struct {
+	queue_elem *elem;
+	int			rc;
+	struct
+	{
 		long		mtype;
 		char		mtext[MSGMAX];
-	}	msg;
+	}			msg;
 
 	while (true)
 	{
@@ -404,8 +405,8 @@ ipc_recv_path(char *buf)
 		}
 
 		/*
-		 * If something requested an immediate shutdown, don't report any
-		 * more logfiles back.
+		 * If something requested an immediate shutdown, don't report any more
+		 * logfiles back.
 		 */
 		if (shutdown_immed_requested)
 		{
@@ -413,9 +414,9 @@ ipc_recv_path(char *buf)
 			return 0;
 		}
 
-		/* 
-		 * If a smart shutdown was requested, try to close the queue
-		 * but don't force it.
+		/*
+		 * If a smart shutdown was requested, try to close the queue but don't
+		 * force it.
 		 */
 		if (shutdown_smart_requested)
 		{
@@ -471,12 +472,11 @@ ipc_recv_path(char *buf)
 			wait_for_resume = false;
 		else if (msg.mtype == 5)
 			logfile_switch_requested = true;
-		else
-			if (ipc_add_path(msg.mtext) < 0)
-			{
-				ipc_finish(true);
-				return -1;
-			}
+		else if (ipc_add_path(msg.mtext) < 0)
+		{
+			ipc_finish(true);
+			return -1;
+		}
 	}
 }
 
@@ -489,7 +489,7 @@ ipc_recv_path(char *buf)
 int
 ipc_send_term(char *archive_dir, bool immediate)
 {
-	int		rc;
+	int			rc;
 
 	rc = ipc_send_code(archive_dir, (immediate) ? 3 : 2);
 	if (rc != 0)
@@ -531,10 +531,11 @@ ipc_send_resume(char *archive_dir)
 static int
 ipc_send_code(char *archive_dir, int code)
 {
-	struct {
-		long	mtype;
-		char	mtext[1];
-	} msg;
+	struct
+	{
+		long		mtype;
+		char		mtext[1];
+	}			msg;
 
 	if (ipc_generate_keys(archive_dir) < 0)
 		return -1;
@@ -556,8 +557,8 @@ ipc_send_code(char *archive_dir, int code)
 		ipc_unlock();
 		return -1;
 	}
-	
-	msg.mtype = (long)code;
+
+	msg.mtype = (long) code;
 	if (msgsnd(msgid, &msg, 0, 0) < 0)
 	{
 		fprintf(stderr, "msgsnd() failed in ipc_send_code(): %s\n",
@@ -578,7 +579,7 @@ ipc_send_code(char *archive_dir, int code)
 int
 ipc_lock(void)
 {
-	struct sembuf	sops[1] = {{0, -1, 0}};
+	struct sembuf sops[1] = {{0, -1, 0}};
 
 	if (semop(semid, sops, 1) < 0)
 	{
@@ -598,7 +599,7 @@ ipc_lock(void)
 int
 ipc_unlock(void)
 {
-	struct sembuf	sops[1] = {{0, 1, 0}};
+	struct sembuf sops[1] = {{0, 1, 0}};
 
 	if (semop(semid, sops, 1) < 0)
 	{
@@ -618,7 +619,7 @@ ipc_unlock(void)
 int
 ipc_wait_for_destroy(void)
 {
-	struct sembuf	sops[1] = {{2, -1, 0}};
+	struct sembuf sops[1] = {{2, -1, 0}};
 
 	if (semop(semid, sops, 1) < 0)
 	{
@@ -655,14 +656,12 @@ ipc_cleanup(char *archive_dir)
 					strerror(errno));
 			rc = -1;
 		}
-		else
-			if (!opt_quiet)
-				fprintf(stderr, "semaphore set removed\n");
-			rc = 1;
+		else if (!opt_quiet)
+			fprintf(stderr, "semaphore set removed\n");
+		rc = 1;
 	}
-	else
-		if (!opt_quiet)
-			fprintf(stderr, "no semaphore set found\n");
+	else if (!opt_quiet)
+		fprintf(stderr, "no semaphore set found\n");
 
 	if ((msgid = msgget(msgkey, 0)) >= 0)
 	{
@@ -672,15 +671,13 @@ ipc_cleanup(char *archive_dir)
 					strerror(errno));
 			rc = -1;
 		}
-		else
-			if (!opt_quiet)
-				fprintf(stderr, "message queue removed\n");
+		else if (!opt_quiet)
+			fprintf(stderr, "message queue removed\n");
 		if (rc >= 0)
 			rc |= 2;
 	}
-	else
-		if (!opt_quiet)
-			fprintf(stderr, "no message queue found\n");
+	else if (!opt_quiet)
+		fprintf(stderr, "no message queue found\n");
 
 	return rc;
 }
@@ -764,13 +761,12 @@ ipc_generate_keys(char *archive_dir)
 static void
 ipc_sighandler(int sig)
 {
-	struct {
-		long	mtype;
-		char	mtext[1];
-	} msg;
+	struct
+	{
+		long		mtype;
+		char		mtext[1];
+	}			msg;
 
 	msg.mtype = 3;
 	msgsnd(msgid, &msg, 0, 0);
 }
-
-

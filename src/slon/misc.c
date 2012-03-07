@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -59,8 +59,7 @@ extern char *Syslog_facility;	/* openlog() parameters */
 extern char *Syslog_ident;
 
 static void write_syslog(int level, const char *line);
-
-#else    /* HAVE_SYSLOG */
+#else							/* HAVE_SYSLOG */
 #define Use_syslog 0
 #endif   /* HAVE_SYSLOG */
 
@@ -76,76 +75,76 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 	static char *outbuf = NULL;
 	static int	outsize = -1;
 	int			off;
-	int  len;
+	int			len;
 	char	   *level_c = NULL;
 
-	char		time_buf[128];   /* Buffer to hold timestamp */
-	char        ps_buf[20];      /* Buffer to hold PID */
+	char		time_buf[128];	/* Buffer to hold timestamp */
+	char		ps_buf[20];		/* Buffer to hold PID */
 	time_t		stamp_time = time(NULL);
-	va_list apcopy;
-	
+	va_list		apcopy;
+
 #ifdef HAVE_SYSLOG
 	int			syslog_level = LOG_ERR;
 #endif
 	if (level > slon_log_level)
 		return;
-    switch (level)
-    {
-        case SLON_DEBUG4:
-            level_c = "DEBUG4";
+	switch (level)
+	{
+		case SLON_DEBUG4:
+			level_c = "DEBUG4";
 #ifdef HAVE_SYSLOG
-            syslog_level = LOG_DEBUG;
+			syslog_level = LOG_DEBUG;
 #endif
-            break;
-        case SLON_DEBUG3:
-            level_c = "DEBUG3";
+			break;
+		case SLON_DEBUG3:
+			level_c = "DEBUG3";
 #ifdef HAVE_SYSLOG
-            syslog_level = LOG_DEBUG;
+			syslog_level = LOG_DEBUG;
 #endif
-            break;
-        case SLON_DEBUG2:
-            level_c = "DEBUG2";
+			break;
+		case SLON_DEBUG2:
+			level_c = "DEBUG2";
 #ifdef HAVE_SYSLOG
-            syslog_level = LOG_DEBUG;
+			syslog_level = LOG_DEBUG;
 #endif
-            break;
-        case SLON_DEBUG1:
-            level_c = "DEBUG1";
+			break;
+		case SLON_DEBUG1:
+			level_c = "DEBUG1";
 #ifdef HAVE_SYSLOG
-            syslog_level = LOG_DEBUG;
-#endif                                                                          
-            break;                                                              
-        case SLON_INFO:                                                         
-            level_c = "INFO";                                                   
-#ifdef HAVE_SYSLOG                                                              
-            syslog_level = LOG_INFO;                                            
-#endif                                                                          
-            break;                                                              
-        case SLON_CONFIG:                                                       
-            level_c = "CONFIG";                                                 
-#ifdef HAVE_SYSLOG
-            syslog_level = LOG_WARNING;
+			syslog_level = LOG_DEBUG;
 #endif
-            break;                                                              
-        case SLON_WARN:                                                         
-            level_c = "WARN";                                                   
+			break;
+		case SLON_INFO:
+			level_c = "INFO";
 #ifdef HAVE_SYSLOG
-            syslog_level = LOG_WARNING;
+			syslog_level = LOG_INFO;
 #endif
-            break;                                                              
-        case SLON_ERROR:                                                        
-            level_c = "ERROR";                                                  
-#ifdef HAVE_SYSLOG                                                              
-            syslog_level = LOG_ERR;                                             
-#endif                                                                          
-            break;                                                              
-        case SLON_FATAL:                                                        
-            level_c = "FATAL";                                                  
-#ifdef HAVE_SYSLOG                                                              
-            syslog_level = LOG_ERR;                                             
-#endif                                                                          
-            break;                                                              
-    }
+			break;
+		case SLON_CONFIG:
+			level_c = "CONFIG";
+#ifdef HAVE_SYSLOG
+			syslog_level = LOG_WARNING;
+#endif
+			break;
+		case SLON_WARN:
+			level_c = "WARN";
+#ifdef HAVE_SYSLOG
+			syslog_level = LOG_WARNING;
+#endif
+			break;
+		case SLON_ERROR:
+			level_c = "ERROR";
+#ifdef HAVE_SYSLOG
+			syslog_level = LOG_ERR;
+#endif
+			break;
+		case SLON_FATAL:
+			level_c = "FATAL";
+#ifdef HAVE_SYSLOG
+			syslog_level = LOG_ERR;
+#endif
+			break;
+	}
 
 	va_start(ap, fmt);
 
@@ -170,25 +169,30 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 		)
 	{
 		len = (int) strftime(time_buf, sizeof(time_buf), log_timestamp_format, localtime(&stamp_time));
-		if (len == 0 && time_buf[0] != '\0') {
+		if (len == 0 && time_buf[0] != '\0')
+		{
 			perror("slon_log: problem with strftime()");
 			slon_retry();
 		}
-	} else {
+	}
+	else
+	{
 		time_buf[0] = (char) 0;
 	}
 
 	if (logpid == true)
 	{
 		sprintf(ps_buf, "[%d] ", slon_pid);
-	} else {
+	}
+	else
+	{
 		ps_buf[0] = (char) 0;
 	}
 
 	sprintf(outbuf, "%s%s%-6.6s ", time_buf, ps_buf, level_c);
 
 	off = (int) strlen(outbuf);
-	va_copy(apcopy,ap);
+	va_copy(apcopy, ap);
 	while (vsnprintf(&outbuf[off], (size_t) (outsize - off), fmt, apcopy) >= outsize - off - 1)
 	{
 		outsize *= 2;
@@ -215,9 +219,10 @@ slon_log(Slon_Log_Level level, char *fmt,...)
 		win32_eventlog(level, outbuf);
 #endif
 #ifdef HAVE_SYSLOG
-	if (Use_syslog != 2) {
-			(void) fwrite(outbuf, strlen(outbuf), 1, stdout);
-			(void) fflush(stdout);
+	if (Use_syslog != 2)
+	{
+		(void) fwrite(outbuf, strlen(outbuf), 1, stdout);
+		(void) fflush(stdout);
 	}
 #else
 	(void) fwrite(outbuf, strlen(outbuf), 1, stdout);
@@ -237,7 +242,7 @@ slon_log(Slon_Log_Level level, char *fmt,...)
  * ----------
  */
 int
-slon_scanint64(char *str, int64 * result)
+slon_scanint64(char *str, int64 *result)
 {
 	char	   *ptr = str;
 	int64		tmp = 0;
@@ -249,7 +254,7 @@ slon_scanint64(char *str, int64 * result)
 	 */
 
 	/* skip leading spaces */
-	while (*ptr && isspace((unsigned char)*ptr))
+	while (*ptr && isspace((unsigned char) *ptr))
 		ptr++;
 
 	/* handle sign */
@@ -274,11 +279,11 @@ slon_scanint64(char *str, int64 * result)
 		ptr++;
 
 	/* require at least one digit */
-	if (!isdigit((unsigned char)*ptr))
+	if (!isdigit((unsigned char) *ptr))
 		return false;
 
 	/* process digits */
-	while (*ptr && isdigit((unsigned char)*ptr))
+	while (*ptr && isdigit((unsigned char) *ptr))
 	{
 		int64		newtmp = tmp * 10 + (*ptr++ - '0');
 
@@ -373,12 +378,12 @@ write_syslog(int level, const char *line)
 			buf[buflen] = '\0';
 
 			/* already word boundary? */
-			if (!isspace((unsigned char)line[buflen]) &&
+			if (!isspace((unsigned char) line[buflen]) &&
 				line[buflen] != '\0')
 			{
 				/* try to divide at word boundary */
 				i = buflen - 1;
-				while (i > 0 && !isspace((unsigned char)buf[i]))
+				while (i > 0 && !isspace((unsigned char) buf[i]))
 					i--;
 
 				if (i > 0)		/* else couldn't divide word boundary */
@@ -403,5 +408,3 @@ write_syslog(int level, const char *line)
 }
 
 #endif   /* HAVE_SYSLOG */
-
-

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  * ----------------------------------------------------------------------
  */
 
@@ -30,12 +30,12 @@
 
 #include "slon.h"
 
-bool keep_alive;
-int keep_alive_idle;
-int keep_alive_count;
-int keep_alive_interval;
+bool		keep_alive;
+int			keep_alive_idle;
+int			keep_alive_count;
+int			keep_alive_interval;
 
-static int	slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap);
+static int	slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap);
 static int	db_get_version(PGconn *conn);
 
 #if (PG_VERSION_MAJOR < 8)
@@ -63,7 +63,7 @@ slon_connectdb(char *conninfo, char *symname)
 	SlonConn   *conn;
 	PGresult   *res;
 	SlonDString query;
-	int         connpid = -1;
+	int			connpid = -1;
 
 	/*
 	 * Create the native database connection
@@ -91,52 +91,52 @@ slon_connectdb(char *conninfo, char *symname)
 		return NULL;
 	}
 
-	setsockopt(PQsocket(dbconn),SOL_SOCKET,SO_KEEPALIVE,&keep_alive,
+	setsockopt(PQsocket(dbconn), SOL_SOCKET, SO_KEEPALIVE, &keep_alive,
 			   sizeof(int));
 #ifndef WIN32
-	if(keep_alive)
+	if (keep_alive)
 	{
-		
-		if(keep_alive_idle > 0)
+
+		if (keep_alive_idle > 0)
 #ifdef TCP_KEEPIDLE
-			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPIDLE,
-					   &keep_alive_idle,sizeof(keep_alive_idle));
+			setsockopt(PQsocket(dbconn), IPPROTO_TCP, TCP_KEEPIDLE,
+					   &keep_alive_idle, sizeof(keep_alive_idle));
 #else
-			slon_log(SLON_WARN,"keep_alive_idle is not supported on this platform");
+			slon_log(SLON_WARN, "keep_alive_idle is not supported on this platform");
 #endif
-		if(keep_alive_interval > 0)
+		if (keep_alive_interval > 0)
 #ifdef TCP_KEEPINTVL
-			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPINTVL,
-					   &keep_alive_interval,sizeof(keep_alive_interval));
+			setsockopt(PQsocket(dbconn), IPPROTO_TCP, TCP_KEEPINTVL,
+					   &keep_alive_interval, sizeof(keep_alive_interval));
 #else
-			slon_log(SLON_WARN,"keep_alive_interval is not supported on this platform");
+			slon_log(SLON_WARN, "keep_alive_interval is not supported on this platform");
 #endif
-		if(keep_alive_count > 0)
+		if (keep_alive_count > 0)
 #ifdef TCP_KEEPCNT
-			setsockopt(PQsocket(dbconn),IPPROTO_TCP,TCP_KEEPCNT,
-					   &keep_alive_count,sizeof(keep_alive_count));
+			setsockopt(PQsocket(dbconn), IPPROTO_TCP, TCP_KEEPCNT,
+					   &keep_alive_count, sizeof(keep_alive_count));
 #else
-			slon_log(SLON_WARN,"keep_alive_count is not supported on this platform");
+			slon_log(SLON_WARN, "keep_alive_count is not supported on this platform");
 #endif
-		
+
 	}
 #else
 	/**
 	 * Win32 does not support the setsockopt calls for setting keep alive
-	 * parameters.  On Win32 this can be adjusted via the registry.
+	 * parameters.	On Win32 this can be adjusted via the registry.
 	 * libpq 9.0 and above provide functions for doing this.
 	 * If we ever require libpq9.0 or above we could start to use them.
 	 * Alternativly someone could re-implement that functionality inside
 	 * of slony.
 	 */
-	if(keep_alive)
+	if (keep_alive)
 	{
-		if(keep_alive_idle > 0 )
-			slon_log(SLON_WARN,"keep_alive_idle is not supported by Slony on Win32");
-		if(keep_alive_interval > 0) 
-			slon_log(SLON_WARN,"keep_alive_interval is not supported by Slony on Win32");
-		if(keep_alive_count > 0) 
-			slon_log(SLON_WARN,"keep_alive_count is not supported by Slony Win32");
+		if (keep_alive_idle > 0)
+			slon_log(SLON_WARN, "keep_alive_idle is not supported by Slony on Win32");
+		if (keep_alive_interval > 0)
+			slon_log(SLON_WARN, "keep_alive_interval is not supported by Slony on Win32");
+		if (keep_alive_count > 0)
+			slon_log(SLON_WARN, "keep_alive_count is not supported by Slony Win32");
 
 	}
 #endif
@@ -172,9 +172,11 @@ slon_connectdb(char *conninfo, char *symname)
 	res = PQexec(dbconn, dstring_data(&query));
 	if (!(PQresultStatus(res) == PGRES_TUPLES_OK))
 	{
-			slon_log(SLON_ERROR, "Unable to check connection PID\n");
-	} else {
-			connpid = strtol(PQgetvalue(res, 0, 0), NULL, 10);
+		slon_log(SLON_ERROR, "Unable to check connection PID\n");
+	}
+	else
+	{
+		connpid = strtol(PQgetvalue(res, 0, 0), NULL, 10);
 	}
 	PQclear(res);
 
@@ -222,7 +224,7 @@ slon_connectdb(char *conninfo, char *symname)
 	res = PQexec(dbconn, dstring_data(&query));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-			slon_log(SLON_ERROR, "Unable to submit application_name store request\n");
+		slon_log(SLON_ERROR, "Unable to submit application_name store request\n");
 	}
 	PQclear(res);
 
@@ -234,12 +236,12 @@ slon_connectdb(char *conninfo, char *symname)
 		if (!res || PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
 			slon_log(SLON_ERROR, "%s: Unable to get backend pid - %s\n",
-				symname, PQresultErrorMessage(res));
+					 symname, PQresultErrorMessage(res));
 		}
 		else
 		{
 			slon_log(SLON_DEBUG1, "%s \"%s\": backend pid = %s\n",
-				symname, conninfo, PQgetvalue(res, 0, 0));
+					 symname, conninfo, PQgetvalue(res, 0, 0));
 		}
 		PQclear(res);
 	}
@@ -254,7 +256,7 @@ slon_connectdb(char *conninfo, char *symname)
  * ----------
  */
 void
-slon_disconnectdb(SlonConn *conn)
+slon_disconnectdb(SlonConn * conn)
 {
 	/*
 	 * Disconnect the native database connection
@@ -308,7 +310,7 @@ slon_make_dummyconn(char *symname)
  * ----------
  */
 void
-slon_free_dummyconn(SlonConn *conn)
+slon_free_dummyconn(SlonConn * conn)
 {
 	/*
 	 * Destroy and unlock the condition and mutex variables
@@ -484,7 +486,7 @@ db_checkSchemaVersion(PGconn *conn)
  * ----------
  */
 void
-slon_mkquery(SlonDString *dsp, char *fmt,...)
+slon_mkquery(SlonDString * dsp, char *fmt,...)
 {
 	va_list		ap;
 
@@ -505,7 +507,7 @@ slon_mkquery(SlonDString *dsp, char *fmt,...)
  * ----------
  */
 void
-slon_appendquery(SlonDString *dsp, char *fmt,...)
+slon_appendquery(SlonDString * dsp, char *fmt,...)
 {
 	va_list		ap;
 
@@ -524,7 +526,7 @@ slon_appendquery(SlonDString *dsp, char *fmt,...)
  * ----------
  */
 static int
-slon_appendquery_int(SlonDString *dsp, char *fmt, va_list ap)
+slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 {
 	char	   *s;
 	char		buf[64];

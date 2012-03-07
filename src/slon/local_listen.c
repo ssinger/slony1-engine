@@ -7,7 +7,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -28,7 +28,7 @@
 
 #include "slon.h"
 
-extern int worker_restarted;
+extern int	worker_restarted;
 
 /* ----------
  * slon_localListenThread
@@ -38,7 +38,7 @@ extern int worker_restarted;
  * ----------
  */
 void *
-localListenThread_main(/* @unused@ */ void *dummy)
+localListenThread_main( /* @unused@ */ void *dummy)
 {
 	SlonConn   *conn;
 	SlonDString query1;
@@ -49,8 +49,8 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	PGnotify   *notification;
 	char		restart_notify[256];
 	int			restart_request;
-	int poll_sleep = 0;
-	int         node_lock_obtained=0;
+	int			poll_sleep = 0;
+	int			node_lock_obtained = 0;
 
 	slon_log(SLON_INFO, "localListenThread: thread starts\n");
 
@@ -73,8 +73,8 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	 * Listen for local events
 	 */
 	(void) slon_mkquery(&query1,
-		     "listen \"_%s_Restart\"; ",
-		     rtcfg_cluster_name);
+						"listen \"_%s_Restart\"; ",
+						rtcfg_cluster_name);
 	res = PQexec(dbconn, dstring_data(&query1));
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -84,7 +84,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		PQclear(res);
 		dstring_free(&query1);
 		pthread_mutex_lock(&slon_wait_listen_lock);
-		slon_listen_started=0;
+		slon_listen_started = 0;
 		pthread_cond_signal(&slon_wait_listen_cond);
 		pthread_mutex_unlock(&slon_wait_listen_lock);
 		slon_retry();
@@ -97,12 +97,12 @@ localListenThread_main(/* @unused@ */ void *dummy)
 #define NODELOCKERROR "ERROR:  duplicate key violates unique constraint \"sl_nodelock-pkey\""
 
 	(void) slon_mkquery(&query1,
-				 "select %s.cleanupNodelock(); "
-				 "insert into %s.sl_nodelock values ("
-				 "    %d, 0, \"pg_catalog\".pg_backend_pid()); ",
-				 rtcfg_namespace, rtcfg_namespace,
-				 rtcfg_nodeid);
-	while(!node_lock_obtained)
+						"select %s.cleanupNodelock(); "
+						"insert into %s.sl_nodelock values ("
+						"    %d, 0, \"pg_catalog\".pg_backend_pid()); ",
+						rtcfg_namespace, rtcfg_namespace,
+						rtcfg_nodeid);
+	while (!node_lock_obtained)
 	{
 		res = PQexec(dbconn, dstring_data(&query1));
 		if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -110,35 +110,36 @@ localListenThread_main(/* @unused@ */ void *dummy)
 			slon_log(SLON_FATAL,
 					 "localListenThread: \"%s\" - %s\n",
 					 dstring_data(&query1), PQresultErrorMessage(res));
-			if (strncmp(NODELOCKERROR, PQresultErrorMessage(res), strlen(NODELOCKERROR)) == 0) {
+			if (strncmp(NODELOCKERROR, PQresultErrorMessage(res), strlen(NODELOCKERROR)) == 0)
+			{
 				slon_log(SLON_FATAL,
-						 "Do you already have a slon running against this node?\n");
+				  "Do you already have a slon running against this node?\n");
 				slon_log(SLON_FATAL,
 						 "Or perhaps a residual idle backend connection from a dead slon?\n");
 				PQclear(res);
-				if(worker_restarted)
+				if (worker_restarted)
 				{
 					sleep(5);
 					continue;
 				}
 				else
 				{
-					dstring_free(&query1);					
+					dstring_free(&query1);
 					pthread_mutex_lock(&slon_wait_listen_lock);
-					slon_listen_started=0;
+					slon_listen_started = 0;
 					pthread_cond_signal(&slon_wait_listen_cond);
 					pthread_mutex_unlock(&slon_wait_listen_lock);
 					slon_abort();
 				}
 			}
-		    
+
 			PQclear(res);
 			dstring_free(&query1);
 			slon_abort();
 		}
 		PQclear(res);
-		node_lock_obtained=1;
-	
+		node_lock_obtained = 1;
+
 	}
 
 	/*
@@ -146,7 +147,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	 * other threads.
 	 */
 	pthread_mutex_lock(&slon_wait_listen_lock);
-	slon_listen_started=1;
+	slon_listen_started = 1;
 	pthread_cond_signal(&slon_wait_listen_cond);
 	pthread_mutex_unlock(&slon_wait_listen_lock);
 
@@ -201,16 +202,16 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		 * Query the database for new local events
 		 */
 		(void) slon_mkquery(&query1,
-					 "select ev_seqno, ev_timestamp, "
-					 "       'dummy', 'dummy', 'dummy', "
-					 "       ev_type, "
-					 "       ev_data1, ev_data2, ev_data3, ev_data4, "
-					 "       ev_data5, ev_data6, ev_data7, ev_data8 "
-					 "from %s.sl_event "
-					 "where  ev_origin = '%d' "
-					 "       and ev_seqno > '%s' "
-					 "order by ev_seqno",
-					 rtcfg_namespace, rtcfg_nodeid, rtcfg_lastevent);
+							"select ev_seqno, ev_timestamp, "
+							"       'dummy', 'dummy', 'dummy', "
+							"       ev_type, "
+							"       ev_data1, ev_data2, ev_data3, ev_data4, "
+							"       ev_data5, ev_data6, ev_data7, ev_data8 "
+							"from %s.sl_event "
+							"where  ev_origin = '%d' "
+							"       and ev_seqno > '%s' "
+							"order by ev_seqno",
+							rtcfg_namespace, rtcfg_nodeid, rtcfg_lastevent);
 		res = PQexec(dbconn, dstring_data(&query1));
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		{
@@ -259,7 +260,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			no_id;
 				char	   *no_comment;
 
-				no_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				no_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 				no_comment = PQgetvalue(res, tupno, 7);
 
 				if (no_id != rtcfg_nodeid)
@@ -274,7 +275,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 */
 				int			no_id;
 
-				no_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				no_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 
 				if (no_id != rtcfg_nodeid)
 					rtcfg_enableNode(no_id);
@@ -290,7 +291,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				char		notify_query[256];
 				PGresult   *notify_res;
 
-				no_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				no_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 
 				/*
 				 * Deactivate the node in the runtime configuration
@@ -324,7 +325,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			no_id;
 				char	   *no_comment;
 
-				no_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				no_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 				no_comment = PQgetvalue(res, tupno, 8);
 
 				rtcfg_storeNode(no_id, no_comment);
@@ -339,10 +340,10 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				char	   *pa_conninfo;
 				int			pa_connretry;
 
-				pa_server = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				pa_client = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				pa_server = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				pa_client = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 				pa_conninfo = PQgetvalue(res, tupno, 8);
-				pa_connretry = (int)strtol(PQgetvalue(res, tupno, 9), NULL, 10);
+				pa_connretry = (int) strtol(PQgetvalue(res, tupno, 9), NULL, 10);
 
 				if (pa_client == rtcfg_nodeid)
 					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
@@ -357,8 +358,8 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			pa_server;
 				int			pa_client;
 
-				pa_server = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				pa_client = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				pa_server = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				pa_client = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 
 				if (pa_client == rtcfg_nodeid)
 					rtcfg_dropPath(pa_server);
@@ -374,9 +375,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			li_provider;
 				int			li_receiver;
 
-				li_origin = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				li_provider = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
-				li_receiver = (int)strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				li_origin = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				li_provider = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				li_receiver = (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
 
 				if (li_receiver == rtcfg_nodeid)
 					rtcfg_storeListen(li_origin, li_provider);
@@ -390,9 +391,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			li_provider;
 				int			li_receiver;
 
-				li_origin = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				li_provider = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
-				li_receiver = (int)strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				li_origin = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				li_provider = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				li_receiver = (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
 
 				if (li_receiver == rtcfg_nodeid)
 					rtcfg_dropListen(li_origin, li_provider);
@@ -406,8 +407,8 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			set_origin;
 				char	   *set_comment;
 
-				set_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				set_origin = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				set_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				set_origin = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 				set_comment = PQgetvalue(res, tupno, 8);
 
 				rtcfg_storeSet(set_id, set_origin, set_comment);
@@ -419,7 +420,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 */
 				int			set_id;
 
-				set_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				set_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 
 				rtcfg_dropSet(set_id);
 			}
@@ -430,7 +431,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 */
 				int			add_id;
 
-				add_id = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				add_id = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 
 				rtcfg_dropSet(add_id);
 			}
@@ -540,9 +541,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				SlonDString query2;
 				int			sub_provider;
 
-				set_id = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				old_origin = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
-				new_origin = (int)strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				set_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				old_origin = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				new_origin = (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
 
 				/*
 				 * We have been the old origin of the set, so according to the
@@ -550,9 +551,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				 */
 				dstring_init(&query2);
 				(void) slon_mkquery(&query2,
-							 "select sub_provider from %s.sl_subscribe "
-					     "    where sub_receiver = %d and sub_set = %d",
-					     rtcfg_namespace, rtcfg_nodeid, set_id);
+								  "select sub_provider from %s.sl_subscribe "
+							  "    where sub_receiver = %d and sub_set = %d",
+									rtcfg_namespace, rtcfg_nodeid, set_id);
 				res2 = PQexec(dbconn, dstring_data(&query2));
 				if (PQresultStatus(res2) != PGRES_TUPLES_OK)
 				{
@@ -574,7 +575,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				}
 
 				sub_provider =
-					(int)strtol(PQgetvalue(res2, 0, 0), NULL, 10);
+					(int) strtol(PQgetvalue(res2, 0, 0), NULL, 10);
 				PQclear(res2);
 				dstring_free(&query2);
 
@@ -603,9 +604,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			sub_receiver;
 				char	   *sub_forward;
 
-				sub_set = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				sub_provider = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
-				sub_receiver = (int)strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				sub_set = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				sub_provider = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				sub_receiver = (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
 				sub_forward = PQgetvalue(res, tupno, 9);
 
 				if (sub_receiver == rtcfg_nodeid)
@@ -623,9 +624,9 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			sub_receiver;
 				char	   *sub_forward;
 
-				sub_set = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				sub_provider = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
-				sub_receiver = (int)strtol(PQgetvalue(res, tupno, 8), NULL, 10);
+				sub_set = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				sub_provider = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				sub_receiver = (int) strtol(PQgetvalue(res, tupno, 8), NULL, 10);
 				sub_forward = PQgetvalue(res, tupno, 9);
 
 				if (sub_receiver == rtcfg_nodeid)
@@ -641,8 +642,8 @@ localListenThread_main(/* @unused@ */ void *dummy)
 				int			sub_set;
 				int			sub_receiver;
 
-				sub_set = (int)strtol(PQgetvalue(res, tupno, 6), NULL, 10);
-				sub_receiver = (int)strtol(PQgetvalue(res, tupno, 7), NULL, 10);
+				sub_set = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
+				sub_receiver = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 
 				if (sub_receiver == rtcfg_nodeid)
 					rtcfg_unsubscribeSet(sub_set);
@@ -687,7 +688,7 @@ localListenThread_main(/* @unused@ */ void *dummy)
 		 */
 		if (ntuples > 0)
 		{
-			poll_sleep = 0;  /* drop polling time back to 0... */
+			poll_sleep = 0;		/* drop polling time back to 0... */
 			res = PQexec(dbconn, "commit transaction");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
@@ -707,16 +708,20 @@ localListenThread_main(/* @unused@ */ void *dummy)
 			 * No database events received. Rollback instead.
 			 */
 
-			/* Increase the amount of time to sleep, to a max of sync_interval_timeout */
+			/*
+			 * Increase the amount of time to sleep, to a max of
+			 * sync_interval_timeout
+			 */
 			poll_sleep += sync_interval;
-			if (poll_sleep > sync_interval_timeout) {
+			if (poll_sleep > sync_interval_timeout)
+			{
 				poll_sleep = sync_interval_timeout;
 			}
 			res = PQexec(dbconn, "rollback transaction;");
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				slon_log(SLON_FATAL,
-						 "localListenThread: \"rollback transaction;\" - %s\n",
+					   "localListenThread: \"rollback transaction;\" - %s\n",
 						 PQresultErrorMessage(res));
 				PQclear(res);
 				slon_retry();

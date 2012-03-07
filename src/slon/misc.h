@@ -20,7 +20,7 @@ typedef enum
 
 extern void slon_log(Slon_Log_Level level, char *fmt,...);
 
-extern int	slon_scanint64(char *str, int64 * result);
+extern int	slon_scanint64(char *str, int64 *result);
 #endif
 
 #ifdef WIN32

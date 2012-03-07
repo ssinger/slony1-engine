@@ -2,12 +2,12 @@
  *
  * slevent.c
  *		Defines the entry point for slevent dll.
- *		The DLL defines event source for Slony tools 
+ *		The DLL defines event source for Slony tools
  *
  *
  * IDENTIFICATION
  *	  $PostgreSQL: pgsql/src/bin/pgevent/pgevent.c,v 1.4 2004/09/27 19:16:01 momjian Exp $
- *    
+ *
  *
  *-------------------------------------------------------------------------
  */
@@ -45,8 +45,8 @@ DllRegisterServer(void)
 	}
 
 	/*
-	 * Add PostgreSQL source name as a subkey under the Application key in
-	 * the EventLog registry key.
+	 * Add PostgreSQL source name as a subkey under the Application key in the
+	 * EventLog registry key.
 	 */
 	if (RegCreateKey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\Slony", &key))
 	{
@@ -73,7 +73,7 @@ DllRegisterServer(void)
 					  "TypesSupported",
 					  0,
 					  REG_DWORD,
-					  (LPBYTE) & data,
+					  (LPBYTE) &data,
 					  sizeof(DWORD)))
 	{
 		MessageBox(NULL, "Could not set the supported types.", "Slony error", MB_OK | MB_ICONSTOP);
@@ -92,8 +92,8 @@ STDAPI
 DllUnregisterServer(void)
 {
 	/*
-	 * Remove PostgreSQL source name as a subkey under the Application key
-	 * in the EventLog registry key.
+	 * Remove PostgreSQL source name as a subkey under the Application key in
+	 * the EventLog registry key.
 	 */
 
 	if (RegDeleteKey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\Slony"))

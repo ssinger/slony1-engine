@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -39,16 +39,17 @@
 #include "config.h"
 
 
-typedef struct archscan_entry_s {
-	char					   *fname;
-	struct archscan_entry_s	   *left;
-	struct archscan_entry_s	   *right;
-} archscan_entry;
+typedef struct archscan_entry_s
+{
+	char	   *fname;
+	struct archscan_entry_s *left;
+	struct archscan_entry_s *right;
+}	archscan_entry;
 
 /*
  * Global data
  */
-int         rescan_interval = 0;
+int			rescan_interval = 0;
 int			parse_errors = 0;
 int			opt_quiet = 0;
 char	   *destinationfname = NULL;
@@ -71,32 +72,32 @@ char	   *destination_conninfo = NULL;
 char	   *cluster_name = NULL;
 char	   *namespace = NULL;
 
-RenameObject	   *rename_list = NULL;
-ProcessingCommand  *pre_processing_commands = NULL;
-ProcessingCommand  *post_processing_commands = NULL;
-ProcessingCommand  *error_commands = NULL;
+RenameObject *rename_list = NULL;
+ProcessingCommand *pre_processing_commands = NULL;
+ProcessingCommand *post_processing_commands = NULL;
+ProcessingCommand *error_commands = NULL;
 
 /*
  * Local commandline options
  */
-static int			opt_send_logswitch = 0;
-static int			opt_send_resume = 0;
-static int			opt_shutdown_smart = 0;
-static int			opt_shutdown_immed = 0;
-static int			opt_foreground = 0;
-static int			opt_cleanup = 0;
-static int			opt_nowait = 0;
+static int	opt_send_logswitch = 0;
+static int	opt_send_resume = 0;
+static int	opt_shutdown_smart = 0;
+static int	opt_shutdown_immed = 0;
+static int	opt_foreground = 0;
+static int	opt_cleanup = 0;
+static int	opt_nowait = 0;
 
 /*
  * Local data
  */
-static archscan_entry  *archscan_sort = NULL;
-static char				current_at_counter[64];
-static bool				process_in_transaction = false;
-static char			   *current_archive_path = NULL;
-static bool				suppress_copy = false;
-static SlonDString		errlog_messages;
-static int				archive_count = 0;
+static archscan_entry *archscan_sort = NULL;
+static char current_at_counter[64];
+static bool process_in_transaction = false;
+static char *current_archive_path = NULL;
+static bool suppress_copy = false;
+static SlonDString errlog_messages;
+static int	archive_count = 0;
 
 
 /*
@@ -106,13 +107,13 @@ static void usage(void);
 static int	process_archive(char *fname);
 static int	process_exec_sql(char *sql);
 static int	archscan(int optind, int argc, char **argv);
-static int	archscan_sort_in(archscan_entry **entpm, char *fname,
-					int optind, int argc, char **argv);
-static int	archscan_sort_out(archscan_entry *ent);
+static int archscan_sort_in(archscan_entry ** entpm, char *fname,
+				 int optind, int argc, char **argv);
+static int	archscan_sort_out(archscan_entry * ent);
 static int	get_current_at_counter(void);
 static int	idents_are_distinct(char *id1, char *id2);
 static int	process_command(char *command, char *inarchive, char *outarchive);
-static void	notice_processor(void *arg, const char *msg);
+static void notice_processor(void *arg, const char *msg);
 
 /* ----------
  * main
@@ -136,7 +137,7 @@ main(int argc, const char *argv[])
 	 * Parse commandline options
 	 *
 	 */
-	while ((opt = getopt(argc, (char **)argv, "hvqcflrtTws:")) != EOF)
+	while ((opt = getopt(argc, (char **) argv, "hvqcflrtTws:")) != EOF)
 	{
 		switch (opt)
 		{
@@ -180,10 +181,10 @@ main(int argc, const char *argv[])
 			case 'w':
 				opt_nowait = 1;
 				break;
-            
-            case 's':
-                rescan_interval = atoi(optarg);
-                break;
+
+			case 's':
+				rescan_interval = atoi(optarg);
+				break;
 
 			default:
 				fprintf(stderr, "unknown option '%c'\n", opt);
@@ -205,7 +206,7 @@ main(int argc, const char *argv[])
 		return 2;
 	}
 	scan_new_input_file(fp);
-	current_file = (char *)argv[optind++];
+	current_file = (char *) argv[optind++];
 	scan_push_string("start_config;");
 	parse_errors += yyparse();
 	if (parse_errors != 0)
@@ -234,13 +235,13 @@ main(int argc, const char *argv[])
 	if (destination_conninfo != NULL && cluster_name == NULL)
 	{
 		fprintf(stderr, "no cluster name specified in config file "
-					"(required for database mode)\n");
+				"(required for database mode)\n");
 		return -1;
 	}
 
 	/*
-	 * Configuration and usage are OK. From now on all messages
-	 * go into the logfile, if one is configured.
+	 * Configuration and usage are OK. From now on all messages go into the
+	 * logfile, if one is configured.
 	 */
 	if (logfile_path != NULL)
 	{
@@ -259,22 +260,21 @@ main(int argc, const char *argv[])
 		return -1;
 
 	/*
-	 * If we are the message queue creator and if we are running in
-	 * database connetion mode, add archives not yet processed to the
-	 * queue.
+	 * If we are the message queue creator and if we are running in database
+	 * connetion mode, add archives not yet processed to the queue.
 	 */
 	if (init_rc == 1)
 	{
-		if (archscan(optind, argc, (char **)argv) < 0)
+		if (archscan(optind, argc, (char **) argv) < 0)
 			return -0;
 	}
-	
+
 	/*
 	 * Put all filenames given to us onto the queue
 	 */
 	while (optind < argc)
 	{
-		if (ipc_send_path((char *)(argv[optind])) < 0)
+		if (ipc_send_path((char *) (argv[optind])) < 0)
 		{
 			ipc_finish(true);
 			return -1;
@@ -287,7 +287,7 @@ main(int argc, const char *argv[])
 
 	if (ipc_unlock() < 0)
 		return -1;
-	
+
 	/*
 	 * If we're not the message queue creator, we're done here.
 	 */
@@ -301,25 +301,25 @@ main(int argc, const char *argv[])
 	{
 		switch (pid = fork())
 		{
-			case -1:	fprintf(stderr, "fork() failed: %s\n",
-								strerror(errno));
-						ipc_finish(true);
-						return -1;
+			case -1:
+				fprintf(stderr, "fork() failed: %s\n",
+						strerror(errno));
+				ipc_finish(true);
+				return -1;
 
-			case 0:		/*
-						 * This is the child
-						 */
-						signal(SIGHUP, SIG_IGN);
-						close(0);
-						close(2);
-						dup2(1, 2);
-						setsid();
-						break;
+			case 0:				/* This is the child */
+				signal(SIGHUP, SIG_IGN);
+				close(0);
+				close(2);
+				dup2(1, 2);
+				setsid();
+				break;
 
-			default:	if (!opt_quiet)
-							printf("logshipper daemon created - pid = %d\n",
-									pid);
-						return 0;
+			default:
+				if (!opt_quiet)
+					printf("logshipper daemon created - pid = %d\n",
+						   pid);
+				return 0;
 		}
 	}
 
@@ -342,19 +342,19 @@ main(int argc, const char *argv[])
 		if (dbconn != NULL)
 		{
 			if (PQstatus(dbconn) != CONNECTION_OK)
-			while (PQstatus(dbconn) != CONNECTION_OK)
-			{
-				errlog(LOG_WARN, "bad database connection, try to recover\n");
-				PQreset(dbconn);
-				process_in_transaction = false;
-				if (PQstatus(dbconn) == CONNECTION_OK)
-					break;
+				while (PQstatus(dbconn) != CONNECTION_OK)
+				{
+					errlog(LOG_WARN, "bad database connection, try to recover\n");
+					PQreset(dbconn);
+					process_in_transaction = false;
+					if (PQstatus(dbconn) == CONNECTION_OK)
+						break;
 
-				ipc_poll(true);
+					ipc_poll(true);
 
-				if (shutdown_immed_requested)
-					break;
-			}
+					if (shutdown_immed_requested)
+						break;
+				}
 		}
 
 		if (wait_for_resume)
@@ -374,42 +374,42 @@ main(int argc, const char *argv[])
 		if (rc == -2)
 		{
 			archscan_sort = NULL;
-            errlog(LOG_INFO, "Queue is empty.  Going to rescan in %d seconds\n", rescan_interval);
-            sleep(rescan_interval);
-			if (archscan(optind, argc, (char **)argv) < 0)
+			errlog(LOG_INFO, "Queue is empty.  Going to rescan in %d seconds\n", rescan_interval);
+			sleep(rescan_interval);
+			if (archscan(optind, argc, (char **) argv) < 0)
 			{
 				return -1;
 			}
-            errlog(LOG_INFO, "Archive dir scanned\n");
+			errlog(LOG_INFO, "Archive dir scanned\n");
 			continue;
-               }
-		
+		}
+
 		if (rc < 0)
 		{
-			errlog(LOG_ERROR,"ipc_recv_path returned an error:%d\n",rc);
+			errlog(LOG_ERROR, "ipc_recv_path returned an error:%d\n", rc);
 			return -1;
 		}
 
 		current_archive_path = archive_path;
 		if (process_archive(archive_path) != 0)
 		{
-			ProcessingCommand	   *errcmd;
-			SlonDString				cmd;
+			ProcessingCommand *errcmd;
+			SlonDString cmd;
 
 			dstring_terminate(&errlog_messages);
 			dstring_init(&cmd);
 			for (errcmd = error_commands; errcmd != NULL; errcmd = errcmd->next)
 			{
-				slon_mkquery(&cmd, 
-					"inarchive='%q'; outarchive=''; errortext='%q'; %s",
-					archive_path, dstring_data(&errlog_messages),
-					errcmd->command);
+				slon_mkquery(&cmd,
+						 "inarchive='%q'; outarchive=''; errortext='%q'; %s",
+							 archive_path, dstring_data(&errlog_messages),
+							 errcmd->command);
 
 				system(dstring_data(&cmd));
 			}
 			dstring_free(&cmd);
 
-			
+
 			/*
 			 * If it left a transaction in progress, roll it back.
 			 */
@@ -440,9 +440,9 @@ main(int argc, const char *argv[])
 				if (PQstatus(dbconn) == CONNECTION_OK)
 				{
 					/*
-					 * this must have failed due to a parse error or
-					 * something went wrong with one of the queries.
-					 * Wait for resume command.
+					 * this must have failed due to a parse error or something
+					 * went wrong with one of the queries. Wait for resume
+					 * command.
 					 */
 					wait_for_resume = true;
 				}
@@ -450,9 +450,8 @@ main(int argc, const char *argv[])
 			else
 			{
 				/*
-				 * If we don't even have a DB connection, this
-				 * can only be a parse error or something similar.
-				 * Wait for resume command.
+				 * If we don't even have a DB connection, this can only be a
+				 * parse error or something similar. Wait for resume command.
 				 */
 				wait_for_resume = true;
 			}
@@ -460,8 +459,8 @@ main(int argc, const char *argv[])
 		else
 		{
 			/*
-			 * Every time we process one archive successfully, we
-			 * reset the errlog message collection.
+			 * Every time we process one archive successfully, we reset the
+			 * errlog message collection.
 			 */
 			dstring_reset(&errlog_messages);
 		}
@@ -475,10 +474,10 @@ main(int argc, const char *argv[])
 static int
 process_archive(char *fname)
 {
-	SlonDString	destfname;
-	char			   *cp;
-	FILE			   *fp;
-	ProcessingCommand  *cmd;
+	SlonDString destfname;
+	char	   *cp;
+	FILE	   *fp;
+	ProcessingCommand *cmd;
 
 	errlog(LOG_INFO, "Processing archive file %s\n", fname);
 
@@ -528,8 +527,8 @@ process_archive(char *fname)
 		destinationfp = fopen(destinationfname, "w");
 		if (destinationfp == NULL)
 		{
-			errlog(LOG_ERROR, "cannot open %s - %s\n", 
-					dstring_data(&destfname), strerror(errno));
+			errlog(LOG_ERROR, "cannot open %s - %s\n",
+				   dstring_data(&destfname), strerror(errno));
 			fclose(fp);
 			dstring_free(&destfname);
 			return 1;
@@ -582,16 +581,16 @@ process_exec_sql(char *sql)
 	 */
 	if (dbconn != NULL)
 	{
-		PGresult	   *res;
+		PGresult   *res;
 
 		res = PQexec(dbconn, sql);
-		if (PQresultStatus(res) != PGRES_COMMAND_OK	&&
-			PQresultStatus(res) != PGRES_TUPLES_OK	&&
+		if (PQresultStatus(res) != PGRES_COMMAND_OK &&
+			PQresultStatus(res) != PGRES_TUPLES_OK &&
 			PQresultStatus(res) != PGRES_EMPTY_QUERY)
 		{
 			errlog(LOG_ERROR, "%s: %sQuery was: %s\n",
-					PQresStatus(PQresultStatus(res)),
-					PQresultErrorMessage(res), sql);
+				   PQresStatus(PQresultStatus(res)),
+				   PQresultErrorMessage(res), sql);
 			PQclear(res);
 
 			return -1;
@@ -621,8 +620,8 @@ process_exec_sql(char *sql)
 int
 process_check_at_counter(char *at_counter)
 {
-	char	buf1[64];
-	char	buf2[64];
+	char		buf1[64];
+	char		buf2[64];
 	size_t		i;
 
 	if (destination_conninfo == NULL)
@@ -631,7 +630,7 @@ process_check_at_counter(char *at_counter)
 	if (strlen(at_counter) > 20)
 	{
 		errlog(LOG_ERROR, "at_counter %s too long in process_check_at_counter\n",
-				at_counter);
+			   at_counter);
 		return -1;
 	}
 
@@ -648,7 +647,7 @@ process_check_at_counter(char *at_counter)
 	if (strcmp(buf2, buf1) <= 0)
 	{
 		errlog(LOG_WARN, "skip archive with counter %s - already applied\n",
-				at_counter);
+			   at_counter);
 		if (process_in_transaction)
 			process_end_transaction("rollback;");
 		return 1;
@@ -668,15 +667,15 @@ process_simple_sql(char *sql)
 int
 process_insert(InsertStmt *stmt)
 {
-	SlonDString		ds;
-	char		   *glue;
-	AttElem		   *elem;
-	int				rc;
-	char		   *namespace;
-	char		   *tablename;
+	SlonDString ds;
+	char	   *glue;
+	AttElem    *elem;
+	int			rc;
+	char	   *namespace;
+	char	   *tablename;
 
-	if (lookup_rename(stmt->namespace, stmt->tablename, 
-					&namespace, &tablename) == 0)
+	if (lookup_rename(stmt->namespace, stmt->tablename,
+					  &namespace, &tablename) == 0)
 		return 0;
 
 	dstring_init(&ds);
@@ -711,15 +710,15 @@ process_insert(InsertStmt *stmt)
 int
 process_update(UpdateStmt *stmt)
 {
-	SlonDString		ds;
-	char		   *glue;
-	AttElem		   *elem;
-	int				rc;
-	char		   *namespace;
-	char		   *tablename;
+	SlonDString ds;
+	char	   *glue;
+	AttElem    *elem;
+	int			rc;
+	char	   *namespace;
+	char	   *tablename;
 
-	if (lookup_rename(stmt->namespace, stmt->tablename, 
-					&namespace, &tablename) == 0)
+	if (lookup_rename(stmt->namespace, stmt->tablename,
+					  &namespace, &tablename) == 0)
 		return 0;
 
 	dstring_init(&ds);
@@ -728,22 +727,22 @@ process_update(UpdateStmt *stmt)
 	for (elem = stmt->changes->list_head; elem != NULL; elem = elem->next)
 	{
 		if (elem->attvalue == NULL)
-			slon_appendquery(&ds, "%s %s=NULL", glue, 
-					elem->attname);
+			slon_appendquery(&ds, "%s %s=NULL", glue,
+							 elem->attname);
 		else
-			slon_appendquery(&ds, "%s %s='%s'", glue, 
-					elem->attname, elem->attvalue);
+			slon_appendquery(&ds, "%s %s='%s'", glue,
+							 elem->attname, elem->attvalue);
 		glue = ",";
 	}
 	glue = " where";
 	for (elem = stmt->qualification->list_head; elem != NULL; elem = elem->next)
 	{
 		if (elem->attvalue == NULL)
-			slon_appendquery(&ds, "%s %s IS NULL", glue, 
-					elem->attname);
+			slon_appendquery(&ds, "%s %s IS NULL", glue,
+							 elem->attname);
 		else
-			slon_appendquery(&ds, "%s %s='%s'", glue, 
-					elem->attname, elem->attvalue);
+			slon_appendquery(&ds, "%s %s='%s'", glue,
+							 elem->attname, elem->attvalue);
 		glue = " and";
 	}
 	dstring_addchar(&ds, ';');
@@ -759,31 +758,31 @@ process_update(UpdateStmt *stmt)
 int
 process_delete(DeleteStmt *stmt)
 {
-	SlonDString		ds;
-	char		   *glue;
-	AttElem		   *elem;
-	int				rc;
-	char		   *namespace;
-	char		   *tablename;
+	SlonDString ds;
+	char	   *glue;
+	AttElem    *elem;
+	int			rc;
+	char	   *namespace;
+	char	   *tablename;
 
-	if (lookup_rename(stmt->namespace, stmt->tablename, 
-					&namespace, &tablename) == 0)
+	if (lookup_rename(stmt->namespace, stmt->tablename,
+					  &namespace, &tablename) == 0)
 		return 0;
 
 	dstring_init(&ds);
-	slon_mkquery(&ds, "delete from %s%s.%s", 
-			(stmt->only) ? "only " : "", namespace, tablename);
+	slon_mkquery(&ds, "delete from %s%s.%s",
+				 (stmt->only) ? "only " : "", namespace, tablename);
 	if (stmt->qualification != NULL)
 	{
 		glue = " where";
 		for (elem = stmt->qualification->list_head; elem != NULL; elem = elem->next)
 		{
 			if (elem->attvalue == NULL)
-				slon_appendquery(&ds, "%s %s IS NULL", glue, 
-						elem->attname);
+				slon_appendquery(&ds, "%s %s IS NULL", glue,
+								 elem->attname);
 			else
-				slon_appendquery(&ds, "%s %s='%s'", glue, 
-						elem->attname, elem->attvalue);
+				slon_appendquery(&ds, "%s %s='%s'", glue,
+								 elem->attname, elem->attvalue);
 			glue = " and";
 		}
 	}
@@ -800,18 +799,18 @@ process_delete(DeleteStmt *stmt)
 int
 process_truncate(TruncateStmt *stmt)
 {
-	SlonDString		ds;
-	int				rc;
-	char		   *namespace;
-	char		   *tablename;
+	SlonDString ds;
+	int			rc;
+	char	   *namespace;
+	char	   *tablename;
 
-	if (lookup_rename(stmt->namespace, stmt->tablename, 
-					&namespace, &tablename) == 0)
+	if (lookup_rename(stmt->namespace, stmt->tablename,
+					  &namespace, &tablename) == 0)
 		return 0;
 
 	dstring_init(&ds);
-	slon_mkquery(&ds, "truncate only %s.%s cascade;", 
-				  namespace, tablename);
+	slon_mkquery(&ds, "truncate only %s.%s cascade;",
+				 namespace, tablename);
 	dstring_terminate(&ds);
 
 	rc = process_exec_sql(dstring_data(&ds));
@@ -823,15 +822,15 @@ process_truncate(TruncateStmt *stmt)
 int
 process_copy(CopyStmt *stmt)
 {
-	SlonDString		ds;
-	char		   *glue;
-	AttElem		   *elem;
-	PGresult	   *res;
-	char		   *namespace;
-	char		   *tablename;
+	SlonDString ds;
+	char	   *glue;
+	AttElem    *elem;
+	PGresult   *res;
+	char	   *namespace;
+	char	   *tablename;
 
-	if (lookup_rename(stmt->namespace, stmt->tablename, 
-					&namespace, &tablename) == 0)
+	if (lookup_rename(stmt->namespace, stmt->tablename,
+					  &namespace, &tablename) == 0)
 	{
 		suppress_copy = true;
 		scan_copy_start();
@@ -855,8 +854,8 @@ process_copy(CopyStmt *stmt)
 		if (PQresultStatus(res) != PGRES_COPY_IN)
 		{
 			errlog(LOG_ERROR, "%s: %sQuery was: %s\n",
-					PQresStatus(PQresultStatus(res)),
-					PQresultErrorMessage(res), dstring_data(&ds));
+				   PQresStatus(PQresultStatus(res)),
+				   PQresultErrorMessage(res), dstring_data(&ds));
 			PQclear(res);
 			dstring_free(&ds);
 			return -1;
@@ -889,7 +888,7 @@ process_copy(CopyStmt *stmt)
 int
 process_copydata(char *line)
 {
-	PGresult	   *res;
+	PGresult   *res;
 
 	if (suppress_copy)
 		return 0;
@@ -938,7 +937,7 @@ process_copyend(void)
 	if (dbconn != NULL)
 	{
 #ifdef HAVE_PQPUTCOPYDATA
-		PGresult	   *res;
+		PGresult   *res;
 
 		if (PQputCopyEnd(dbconn, NULL) != 1)
 		{
@@ -949,8 +948,8 @@ process_copyend(void)
 		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
 			errlog(LOG_ERROR, "%s: %s",
-					PQresStatus(PQresultStatus(res)),
-					PQresultErrorMessage(res));
+				   PQresStatus(PQresultStatus(res)),
+				   PQresultErrorMessage(res));
 			PQclear(res);
 			return -1;
 		}
@@ -1016,7 +1015,7 @@ process_command(char *command, char *inarchive, char *outarchive)
 {
 	int			status;
 	int			errorignore = 0;
-	SlonDString	cmd;
+	SlonDString cmd;
 
 	if (*command == '@')
 	{
@@ -1026,7 +1025,7 @@ process_command(char *command, char *inarchive, char *outarchive)
 
 	dstring_init(&cmd);
 	slon_mkquery(&cmd, "inarchive='%q'; outarchive='%q'; %s",
-			inarchive, (outarchive == NULL) ? "" : outarchive, command);
+				 inarchive, (outarchive == NULL) ? "" : outarchive, command);
 	status = system(dstring_data(&cmd));
 	if (status != 0)
 	{
@@ -1052,16 +1051,16 @@ notice_processor(void *arg, const char *msg)
 
 
 void
-errlog(log_level level, char *fmt, ...)
+errlog(log_level level, char *fmt,...)
 {
-	static char	errbuf[256 * 1024];
+	static char errbuf[256 * 1024];
 	char	   *pos;
 	va_list		ap;
 	time_t		tnow;
 	struct tm	now;
 	char	   *clevel[] = {
-					"DEBUG", "INFO", "WARN", "ERROR"
-				};
+		"DEBUG", "INFO", "WARN", "ERROR"
+	};
 
 	if (logfile_switch_requested && logfile_path != NULL)
 	{
@@ -1078,8 +1077,8 @@ errlog(log_level level, char *fmt, ...)
 	localtime_r(&tnow, &now);
 
 	snprintf(errbuf, sizeof(errbuf), "%-5.5s %04d-%02d-%02d %02d:%02d:%02d > ",
-			clevel[level], now.tm_year + 1900, now.tm_mon + 1, now.tm_mday,
-			now.tm_hour, now.tm_min, now.tm_sec);
+			 clevel[level], now.tm_year + 1900, now.tm_mon + 1, now.tm_mday,
+			 now.tm_hour, now.tm_min, now.tm_sec);
 	pos = errbuf + strlen(errbuf);
 	va_start(ap, fmt);
 	vsnprintf(pos, sizeof(errbuf) - (pos - errbuf), fmt, ap);
@@ -1097,8 +1096,10 @@ errlog(log_level level, char *fmt, ...)
 static int
 idents_are_distinct(char *id1, char *id2)
 {
-	if (id1 == NULL && id2 == NULL) return 0;
-	if (id1 == NULL || id2 == NULL) return 1;
+	if (id1 == NULL && id2 == NULL)
+		return 0;
+	if (id1 == NULL || id2 == NULL)
+		return 1;
 
 	if (*id1 == '"')
 	{
@@ -1113,9 +1114,9 @@ idents_are_distinct(char *id1, char *id2)
 
 
 void
-config_add_rename(RenameObject *entry)
+config_add_rename(RenameObject * entry)
 {
-	RenameObject	**ep;
+	RenameObject **ep;
 
 	for (ep = &rename_list; *ep != NULL; ep = &((*ep)->next))
 	{
@@ -1134,10 +1135,10 @@ config_add_rename(RenameObject *entry)
 
 
 int
-lookup_rename(char *namespace, char *name, 
-			char **use_namespace, char **use_name)
+lookup_rename(char *namespace, char *name,
+			  char **use_namespace, char **use_name)
 {
-	RenameObject	   *entry;
+	RenameObject *entry;
 
 	/*
 	 * first we look for a table specific entry
@@ -1152,10 +1153,10 @@ lookup_rename(char *namespace, char *name,
 			continue;
 
 		/*
-		 * This is a match. 
+		 * This is a match.
 		 */
 		*use_namespace = entry->new_namespace;
-		*use_name      = entry->new_name;
+		*use_name = entry->new_name;
 		if (*use_namespace == NULL)
 			return 0;
 		else
@@ -1174,10 +1175,10 @@ lookup_rename(char *namespace, char *name,
 			continue;
 
 		/*
-		 * This is a match. 
+		 * This is a match.
 		 */
 		*use_namespace = entry->new_namespace;
-		*use_name      = name;
+		*use_name = name;
 		if (*use_namespace == NULL)
 			return 0;
 		else
@@ -1188,7 +1189,7 @@ lookup_rename(char *namespace, char *name,
 	 * No match found - just keep the item as it is
 	 */
 	*use_namespace = namespace;
-	*use_name      = name;
+	*use_name = name;
 	return 1;
 }
 
@@ -1201,22 +1202,22 @@ static void
 usage(void)
 {
 	fprintf(stderr,
-		"usage: slony_logshipper [options] config_file [archive_file]\n"
-		"\n"
-		"    options:\n"
-		"      -h    display this help text and exit\n"
-		"      -v    display program version and exit\n"
-		"      -q    quiet mode\n"
-		"      -l    cause running daemon to reopen its logfile\n"
-		"      -r    cause running daemon to resume after error\n"
-		"      -t    cause running daemon to enter smart shutdown mode\n"
+			"usage: slony_logshipper [options] config_file [archive_file]\n"
+			"\n"
+			"    options:\n"
+			"      -h    display this help text and exit\n"
+			"      -v    display program version and exit\n"
+			"      -q    quiet mode\n"
+			"      -l    cause running daemon to reopen its logfile\n"
+			"      -r    cause running daemon to resume after error\n"
+			"      -t    cause running daemon to enter smart shutdown mode\n"
 		"      -T    cause running daemon to enter immediate shutdown mode\n"
-		"      -c    destroy existing semaphore set and message queue\n"
-		"            (use with caution)\n"
-		"      -f    stay in foreground (don't daemonize)\n"
-		"      -w    enter smart shutdown mode immediately\n"
-		"      -s    indicate (integer value) rescan interval\n"
-		"\n");
+			"      -c    destroy existing semaphore set and message queue\n"
+			"            (use with caution)\n"
+			"      -f    stay in foreground (don't daemonize)\n"
+			"      -w    enter smart shutdown mode immediately\n"
+			"      -s    indicate (integer value) rescan interval\n"
+			"\n");
 	exit(1);
 }
 
@@ -1224,10 +1225,10 @@ usage(void)
 static int
 get_current_at_counter(void)
 {
-	SlonDString		ds;
-	SlonDString     query;
-	PGresult	   *res;
-	char		   *s;
+	SlonDString ds;
+	SlonDString query;
+	PGresult   *res;
+	char	   *s;
 
 	if (namespace == NULL)
 	{
@@ -1254,32 +1255,34 @@ get_current_at_counter(void)
 	}
 
 	dstring_init(&query);
-	slon_mkquery(&query,"select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
-	res = PQexec (dbconn, dstring_data(&query));
+	slon_mkquery(&query, "select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
+	res = PQexec(dbconn, dstring_data(&query));
 	dstring_free(&query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-			return -1;
+		return -1;
 
 	if (PQntuples(res) == 0)
 	{
-			PQclear(res);
-	} else {
-			PQclear(res);
-			dstring_init(&query);
-			slon_mkquery(&query,"SET application_name TO 'slony_logshipper'; ");
-			res=PQexec(dbconn, dstring_data(&query));
-			dstring_free(&query); 
-			PQclear(res);
+		PQclear(res);
+	}
+	else
+	{
+		PQclear(res);
+		dstring_init(&query);
+		slon_mkquery(&query, "SET application_name TO 'slony_logshipper'; ");
+		res = PQexec(dbconn, dstring_data(&query));
+		dstring_free(&query);
+		PQclear(res);
 	}
 
 	dstring_init(&ds);
 	slon_mkquery(&ds, "select at_counter from %s.sl_archive_tracking;",
-			namespace);
+				 namespace);
 	res = PQexec(dbconn, dstring_data(&ds));
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		errlog(LOG_ERROR, "cannot retrieve archive tracking status: %s\n",
-				PQresultErrorMessage(res));
+			   PQresultErrorMessage(res));
 		PQclear(res);
 		PQfinish(dbconn);
 		ipc_finish(true);
@@ -1290,9 +1293,9 @@ get_current_at_counter(void)
 	s = PQgetvalue(res, 0, 0);
 	if (strlen(s) > 20)
 	{
-		errlog(LOG_ERROR, 
-			"value of sl_archive_tracking.at_counter is suspicious: '%s'\n",
-			s);
+		errlog(LOG_ERROR,
+			 "value of sl_archive_tracking.at_counter is suspicious: '%s'\n",
+			   s);
 		PQclear(res);
 		PQfinish(dbconn);
 		ipc_finish(true);
@@ -1311,9 +1314,9 @@ get_current_at_counter(void)
 static int
 archscan(int optind, int argc, char **argv)
 {
-	DIR			   *dirp;
-	struct dirent  *dp;
-	char			counter_done_buf[64];
+	DIR		   *dirp;
+	struct dirent *dp;
+	char		counter_done_buf[64];
 
 	if (destination_conninfo != NULL)
 	{
@@ -1321,7 +1324,7 @@ archscan(int optind, int argc, char **argv)
 			return -1;
 
 		counter_done_buf[0] = '\0';
-		while(strlen(counter_done_buf) + strlen(current_at_counter) < 20)
+		while (strlen(counter_done_buf) + strlen(current_at_counter) < 20)
 			strcat(counter_done_buf, "0");
 		strcat(counter_done_buf, current_at_counter);
 		strcat(counter_done_buf, ".sql");
@@ -1332,13 +1335,13 @@ archscan(int optind, int argc, char **argv)
 	}
 
 	/*
-	 * Scan the archive directory for files that have not been
-	 * processed yet according to the archive tracking.
+	 * Scan the archive directory for files that have not been processed yet
+	 * according to the archive tracking.
 	 */
 	if ((dirp = opendir(archive_dir)) == NULL)
 	{
-		errlog(LOG_ERROR, "cannot open directory %s: %s\n", archive_dir, 
-					strerror(errno));
+		errlog(LOG_ERROR, "cannot open directory %s: %s\n", archive_dir,
+			   strerror(errno));
 		PQfinish(dbconn);
 		ipc_finish(true);
 		return -1;
@@ -1347,7 +1350,7 @@ archscan(int optind, int argc, char **argv)
 	{
 		if (strlen(dp->d_name) > 24 &&
 			strcmp(dp->d_name + strlen(dp->d_name) - 24,
-					counter_done_buf) <= 0)
+				   counter_done_buf) <= 0)
 		{
 			continue;
 		}
@@ -1357,7 +1360,7 @@ archscan(int optind, int argc, char **argv)
 			strcmp(dp->d_name + strlen(dp->d_name) - 4, ".sql") == 0)
 		{
 			if (archscan_sort_in(&archscan_sort, dp->d_name, optind,
-					argc, argv) < 0)
+								 argc, argv) < 0)
 			{
 				PQfinish(dbconn);
 				ipc_finish(true);
@@ -1379,15 +1382,15 @@ archscan(int optind, int argc, char **argv)
 
 
 static int
-archscan_sort_in(archscan_entry **entp, char *fname, int optind,
-		int argc, char **argv)
+archscan_sort_in(archscan_entry ** entp, char *fname, int optind,
+				 int argc, char **argv)
 {
-	archscan_entry  *ent;
-	char			*cp1;
+	archscan_entry *ent;
+	char	   *cp1;
 
 	/*
-	 * Ignore files that compare higher or equal to any of our
-	 * command line arguments.
+	 * Ignore files that compare higher or equal to any of our command line
+	 * arguments.
 	 */
 	while (optind < argc)
 	{
@@ -1404,7 +1407,7 @@ archscan_sort_in(archscan_entry **entp, char *fname, int optind,
 
 	if (*entp == NULL)
 	{
-		ent = (archscan_entry *)malloc(sizeof(archscan_entry));
+		ent = (archscan_entry *) malloc(sizeof(archscan_entry));
 		if (ent == NULL)
 		{
 			errlog(LOG_ERROR, "out of memory in archscan_sort_in()\n");
@@ -1429,9 +1432,9 @@ archscan_sort_in(archscan_entry **entp, char *fname, int optind,
 
 
 static int
-archscan_sort_out(archscan_entry *ent)
+archscan_sort_out(archscan_entry * ent)
 {
-	char   *buf;
+	char	   *buf;
 
 	if (ent == NULL)
 		return 0;
@@ -1439,7 +1442,7 @@ archscan_sort_out(archscan_entry *ent)
 	if (archscan_sort_out(ent->left) < 0)
 		return -1;
 
-	buf = (char *)malloc(strlen(archive_dir) + strlen(ent->fname) + 2);
+	buf = (char *) malloc(strlen(archive_dir) + strlen(ent->fname) + 2);
 	if (buf == NULL)
 	{
 		errlog(LOG_ERROR, "out of memory in archscan_sort_out()\n");

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  * ----------------------------------------------------------------------
  */
 
@@ -33,14 +33,14 @@ typedef struct AVLnode_s
 				rdepth;
 	void	   *cdata;
 	int			deleted;
-} AVLnode;
+}	AVLnode;
 
 typedef struct AVLtree_s
 {
 	AVLnode    *root;
 	AVLcompfunc *compfunc;
 	AVLfreefunc *freefunc;
-} AVLtree;
+}	AVLtree;
 
 /* ----
  * Macros
@@ -58,11 +58,11 @@ typedef struct AVLtree_s
  * Public functions
  * ----
  */
-void avl_init(AVLtree *tree, AVLcompfunc *compfunc,
-		 AVLfreefunc *freefunc);
-void		avl_reset(AVLtree *tree);
-AVLnode    *avl_insert(AVLtree *tree, void *cdata);
-AVLnode    *avl_lookup(AVLtree *tree, void *cdata);
-int			avl_delete(AVLtree *tree, void *cdata);
+void avl_init(AVLtree * tree, AVLcompfunc * compfunc,
+		 AVLfreefunc * freefunc);
+void		avl_reset(AVLtree * tree);
+AVLnode    *avl_insert(AVLtree * tree, void *cdata);
+AVLnode    *avl_lookup(AVLtree * tree, void *cdata);
+int			avl_delete(AVLtree * tree, void *cdata);
 
 #endif   /* _AVL_TREE_H_INCLUDED_ */
