@@ -2969,7 +2969,7 @@ REPAIR CONFIG (
    </refnamediv>
    <refsynopsisdiv>
     <cmdsynopsis>
-     <command>clone prepare </command>
+     <command>clone finish </command>
      <arg><replaceable class="parameter"> id</replaceable></arg>
      <arg><replaceable class="parameter"> provider</replaceable></arg>
     </cmdsynopsis>
