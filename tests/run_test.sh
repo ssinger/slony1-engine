@@ -493,8 +493,6 @@ build_slonconf()
     echo "sync_interval=2010" >> ${CONFFILE}
     echo "sync_interval_timeout=15000" >> ${CONFFILE}
     echo "sync_group_maxsize=8" >> ${CONFFILE}
-    echo "sync_max_rowsize=4096" >> ${CONFFILE}
-    echo "sync_max_largemem=1048576" >> ${CONFFILE}
     echo "syslog=1" >> ${CONFFILE}
     echo "log_timestamp=true" >> ${CONFFILE}
     echo "log_timestamp_format='%Y-%m-%d %H:%M:%S %Z'" >> ${CONFFILE}

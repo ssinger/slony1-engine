@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -28,15 +28,15 @@
 #include "slon.h"
 
 
-/* ---------- 
- * Global variables 
+/* ----------
+ * Global variables
  * ----------
  */
 int			sync_interval;
 int			sync_interval_timeout;
 
 
-/* ---------- 
+/* ----------
  * slon_localSyncThread
  *
  * Generate SYNC event if local database activity created new log info.

@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -29,7 +29,7 @@
 
 
 /* ----------
- * Global data 
+ * Global data
  * ----------
  */
 pid_t		slon_pid;
@@ -54,7 +54,7 @@ SlonNode   *rtcfg_node_list_tail = NULL;
 
 
 /* ----------
- * Local data 
+ * Local data
  * ----------
  */
 static pthread_mutex_t config_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -73,14 +73,14 @@ static struct to_activate *to_activate_tail = NULL;
 
 
 /* ----------
- * Local functions 
+ * Local functions
  * ----------
  */
 static void rtcfg_startStopNodeThread(SlonNode * node);
 
 
 /* ----------
- * rtcfg_lock 
+ * rtcfg_lock
  * ----------
  */
 void
@@ -91,7 +91,7 @@ rtcfg_lock(void)
 
 
 /* ----------
- * rtcfg_unlock 
+ * rtcfg_unlock
  * ----------
  */
 void
@@ -102,7 +102,7 @@ rtcfg_unlock(void)
 
 
 /* ----------
- * rtcfg_storeNode 
+ * rtcfg_storeNode
  * ----------
  */
 void
@@ -164,7 +164,7 @@ rtcfg_storeNode(int no_id, char *no_comment)
  * Set the last_event field in the node runtime structure.
  *
  * Returns: 0 if the event_seq is <= the known value -1 if the node is
- * not known event_seq otherwise 
+ * not known event_seq otherwise
  * ----------
  */
 int64
@@ -200,7 +200,7 @@ rtcfg_setNodeLastEvent(int no_id, int64 event_seq)
 /* ----------
  * rtcfg_getNodeLastEvent
  *
- * Read the nodes last_event field 
+ * Read the nodes last_event field
  * ----------
  */
 int64
@@ -222,7 +222,7 @@ rtcfg_getNodeLastEvent(int no_id)
 	return retval;
 }
 
- 
+
 /* ----------
  * rtcfg_setNodeLastSnapshot()
  *
@@ -241,7 +241,7 @@ rtcfg_setNodeLastSnapshot(int no_id, char *snapshot)
 	if ((node = rtcfg_findNode(no_id)) != NULL)
 	{
 		if (node->last_snapshot != NULL)
-			free (node->last_snapshot);
+			free(node->last_snapshot);
 
 		node->last_snapshot = strdup(snapshot);
 	}
@@ -257,7 +257,7 @@ rtcfg_setNodeLastSnapshot(int no_id, char *snapshot)
 /* ----------
  * rtcfg_getNodeLastSnapshot
  *
- * Read the nodes last_snapshot field 
+ * Read the nodes last_snapshot field
  * ----------
  */
 char *
@@ -279,9 +279,9 @@ rtcfg_getNodeLastSnapshot(int no_id)
 	return retval;
 }
 
- 
-/* ---------- 
- * rtcfg_enableNode 
+
+/* ----------
+ * rtcfg_enableNode
  * ----------
  */
 void
@@ -316,8 +316,8 @@ rtcfg_enableNode(int no_id)
 }
 
 
-/* ---------- 
- * slon_disableNode 
+/* ----------
+ * slon_disableNode
  * ----------
  */
 void
@@ -354,8 +354,8 @@ rtcfg_disableNode(int no_id)
 }
 
 
-/* ---------- 
- * rtcfg_findNode 
+/* ----------
+ * rtcfg_findNode
  * ----------
  */
 SlonNode *
@@ -373,8 +373,8 @@ rtcfg_findNode(int no_id)
 }
 
 
-/* ---------- 
- * rtcfg_storePath 
+/* ----------
+ * rtcfg_storePath
  * ----------
  */
 void
@@ -420,8 +420,8 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 }
 
 
-/* ---------- 
- * rtcfg_dropPath 
+/* ----------
+ * rtcfg_dropPath
  * ----------
  */
 void
@@ -477,8 +477,8 @@ rtcfg_dropPath(int pa_server)
 }
 
 
-/* ---------- 
- * rtcfg_storeListen 
+/* ----------
+ * rtcfg_storeListen
  * ----------
  */
 void
@@ -526,8 +526,8 @@ rtcfg_reloadListen(PGconn *db)
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
-		int			li_origin = (int)strtol(PQgetvalue(res, i, 0), NULL, 10);
-		int			li_provider = (int)strtol(PQgetvalue(res, i, 1), NULL, 10);
+		int			li_origin = (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int			li_provider = (int) strtol(PQgetvalue(res, i, 1), NULL, 10);
 
 		rtcfg_storeListen(li_origin, li_provider);
 	}
@@ -542,8 +542,8 @@ rtcfg_reloadListen(PGconn *db)
 }
 
 
-/* ---------- 
- * rtcfg_storeListen 
+/* ----------
+ * rtcfg_storeListen
  * ----------
  */
 void
@@ -608,8 +608,8 @@ rtcfg_storeListen(int li_origin, int li_provider)
 }
 
 
-/* ---------- 
- * rtcfg_dropListen 
+/* ----------
+ * rtcfg_dropListen
  * ----------
  */
 void
@@ -667,8 +667,8 @@ rtcfg_dropListen(int li_origin, int li_provider)
 }
 
 
-/* ---------- 
- * rtcfg_storeSet 
+/* ----------
+ * rtcfg_storeSet
  * ----------
  */
 void
@@ -734,8 +734,8 @@ rtcfg_storeSet(int set_id, int set_origin, char *set_comment)
 }
 
 
-/* ---------- 
- * rtcfg_dropSet 
+/* ----------
+ * rtcfg_dropSet
  * ----------
  */
 void
@@ -772,8 +772,8 @@ rtcfg_dropSet(int set_id)
 	rtcfg_unlock();
 }
 
-/* ---------- 
- * rtcfg_moveSet 
+/* ----------
+ * rtcfg_moveSet
  * ----------
  */
 void
@@ -824,8 +824,8 @@ rtcfg_moveSet(int set_id, int old_origin, int new_origin, int sub_provider)
 }
 
 
-/* ---------- 
- * rtcfg_storeSubscribe 
+/* ----------
+ * rtcfg_storeSubscribe
  * ----------
  */
 void
@@ -873,8 +873,8 @@ rtcfg_storeSubscribe(int sub_set, int sub_provider, char *sub_forward)
 }
 
 
-/* ---------- 
- * rtcfg_enableSubscription 
+/* ----------
+ * rtcfg_enableSubscription
  * ----------
  */
 void
@@ -919,8 +919,8 @@ rtcfg_enableSubscription(int sub_set, int sub_provider, char *sub_forward)
 }
 
 
-/* ---------- 
- * rtcfg_unsubscribeSet 
+/* ----------
+ * rtcfg_unsubscribeSet
  * ----------
  */
 void
@@ -964,8 +964,8 @@ rtcfg_unsubscribeSet(int sub_set)
 }
 
 
-/* ---------- 
- * rtcfg_startStopNodeThread 
+/* ----------
+ * rtcfg_startStopNodeThread
  * ----------
  */
 static void
@@ -985,7 +985,7 @@ rtcfg_startStopNodeThread(SlonNode * node)
 		{
 			case SLON_TSTAT_NONE:
 				if (pthread_create(&(node->worker_thread), NULL,
-								   remoteWorkerThread_main, (void *)node) < 0)
+								 remoteWorkerThread_main, (void *) node) < 0)
 				{
 					slon_log(SLON_FATAL,
 							 "startStopNodeThread: cannot create "
@@ -1039,7 +1039,7 @@ rtcfg_startStopNodeThread(SlonNode * node)
 			case SLON_TSTAT_NONE:
 				node->listen_status = SLON_TSTAT_RUNNING;
 				if (pthread_create(&(node->listen_thread), NULL,
-								   remoteListenThread_main, (void *)node) < 0)
+								 remoteListenThread_main, (void *) node) < 0)
 				{
 					slon_log(SLON_FATAL,
 							 "startStopNodeThread: cannot create "
@@ -1110,8 +1110,8 @@ rtcfg_startStopNodeThread(SlonNode * node)
 }
 
 
-/* ---------- 
- * rtcfg_needActivate 
+/* ----------
+ * rtcfg_needActivate
  * ----------
  */
 void
@@ -1130,8 +1130,8 @@ rtcfg_needActivate(int no_id)
 }
 
 
-/* ---------- 
- * rtcfg_doActivate 
+/* ----------
+ * rtcfg_doActivate
  * ----------
  */
 void
@@ -1148,8 +1148,8 @@ rtcfg_doActivate(void)
 }
 
 
-/* ---------- 
- * rtcfg_joinAllRemoteThreads 
+/* ----------
+ * rtcfg_joinAllRemoteThreads
  * ----------
  */
 void
@@ -1207,8 +1207,8 @@ rtcfg_joinAllRemoteThreads(void)
 }
 
 
-/* ---------- 
- * rtcfg_seq_bump 
+/* ----------
+ * rtcfg_seq_bump
  * ----------
  */
 void
@@ -1220,8 +1220,8 @@ rtcfg_seq_bump(void)
 }
 
 
-/* ---------- 
- * rtcfg_seq_get 
+/* ----------
+ * rtcfg_seq_get
  * ----------
  */
 int64

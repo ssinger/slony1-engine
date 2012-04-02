@@ -22,7 +22,7 @@ void	   *get_config_option(const char *name);
 static double real_placeholder;
 
 void		dump_configuration(void);
-void build_conf_variables(void);
+void		build_conf_variables(void);
 
 
 
@@ -145,51 +145,51 @@ static struct config_int ConfigureNamesInt[] =
 		12000
 	},
 	{
-		{	  
-			(const char *) "explain_interval",		/* conf name */
-			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* short desc */
-			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),		/* long desc */
+		{
+			(const char *) "explain_interval",	/* conf name */
+			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),	/* short desc */
+			gettext_noop("Interval in seconds in which the remote worker will report an explain of the log selection query"),	/* long desc */
 			SLON_C_INT			/* config type */
-	    },
-		&explain_interval, /* var name */
+		},
+		&explain_interval,		/* var name */
 		0,						/* default val (never) */
 		0,						/* min val */
 		86400					/* max val (1 day) */
 	},
+	{
 		{
-		{
-			(const char*) "tcp_keepalive_idle",
+			(const char *) "tcp_keepalive_idle",
 			gettext_noop("The number of seconds after which a TCP keep alive "
 						 "is sent across an idle connection. tcp_keepalive "
 						 "must be enabled for this to take effect.  Default "
 						 "of 0 means use operating system default"
-						 "use default" ),
+						 "use default"),
 			NULL,
 			SLON_C_INT,
 		},
 		&keep_alive_idle,
-		0, /*default val */
-		0, /* min val */
-		1073741824	/*max val*/
+		0,						/* default val */
+		0,						/* min val */
+		1073741824				/* max val */
 	},
 	{
 		{
-			(const char*) "tcp_keepalive_interval",
+			(const char *) "tcp_keepalive_interval",
 			gettext_noop("The number of seconds in between TCP keep alive "
 						 "requests. tcp_keepalive "
 						 "must be enabled. Default value of 0 means use "
-                         "operating system defaut"),
+						 "operating system defaut"),
 			NULL,
 			SLON_C_INT,
 		},
 		&keep_alive_interval,
 		0,
-		0, /* min val */
-		1073741824	/*max val*/
+		0,						/* min val */
+		1073741824				/* max val */
 	},
 	{
 		{
-			(const char*) "tcp_keepalive_count",
+			(const char *) "tcp_keepalive_count",
 			gettext_noop("The number of keep alive requests to the server "
 						 "that can be lost before the connection is declared "
 						 "dead. tcp_keep_alive must be on. Default value "
@@ -199,8 +199,8 @@ static struct config_int ConfigureNamesInt[] =
 		},
 		&keep_alive_count,
 		0,
-		0, /* min val */
-		1073741824	/*max val*/
+		0,						/* min val */
+		1073741824				/* max val */
 	},
 	{
 		{
@@ -240,10 +240,10 @@ static struct config_bool ConfigureNamesBool[] =
 		true
 	},
 
-	{  
-	
+	{
+
 		{
-			(const char*) "tcp_keepalive",
+			(const char *) "tcp_keepalive",
 			gettext_noop("Enables sending of TCP KEEP alive between slon "
 						 "and the PostgreSQL backends. "),
 			NULL,
@@ -254,7 +254,7 @@ static struct config_bool ConfigureNamesBool[] =
 	},
 	{
 		{
-			(const char*) "monitor_threads",
+			(const char *) "monitor_threads",
 			gettext_noop("Should the monitoring thread be run?"),
 			NULL,
 			SLON_C_BOOL,
@@ -438,7 +438,7 @@ dump_configuration(void)
 	for (i = 0; ConfigureNamesString[i].gen.name; i++)
 	{
 		slon_log(SLON_CONFIG, "main: String option %s = %s\n",
-				 ConfigureNamesString[i].gen.name, ((*ConfigureNamesString[i].variable)==NULL)?"[NULL]":*(ConfigureNamesString[i].variable));
+				 ConfigureNamesString[i].gen.name, ((*ConfigureNamesString[i].variable) == NULL) ? "[NULL]" : *(ConfigureNamesString[i].variable));
 	}
 
 
@@ -528,7 +528,7 @@ build_conf_variables(void)
 
 #ifdef NEED_ADD_CONF_VARIABLE
 static bool
-add_conf_variable(struct config_generic *var, int elevel)
+add_conf_variable(struct config_generic * var, int elevel)
 {
 	if (num_conf_variables + 1 >= size_conf_variables)
 	{

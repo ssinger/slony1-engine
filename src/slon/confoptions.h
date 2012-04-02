@@ -1,4 +1,4 @@
-/*  */
+/*	*/
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 
@@ -25,10 +25,10 @@ extern int	desired_sync_time;
 
 extern int	quit_sync_provider;
 extern int	quit_sync_finalsync;
-extern bool  keep_alive;
-extern int  keep_alive_idle;
-extern int  keep_alive_interval;
-extern int  keep_alive_count;
+extern bool keep_alive;
+extern int	keep_alive_idle;
+extern int	keep_alive_interval;
+extern int	keep_alive_count;
 
 extern int	apply_cache_size;
 

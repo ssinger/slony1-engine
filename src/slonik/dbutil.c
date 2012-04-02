@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -38,7 +38,7 @@
 int			db_notice_silent = false;
 SlonikStmt *db_notice_stmt = NULL;
 
-extern int current_try_level;
+extern int	current_try_level;
 
 /*
  * Local functions
@@ -119,7 +119,7 @@ int
 db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
 	PGconn	   *dbconn;
-	SlonDString	query;
+	SlonDString query;
 	PGresult   *res;
 
 	db_notice_stmt = stmt;
@@ -162,8 +162,8 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	 * ----
 	 */
 	dstring_init(&query);
-	slon_mkquery(&query,"SET datestyle TO 'ISO'; "
-						"SET session_replication_role TO local; ");
+	slon_mkquery(&query, "SET datestyle TO 'ISO'; "
+				 "SET session_replication_role TO local; ");
 
 
 	adminfo->dbconn = dbconn;
@@ -176,29 +176,31 @@ db_connect(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	dstring_free(&query);
 
 	dstring_init(&query);
-	slon_mkquery(&query,"select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
-	res = db_exec_select (stmt, adminfo, &query);
+	slon_mkquery(&query, "select 1 from pg_catalog.pg_settings where name= 'application_name'; ");
+	res = db_exec_select(stmt, adminfo, &query);
 
 	if (res == NULL)
-			return -1;
+		return -1;
 
-	dstring_free(&query); 
+	dstring_free(&query);
 
 	if (PQntuples(res) == 0)
 	{
-			/* Unable to set application_name on this version of PostgreSQL */
-			PQclear(res);
-	} else {
-			PQclear(res);
-			dstring_init(&query);
-			slon_mkquery(&query,"SET application_name TO 'slonik'; ");
-			adminfo->dbconn = dbconn;
-			if (db_exec_command(stmt, adminfo, &query) < 0)
-			{
-					printf("Unable to set application name ?!?\n");
-					return -1;
-			}
-			dstring_free(&query); 
+		/* Unable to set application_name on this version of PostgreSQL */
+		PQclear(res);
+	}
+	else
+	{
+		PQclear(res);
+		dstring_init(&query);
+		slon_mkquery(&query, "SET application_name TO 'slonik'; ");
+		adminfo->dbconn = dbconn;
+		if (db_exec_command(stmt, adminfo, &query) < 0)
+		{
+			printf("Unable to set application name ?!?\n");
+			return -1;
+		}
+		dstring_free(&query);
 	}
 	/* ----
 	 * Commit the changes to the session settings.
@@ -244,7 +246,7 @@ db_exec_command(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
@@ -281,7 +283,7 @@ db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * quer
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
@@ -319,21 +321,21 @@ db_exec_evcommand(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * quer
  * ----------
  */
 int
-db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo, 
-		SlonDString * query, int nParams, const Oid *paramTypes,
-		const char *const *paramValues, const int *paramLengths,
-		const int *paramFormats, int resultFormat)
+db_exec_evcommand_p(SlonikStmt * stmt, SlonikAdmInfo * adminfo,
+					SlonDString * query, int nParams, const Oid *paramTypes,
+					const char *const * paramValues, const int *paramLengths,
+					const int *paramFormats, int resultFormat)
 {
 	PGresult   *res;
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
 	res = PQexecParams(adminfo->dbconn, dstring_data(query),
-			nParams, paramTypes, paramValues, paramLengths,
-			paramFormats, resultFormat);
+					   nParams, paramTypes, paramValues, paramLengths,
+					   paramFormats, resultFormat);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		fprintf(stderr, "%s:%d: %s %s - %s",
@@ -372,7 +374,7 @@ db_exec_select(SlonikStmt * stmt, SlonikAdmInfo * adminfo, SlonDString * query)
 
 	db_notice_stmt = stmt;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return NULL;
 
 	res = PQexec(adminfo->dbconn, dstring_data(query));
@@ -403,7 +405,7 @@ db_get_nodeid(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	SlonDString query;
 	int			no_id;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -434,13 +436,13 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 {
 	PGresult   *res;
 	SlonDString query;
-	char        versionstr[7];
-	int	    major=0;
-	int	    minor=0;
-	int         patch=0;
-	int         version=0;
+	char		versionstr[7];
+	int			major = 0;
+	int			minor = 0;
+	int			patch = 0;
+	int			version = 0;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -462,7 +464,7 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	}
 	PQclear(res);
 	snprintf(versionstr, 7, "%.2d%.2d%.2d", major, minor, patch);
-	version=atoi(versionstr);
+	version = atoi(versionstr);
 	return version;
 }
 
@@ -491,20 +493,21 @@ db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo, bool suppress_locking)
 		return -1;
 	}
 	PQclear(res);
-	if(current_try_level > 0 && !suppress_locking)
+	if (current_try_level > 0 && !suppress_locking)
 	{
 		/**
 		 * inside of a try block we obtain sl_event_lock
-		 * right away.  This is because if sometime later
+		 * right away.	This is because if sometime later
 		 * in the try block needs sl_event_lock, it will
 		 * be running in the same transaction and will then
 		 * be too late to obtain the lock.
 		 */
 		SlonDString lock_query;
+
 		dstring_init(&lock_query);
 		slon_mkquery(&lock_query, "lock table \"_%s\".sl_event_lock; "
 					 ,stmt->script->clustername);
-		res = PQexec(adminfo->dbconn,dstring_data(&lock_query));
+		res = PQexec(adminfo->dbconn, dstring_data(&lock_query));
 		if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		{
 			printf("%s:%d: lock table \"_%s\".sl_event_lock; - %s",
@@ -513,11 +516,11 @@ db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo, bool suppress_locking)
 				   PQresultErrorMessage(res));
 			PQclear(res);
 			adminfo->have_xact = true;
-			db_rollback_xact(stmt,adminfo);
+			db_rollback_xact(stmt, adminfo);
 			return -1;
 		}
 		PQclear(res);
-		
+
 	}
 
 	adminfo->have_xact = true;
@@ -597,7 +600,7 @@ db_check_namespace(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustername
 	SlonDString query;
 	int			ntuples;
 
-	if (db_begin_xact(stmt, adminfo,false) < 0)
+	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -630,7 +633,7 @@ db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustern
 	SlonDString query;
 	int			ntuples;
 
-	if (db_begin_xact(stmt, adminfo,true) < 0)
+	if (db_begin_xact(stmt, adminfo, true) < 0)
 		return -1;
 
 	dstring_init(&query);
@@ -662,7 +665,7 @@ db_check_requirements(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *clustern
 	/*
 	 * Check loading of slony1_funcs module
 	 */
-	slon_mkquery(&query, "load '$libdir/slony1_funcs.%s'; ",SLONY_I_VERSION_STRING);
+	slon_mkquery(&query, "load '$libdir/slony1_funcs.%s'; ", SLONY_I_VERSION_STRING);
 	if (db_exec_command(stmt, adminfo, &query) < 0)
 	{
 		printf("%s:%d: Error: the extension for the Slony-I C functions "

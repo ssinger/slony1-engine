@@ -6,7 +6,7 @@
  *	Copyright (c) 2003-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -91,69 +91,79 @@ do { \
 /*
  * Parser data structures
  */
-typedef struct AttElem_s {
-	char			   *attname;
-	char			   *attvalue;
-	struct AttElem_s  *next;
-} AttElem;
+typedef struct AttElem_s
+{
+	char	   *attname;
+	char	   *attvalue;
+	struct AttElem_s *next;
+}	AttElem;
 
-typedef struct AttElemList_s {
-	AttElem			   *list_head;
-	AttElem			   *list_tail;
-} AttElemList;
+typedef struct AttElemList_s
+{
+	AttElem    *list_head;
+	AttElem    *list_tail;
+}	AttElemList;
 
-typedef struct InsertStmt_s {
-	char			   *namespace;
-	char			   *tablename;
-	AttElemList		   *attributes;
+typedef struct InsertStmt_s
+{
+	char	   *namespace;
+	char	   *tablename;
+	AttElemList *attributes;
 } InsertStmt;
 
-typedef struct UpdateStmt_s {
-	char			   *namespace;
-	char			   *tablename;
-	AttElemList		   *changes;
-	AttElemList		   *qualification;
+typedef struct UpdateStmt_s
+{
+	char	   *namespace;
+	char	   *tablename;
+	AttElemList *changes;
+	AttElemList *qualification;
 } UpdateStmt;
 
-typedef struct DeleteStmt_s {
-	char			   *namespace;
-	char			   *tablename;
-	int					only;
-	AttElemList		   *qualification;
+typedef struct DeleteStmt_s
+{
+	char	   *namespace;
+	char	   *tablename;
+	int			only;
+	AttElemList *qualification;
 } DeleteStmt;
 
-typedef struct TruncateStmt_s {
-  char					*namespace;
-  char					*tablename;
+typedef struct TruncateStmt_s
+{
+	char	   *namespace;
+	char	   *tablename;
 } TruncateStmt;
 
-typedef struct CopyStmt_s {
-	char			   *namespace;
-	char			   *tablename;
-	AttElemList		   *attributes;
-	char			   *from;
+typedef struct CopyStmt_s
+{
+	char	   *namespace;
+	char	   *tablename;
+	AttElemList *attributes;
+	char	   *from;
 } CopyStmt;
 
-typedef struct RenameObject_s {
-	char			   *old_namespace;
-	char			   *old_name;
-	char			   *new_namespace;
-	char			   *new_name;
+typedef struct RenameObject_s
+{
+	char	   *old_namespace;
+	char	   *old_name;
+	char	   *new_namespace;
+	char	   *new_name;
 	struct RenameObject_s *next;
-} RenameObject;
+}	RenameObject;
 
-typedef struct ProcessingCommand_s {
-	char			   *command;
+typedef struct ProcessingCommand_s
+{
+	char	   *command;
 	struct ProcessingCommand_s *next;
-} ProcessingCommand;
+}	ProcessingCommand;
 
 
-typedef enum {
+typedef enum
+{
 	LOG_DEBUG = 0,
 	LOG_INFO,
 	LOG_WARN,
 	LOG_ERROR
-} log_level;
+}	log_level;
 
 
 #ifndef MSGMAX
@@ -164,46 +174,46 @@ typedef enum {
 /*
  * Globals in slony_logshipper.c
  */
-extern int			parse_errors;
-extern char		   *current_file;
-extern int			opt_quiet;
-extern PGconn	   *dbconn;
-extern bool			logfile_switch_requested;
-extern bool			wait_for_resume;
-extern bool			shutdown_smart_requested;
-extern bool			shutdown_immed_requested;
+extern int	parse_errors;
+extern char *current_file;
+extern int	opt_quiet;
+extern PGconn *dbconn;
+extern bool logfile_switch_requested;
+extern bool wait_for_resume;
+extern bool shutdown_smart_requested;
+extern bool shutdown_immed_requested;
 
-extern char		   *archive_dir;
-extern char		   *destination_dir;
-extern char		   *destination_conninfo;
-extern char		   *logfile_path;
-extern int			max_archives;
-extern char		   *cluster_name;
-extern char		   *namespace;
+extern char *archive_dir;
+extern char *destination_dir;
+extern char *destination_conninfo;
+extern char *logfile_path;
+extern int	max_archives;
+extern char *cluster_name;
+extern char *namespace;
 
-extern RenameObject			   *rename_list;
-extern ProcessingCommand	   *pre_processing_commands;
-extern ProcessingCommand	   *post_processing_commands;
-extern ProcessingCommand	   *error_commands;
+extern RenameObject *rename_list;
+extern ProcessingCommand *pre_processing_commands;
+extern ProcessingCommand *post_processing_commands;
+extern ProcessingCommand *error_commands;
 
 /*
  * Functions in slony_logshipper.c
  */
-extern int		process_check_at_counter(char *at_counter);
-extern int		process_simple_sql(char *sql);
-extern int		process_start_transaction(char *sql);
-extern int		process_end_transaction(char *sql);
-extern int		process_insert(InsertStmt *stmt);
-extern int		process_update(UpdateStmt *stmt);
-extern int		process_delete(DeleteStmt *stmt);
-extern int		process_truncate(TruncateStmt *stmt);
-extern int		process_copy(CopyStmt *stmt);
-extern int		process_copydata(char *line);
-extern int		process_copyend(void);
-extern void		config_add_rename(RenameObject *entry);
-extern int		lookup_rename(char *namespace, char *name,
-							char **use_namespace, char **use_name);
-extern void		errlog(log_level level, char *fmt, ...);
+extern int	process_check_at_counter(char *at_counter);
+extern int	process_simple_sql(char *sql);
+extern int	process_start_transaction(char *sql);
+extern int	process_end_transaction(char *sql);
+extern int	process_insert(InsertStmt *stmt);
+extern int	process_update(UpdateStmt *stmt);
+extern int	process_delete(DeleteStmt *stmt);
+extern int	process_truncate(TruncateStmt *stmt);
+extern int	process_copy(CopyStmt *stmt);
+extern int	process_copydata(char *line);
+extern int	process_copyend(void);
+extern void config_add_rename(RenameObject * entry);
+extern int lookup_rename(char *namespace, char *name,
+			  char **use_namespace, char **use_name);
+extern void errlog(log_level level, char *fmt,...);
 
 /*
  * Functions in dbutil.c
@@ -237,12 +247,12 @@ void		ipc_set_shutdown_immed(void);
 extern int	yylineno;
 extern char *yytext;
 extern FILE *yyin;
-extern char	yychunk[];
+extern char yychunk[];
 
 extern void scan_new_input_file(FILE *in);
 extern void scan_push_string(char *str);
 extern int	scan_yyinput(void);
-extern void	scan_copy_start(void);
+extern void scan_copy_start(void);
 
 extern void parse_error(const char *str);
 
