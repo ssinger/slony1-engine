@@ -4412,9 +4412,10 @@ sync_event(SlonNode *node, SlonConn *local_conn,
 		wd->repldata_head = NULL;
 		wd->repldata_tail = NULL;
 		pthread_mutex_unlock(&(wd->workdata_lock));
-
+		
 		for (wgline = lines_head; wgline; wgline = wgline->next)
 		{
+			dstring_terminate(&wgline->data);
 			/*
 			 * Got a line ... process content
 			 */
