@@ -16,24 +16,28 @@ ExecuteScript.prototype.constructor = ExecuteScript;
 
 ExecuteScript.prototype.runTest = function() {
 
+	this.coordinator.log("ExecuteScript.prototype.runTest - begin");
 	this.testResults.newGroup("Execute Script");
 	this.setupReplication();
 
 	/**
 	 * Start the slons.
 	 */
+	this.coordinator.log("ExecuteScript.prototype.runTest - start slons");
 	var slonArray = [];
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		slonArray[idx - 1] = this.coordinator.createSlonLauncher('db' + idx);
 		slonArray[idx - 1].run();
 	}
 
+	this.coordinator.log("ExecuteScript.prototype.runTest - add tables");
 	/**
 	 * Add some tables to replication.
 	 * 
 	 */
 	this.addTables();
 
+	this.coordinator.log("ExecuteScript.prototype.runTest - subscribe first set");
 	/**
 	 * Subscribe the first node.
 	 */
@@ -42,6 +46,7 @@ ExecuteScript.prototype.runTest = function() {
 
 	this.testAddDropColumn(1, 1, false);
 
+	this.coordinator.log("ExecuteScript.prototype.runTest - subscribe first set");
 	/**
 	 * Now create a second replication set.
 	 * 
@@ -58,6 +63,7 @@ ExecuteScript.prototype.runTest = function() {
 	 */
 	this.subscribeSet(2, 2,3, [ 4, 5 ]);
 
+	this.coordinator.log("ExecuteScript.prototype.runTest - move set to node 1");
 	/**
 	 * Move the set to node 1. We want to do this for the next test.
 	 */
@@ -105,7 +111,7 @@ ExecuteScript.prototype.runTest = function() {
 	 * Now we generate READ only loads on all nodes.
 	 * We then start doing execute scripts. 
 	 */
-	this.coordinator.log('starting execute script with read queries on all nodes');
+	this.coordinator.log("ExecuteScript.prototype.runTest - starting execute script with read queries on all nodes");
 	var readLoad=[];
 	for(var idx=0; idx < this.getNodeCount(); idx++) {
 		readLoad[idx] = this.startDataChecks(idx+1);		
@@ -133,6 +139,7 @@ ExecuteScript.prototype.runTest = function() {
 		slonArray[idx - 1].stop();
 		this.coordinator.join(slonArray[idx - 1]);		
 	}
+	this.coordinator.log("ExecuteScript.prototype.runTest - complete");
 
 }
 
@@ -160,12 +167,13 @@ ExecuteScript.prototype.validateDdl = function(dbname) {
 }
 ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 		expectFailure) {
-	this.coordinator.log('testAddDropColumn');
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - begin");
 	/**
 	 * start up some load.
 	 */
 	var load = this.generateLoad();
 
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - add column to orders");
 	/**
 	 * Now add a column to orders. We will do this via EXECUTE SCRIPT.
 	 */
@@ -176,7 +184,9 @@ ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 	fileWriter
 			.write('ALTER TABLE disorder.do_order ADD COLUMN testcolumn int4 default 7;');
 	fileWriter.close();
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=' + setid + ', FILENAME=\''
+        var slonikScript = 'echo \'ExecuteScript.prototype.testAddDropColumn\';\n';
+    
+	slonikScript += 'EXECUTE SCRIPT( SET ID=' + setid + ', FILENAME=\''
 			+ scriptFile.getAbsolutePath() + '\' , EVENT NODE=' + eventNode
 			+ ' );\n' + 'SYNC(id=' + eventNode + ');\n'
 			+ 'wait for event(origin=' + eventNode
@@ -212,14 +222,18 @@ ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 		return;
 	}
 
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - terminate load");
 	load.stop();
 	this.coordinator.join(load);
 
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - synchronize");
 	this.slonikSync(1, 1);
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - compare databases");
 	this.compareDb('db1', 'db2');
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
 
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - execute ONLY ON");
 	// Now execute ONLY ON.
 	// We DROP the column, on the master first then moving out.
 	load = this.generateLoad();
@@ -254,18 +268,19 @@ ExecuteScript.prototype.testAddDropColumn = function(setid, eventNode,
 	this.compareDb('db1', 'db3');
 	this.compareDb('db1', 'db4');
 	
-
-	
+	this.coordinator.log("ExecuteScript.prototype.testAddDropColumn - complete");
 }
 
 ExecuteScript.prototype.createAndReplicateTestTable=function() {
+	this.coordinator.log("ExecuteScript.prototype.createAndReplicateTestTable - begin");
 	var scriptFile = java.io.File.createTempFile('executeScript', '.sql');
 	scriptFile.deleteOnExit();
 	fileWriter = new java.io.FileWriter(scriptFile);
 	fileWriter
 			.write('CREATE TABLE disorder.test_transient(id serial,data text, primary key(id));');
 	fileWriter.close();
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=1' + ', FILENAME=\''
+        var slonikScript = 'echo \'ExecuteScript.prototype.createAndReplicateTestTable\';\n';
+	slonikScript += 'EXECUTE SCRIPT( SET ID=1' + ', FILENAME=\''
 			+ scriptFile.getAbsolutePath() + '\' , EVENT NODE=1 );\n'
 			+ 'SYNC(id=1);\n'
 			+ 'wait for event(origin=1, confirmed=all, wait on=1);\n'
@@ -286,9 +301,11 @@ ExecuteScript.prototype.createAndReplicateTestTable=function() {
 	// Explicitly leave node 2 out of this.
 	this.subscribeSet(3,1, 1, [ 3 ]);
 	this.subscribeSet(3,1, 3, [ 4, 5 ]);
+	this.coordinator.log("ExecuteScript.prototype.createAndReplicateTestTable - complete");
 }
 
 ExecuteScript.prototype.createAddTestTable = function() {
+	this.coordinator.log("ExecuteScript.prototype.createAddTestTable - begin");
 	this.coordinator.log('createAddTestTable');
 	this.createAndReplicateTestTable();
 	
@@ -320,7 +337,7 @@ ExecuteScript.prototype.createAddTestTable = function() {
 	//this.coordinator.join(slonik);
 	//this.testResults.assertCheck('drop removed table worked okay',slonik.getReturnCode(),0);
 	this.moveSet(3, 1, 3);
-
+	this.coordinator.log("ExecuteScript.prototype.createAddTestTable - complete");
 }
 
 /**
@@ -336,28 +353,31 @@ ExecuteScript.prototype.createAddTestTable = function() {
  * 
  */
 ExecuteScript.prototype.testDDLFailure = function() {
-	this.coordinator.log("entering testDDL failure");
+	this.coordinator.log("ExecuteScript.prototype.testDDLFailure - begin");
 	var scriptFile = java.io.File.createTempFile('executeScript', '.sql');
 	scriptFile.deleteOnExit();
 	fileWriter = new java.io.FileWriter(scriptFile);
-	fileWriter
-			.write('CREATE TABLE disorder.test_transient(id serial,data text, primary key(id));');
+	fileWriter.write('CREATE TABLE disorder.test_transient(id serial,data text, primary key(id));');
 	fileWriter.close();
 	
 	var connection = this.coordinator.createJdbcConnection('db2');
 	var statement = connection.createStatement();
 	statement.execute('CREATE TABLE disorder.test_transient(id int4, data text,primary key(id));');
 	
+	this.coordinator.log("ExecuteScript.prototype.testDDLFailure - failure expected on node 2");
 	/**
 	 * First execute the script against node 2, it should fail.
 	 */
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=2' + ', FILENAME=\''
+        var slonikScript = 'echo \'ExecuteScript.prototype.testDDLFailure\';\n';
+	slonikScript += 'EXECUTE SCRIPT( SET ID=2' + ', FILENAME=\''
 			+ scriptFile.getAbsolutePath() + '\' , EVENT NODE=2 );\n';
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonik = this.coordinator.createSlonik('slonik, ddlFailure',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('ddl failed as expected',slonik.getReturnCode(),255);
+
+	this.coordinator.log("ExecuteScript.prototype.testDDLFailure - failure expected on event node");
 	/**
 	 *  Now try it against an event node that it should succeed.
 	 */
@@ -368,6 +388,7 @@ ExecuteScript.prototype.testDDLFailure = function() {
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('ddl accepted on node 1',slonik.getReturnCode(),0);
 	
+	this.coordinator.log("ExecuteScript.prototype.testDDLFailure - paused replication to node 2");
 	/**
 	 * Replication to node 2 should now be 'paused', 
 	 */
@@ -375,6 +396,8 @@ ExecuteScript.prototype.testDDLFailure = function() {
 	var lag = this.measureLag(1,2);
 	this.coordinator.log('we expect lag, we measure it as ' + lag);
 	this.testResults.assertCheck('node is lagged', lag >= 10,true);
+
+	this.coordinator.log("ExecuteScript.prototype.testDDLFailure - lag analysis");
 	/**
 	 * Allow the DDL to work on node 2. 
 	 */
@@ -388,7 +411,7 @@ ExecuteScript.prototype.testDDLFailure = function() {
 	
 	statement.close();
 	connection.close();
-	
+	this.coordinator.log("ExecuteScript.prototype.testDDLFailure - complete");
 }
 
 /**
@@ -399,13 +422,13 @@ ExecuteScript.prototype.testDDLFailure = function() {
  * 
  */
 ExecuteScript.prototype.dropTestTable=function(node_id,set_id,removeFromReplication) {
-	this.coordinator.log('dropTestTable ' + node_id + ',' + set_id);
+	this.coordinator.log('ExecuteScript.prototype.dropTestTable ' + node_id + ',' + set_id);
 	var slonikPreamble = this.getSlonikPreamble();
 	var scriptFile_drop = java.io.File.createTempFile('executeScript', '.sql');
 	var fileWriter = new java.io.FileWriter(scriptFile_drop);
 	fileWriter.write('DROP TABLE disorder.test_transient;');
 	fileWriter.close();
-	var slonikScript ='';
+	var slonikScript ='echo \'ExecuteScript.prototype.dropTestTable\';\n';
 	if(removeFromReplication) {
 		slonikScript+='set drop table(id=' + (this.tableIdCounter-1) + ',origin=' + node_id + ');\n';
 	}
@@ -420,15 +443,19 @@ ExecuteScript.prototype.dropTestTable=function(node_id,set_id,removeFromReplicat
 	this.testResults.assertCheck('slonik executed drop table okay', slonik
 			.getReturnCode(), 0);
 
+	this.coordinator.log('ExecuteScript.prototype.dropTestTable ' + node_id + ',' + set_id+ " complete");
 }
 ExecuteScript.prototype.dropSet3 = function(set_origin) {
+        this.coordinator.log('ExecuteScript.prototype.dropSet3 ' + set_origin + " - begin");
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript = 'drop set (id=3,origin=' + set_origin + ');'
+	var slonikScript ='echo \'ExecuteScript.prototype.dropSet3\';\n';
+	slonikScript =+ 'drop set (id=3,origin=' + set_origin + ');'
 		+ 'wait for event(origin=' + set_origin + ', wait on=' + set_origin + ', confirmed=all);\n';
 	var slonik=this.coordinator.createSlonik('DROP SET',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('drop set 3 worked as expected',slonik.getReturnCode(),0);
+        this.coordinator.log('ExecuteScript.prototype.dropSet3 ' + set_origin + " - complete");
 }
 
 
@@ -439,13 +466,14 @@ ExecuteScript.prototype.dropSet3 = function(set_origin) {
  * 
  */
 ExecuteScript.prototype.performInsert=function(node_id) {
-	this.coordinator.log("performInsert on node " + node_id);
+	this.coordinator.log("ExecuteScript.prototype.performInsert on node " + node_id + " - begin");
 	var slonikPreamble = this.getSlonikPreamble();
 	var scriptFile = java.io.File.createTempFile('executeScript', '.sql');
 	var fileWriter = new java.io.FileWriter(scriptFile);
 	fileWriter.write('INSERT INTO disorder.do_customer(c_name) VALUES (disorder.digsyl(' + new java.util.Date().getTime() +',16));');
 	fileWriter.close();
-	var slonikScript = 'EXECUTE SCRIPT( SET ID=1'  +  ', FILENAME=\''
+	var slonikScript = 'echo \'ExecuteScript.prototype.performInsert\';\n';
+	slonikScript += 'EXECUTE SCRIPT( SET ID=1'  +  ', FILENAME=\''
 			+ scriptFile + '\' , EVENT NODE=' + node_id +' );\n'
 			+ 'SYNC(id=' + node_id + ');\n'
 			+ 'wait for event(origin=' + node_id + ', confirmed=all, wait on=' + node_id+');\n';
@@ -455,6 +483,7 @@ ExecuteScript.prototype.performInsert=function(node_id) {
 	// Generate some WRITE load.
 	// We want the EXECUTE script to go in sequence.
 	
+	this.coordinator.log("ExecuteScript.prototype.performInsert on node " + node_id + " - imposing load");
 
 	var disorderClientJs = this.coordinator.readFile('disorder/client/disorder.js');
 	disorderClientJs+= this.coordinator.readFile('disorder/client/run_fixed_load.js');
@@ -463,18 +492,19 @@ ExecuteScript.prototype.performInsert=function(node_id) {
 	
 	
 	slonik.run();
+	this.coordinator.log("ExecuteScript.prototype.performInsert on node " + node_id + " - performing drop table");
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('slonik executed drop table okay', slonik
 			.getReturnCode(), 0);
 
 	load.stop();
 	this.coordinator.join(load);
+	this.coordinator.log("ExecuteScript.prototype.performInsert on node " + node_id + " - SYNC, compare DBs");
 	this.slonikSync(1,1);
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db3');
 	this.compareDb('db1','db4');
 	this.compareDb('db1','db5');
-	
 		
-		
+	this.coordinator.log("ExecuteScript.prototype.performInsert on node " + node_id + " - complete");
 }

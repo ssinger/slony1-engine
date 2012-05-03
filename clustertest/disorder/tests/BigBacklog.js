@@ -16,6 +16,7 @@ BigBacklogTest.prototype.constructor = BigBacklogTest;
 
 BigBacklogTest.prototype.runTest = function() {
 	
+	this.coordinator.log("BigBacklogTest.prototype.runTest - start");
 	this.testResults.newGroup("Big Backlog ");
 	this.setupReplication();
 	
@@ -113,9 +114,11 @@ BigBacklogTest.prototype.runTest = function() {
 	
 	this.compareDb('db4','db6');
 	this.dropDb(['db6']);
+	this.coordinator.log("BigBacklogTest.prototype.runTest - complete");
 }
 
 BigBacklogTest.prototype.startSlons=function() {
+	this.coordinator.log("BigBacklogTest.prototype.startSlons - begin");
 	
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {
 		
@@ -128,4 +131,5 @@ BigBacklogTest.prototype.startSlons=function() {
 		}
 		this.slonArray[idx-1].run();
 	}
+	this.coordinator.log("BigBacklogTest.prototype.startSlons - complete");
 }

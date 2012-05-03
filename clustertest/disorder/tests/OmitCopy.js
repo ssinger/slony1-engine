@@ -25,6 +25,7 @@ OmitCopy.prototype = new BasicTest();
 OmitCopy.prototype.constructor = OmitCopy;
 
 OmitCopy.prototype.runTest = function() {
+        this.coordinator.log("OmitCopy.prototype.runTest - begin");
 	
 	this.testResults.newGroup("Omit Copy");
 	this.setupReplication();
@@ -112,6 +113,7 @@ OmitCopy.prototype.runTest = function() {
 		slonArray[idx-1].stop();
 		this.coordinator.join(slonArray[idx-1]);
 	}
+        this.coordinator.log("OmitCopy.prototype.runTest - complete");
 }
 
 OmitCopy.prototype.subscribeOmitCopy=function(origin,provider,subscriberNodeId,outFile) {
@@ -133,7 +135,8 @@ OmitCopy.prototype.subscribeOmitCopy=function(origin,provider,subscriberNodeId,o
 	this.testResults.assertCheck('history rows updated', updateCnt > 0,true);
 	
 	var slonikPreamble = this.getSlonikPreamble();
-	var slonikScript="subscribe set(id=1, provider=" + provider+", receiver=" + subscriberNodeId+", omit copy=true, forward=yes);\n";
+        var slonikScript = 'echo \'OmitCopy.prototype.subscribeOmitCopy\';\n';
+	slonikScript += "subscribe set(id=1, provider=" + provider+", receiver=" + subscriberNodeId+", omit copy=true, forward=yes);\n";
 	slonikScript += ' wait for event (origin='+origin+', wait on='+provider+',confirmed=all);\n';
 	
 	var slonik=this.coordinator.createSlonik('omit copy subscribe',slonikPreamble,slonikScript);

@@ -16,6 +16,7 @@ SlonKilling.prototype = new BasicTest();
 SlonKilling.prototype.constructor = SlonKilling;
 
 SlonKilling.prototype.runTest = function() {
+        this.coordinator.log("SlonKilling.prototype.runTest - begin");
 	
 	this.testResults.newGroup("Slon killing");
 	for(var idx=0; idx < 10; idx++) {
@@ -23,27 +24,31 @@ SlonKilling.prototype.runTest = function() {
 		this.testActions();
 		this.teardownSlony();
 	}
+        this.coordinator.log("SlonKilling.prototype.runTest - compare db1,2,3,4,5");
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db3');
 	this.compareDb('db1','db4');
 	this.compareDb('db1','db5');
 	
-	
-	
+        this.coordinator.log("SlonKilling.prototype.runTest - complete");
 }
+
 SlonKilling.prototype.testActions=function() {
+        this.coordinator.log("SlonKilling.prototype.testActions - begin");
 	
 	this.setupReplication();
 	this.addTables();
 	/**
 	 * Start the slons.
 	 */
+        this.coordinator.log("SlonKilling.prototype.testActions - start slons");
 	var slonArray=[];
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {
 		slonArray[idx-1] = this.coordinator.createSlonLauncher('db' + idx);
 		slonArray[idx-1].run();
 	}
 	
+        this.coordinator.log("SlonKilling.prototype.testActions - subscribe sets");
 	//Now subscribe the sets in the background
 	this.addCompletePaths();
 	var slonikList = this.subscribeSetBackground(1,1,1,[2,3,4,5]);
@@ -53,7 +58,7 @@ SlonKilling.prototype.testActions=function() {
 	}
 	var random = new java.util.Random();
 	var sleepTime = random.nextInt(60);
-	this.coordinator.log('sleeping for ' + sleepTime + ' seconds before killing a slon');
+        this.coordinator.log("SlonKilling.prototype.testActions - sleeping for " + sleepTime + ' seconds before killing a slon');
 	java.lang.Thread.sleep(sleepTime);
 	var slonToKill = random.nextInt(slonArray.length-1);
 	slonArray[slonToKill].stop();
@@ -68,6 +73,7 @@ SlonKilling.prototype.testActions=function() {
 	}
 	load.stop();
 	this.coordinator.join(load);
+        this.coordinator.log("SlonKilling.prototype.testActions - sync");
 	this.slonikSync(1,1,60*5);
 	
 	for(var idx=1; idx <= this.getNodeCount(); idx++) {		
@@ -75,5 +81,5 @@ SlonKilling.prototype.testActions=function() {
 		this.coordinator.join(slonArray[idx-1]);
 	}
 	
-	
+        this.coordinator.log("SlonKilling.prototype.testActions - complete");
 }

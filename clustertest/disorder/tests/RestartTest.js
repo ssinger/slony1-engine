@@ -22,6 +22,7 @@ RestartTest.prototype = new BasicTest();
 RestartTest.prototype.constructor = RestartTest;
 
 RestartTest.prototype.runTest = function() {
+        this.coordinator.log("RestartTest.prototype.runTest - begin");
 	this.testResults.newGroup("Restart test");	
 	this.setupReplication();
 	
@@ -66,8 +67,7 @@ RestartTest.prototype.runTest = function() {
 	}
 	
 	
-	
-	
+        this.coordinator.log("RestartTest.prototype.runTest - complete");
 }
 
 RestartTest.prototype.notifyRestart=function(node_id) {
