@@ -22,6 +22,7 @@
 #ifndef WIN32
 #include <unistd.h>
 #include <sys/time.h>
+#include <fcntl.h>
 #endif
 
 
@@ -4858,6 +4859,7 @@ archive_open(SlonNode * node, char *seqbuf, PGconn *dbconn)
 	PGresult   *res;
 	int			i;
 	int			rc;
+	int			fd;
 
 	if (!archive_dir)
 		return 0;
@@ -4942,7 +4944,15 @@ archive_open(SlonNode * node, char *seqbuf, PGconn *dbconn)
 	strcat(node->archive_name, ".sql");
 	strcpy(node->archive_temp, node->archive_name);
 	strcat(node->archive_temp, ".tmp");
-	node->archive_fp = fopen(node->archive_temp, "w");
+	fd = open(node->archive_temp, O_WRONLY | O_CREAT | O_EXCL, 0666);
+	if (fd < 0)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
+				 "Cannot open archive file %s - %s\n",
+				 node->no_id, node->archive_temp, strerror(errno));
+		return -1;
+	}
+	node->archive_fp = fdopen(fd, "w");
 	if (node->archive_fp == NULL)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d: "
