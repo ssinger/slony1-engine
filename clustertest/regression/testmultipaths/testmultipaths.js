@@ -51,14 +51,28 @@ function subscribe_set() {
 		+"wait for event (origin=1, confirmed=all, wait on=1);\n"
 		+"subscribe set ( id = 2, provider = 1, receiver = 2, forward = yes);\n"
 		+"sync(id=1);\n"
-		+"wait for event (origin=1, confirmed=all, wait on=1);\n"
-		+"subscribe set ( id = 2, provider = 2, receiver = 3, forward = no);\n"
-		+"sync(id=1);\n"
-		+"wait for event (origin=1, confirmed=all, wait on=1);\n";
+		+"wait for event (origin=1, confirmed=all, wait on=1);\n";	
 	return script;
 }
 
-
+function test_invalid_config() {
+	var preamble = get_slonik_preamble();
+	var script ="subscribe set ( id = 2, provider = 2, receiver = 3, forward = no);\n"
+		+"sync(id=1);\n"
+		+"wait for event (origin=1, confirmed=all, wait on=1);\n";
+	var slonik = coordinator.createSlonik('test invalid path',preamble,script);
+	slonik.run();
+	coordinator.join(slonik);
+	results.assertCheck('slonik did not add invalid path',slonik.getReturnCode()!=0,true);
+	//Now subscribe node 3 from 1. We do this so the compare works later
+	script ="subscribe set ( id = 2, provider = 1, receiver = 3, forward = no);\n"
+		+"sync(id=1);\n"
+		+"wait for event (origin=1, confirmed=all, wait on=1);\n";
+	var slonik = coordinator.createSlonik('valid subscribe path',preamble,script);
+	slonik.run();
+	coordinator.join(slonik);
+	results.assertCheck('slonik did not add invalid path',slonik.getReturnCode(),0);
+}
 
 function generate_data(coordinator) {
 	var num_rows = random_number(50,1000);
@@ -98,7 +112,7 @@ function do_test(coordinator) {
 	psql = coordinator.createPsqlCommand('db1',sqlScript);
 	psql.run();
 	coordinator.join(psql);
-	wait_for_sync(coordinator);
+	test_invalid_config();
 	
 	
 	

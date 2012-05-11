@@ -30,7 +30,7 @@ static void stack_init(void);
 static bool stack_pop(SlonState * current);
 static void stack_dump();
 static void entry_dump(int i, SlonState * tos);
-static int initial_stack_size=6;
+static int	initial_stack_size = 6;
 
 /* ----------
  * Global variables
@@ -53,7 +53,8 @@ void *
 monitorThread_main(void *dummy)
 {
 	SlonConn   *conn;
-	SlonDString beginquery, commitquery;
+	SlonDString beginquery,
+				commitquery;
 	SlonDString monquery;
 
 	PGconn	   *dbconn;
@@ -99,11 +100,13 @@ monitorThread_main(void *dummy)
 			slon_log(SLON_ERROR, "monitorThread: exit monitoring thread\n");
 			pthread_exit(NULL);
 			return (void *) 0;
-		} else {
+		}
+		else
+		{
 			PQclear(res);
 			dstring_free(&monquery);
 		}
-		
+
 		monitor_state("local_monitor", 0, (pid_t) conn->conn_pid, "thread main loop", 0, "n/a");
 
 		/*
@@ -130,7 +133,7 @@ monitorThread_main(void *dummy)
 				{
 					slon_log(SLON_ERROR,
 							 "monitorThread: \"%s\" - %s",
-							 dstring_data(&beginquery), PQresultErrorMessage(res));
+					   dstring_data(&beginquery), PQresultErrorMessage(res));
 					PQclear(res);
 					break;
 				}
@@ -207,7 +210,9 @@ monitorThread_main(void *dummy)
 							 PQresultErrorMessage(res));
 					PQclear(res);
 					dstring_free(&monquery);
-				} else {
+				}
+				else
+				{
 					dstring_free(&monquery);
 				}
 
@@ -257,7 +262,7 @@ monitor_state(const char *actor, int node, pid_t conn_pid, /* @null@ */ const ch
 	char	   *ns;
 	pid_t		mypid;
 
-	if (!monitor_threads)   /* Don't collect if this thread is shut off */
+	if (!monitor_threads)		/* Don't collect if this thread is shut off */
 		return;
 
 	mypid = getpid();
@@ -269,7 +274,7 @@ monitor_state(const char *actor, int node, pid_t conn_pid, /* @null@ */ const ch
 	if (stack_size >= stack_maxlength)
 	{
 		/* Need to reallocate stack */
-		if (stack_size > 100) 
+		if (stack_size > 100)
 		{
 			slon_log(SLON_WARN, "monitorThread: stack reallocation - size %d > warning threshold of 100.  Stack perhaps isn't getting processed properly by monitoring thread\n", stack_size);
 		}
@@ -321,13 +326,13 @@ monitor_state(const char *actor, int node, pid_t conn_pid, /* @null@ */ const ch
 	tos->event = event;
 
 /* It might seem somewhat desirable for the database to record
- *  DB-centred timestamps, unfortunately that would only be the
- *  correct time if each thread were responsible for stowing its own
- *  activities in sl_components in the database.  This would multiply
- *  database activity, and the implementation instead passes requests
- *  to a single thread that uses a single DB connection to record
- *  things, with the consequence that timestamps must be captured
- *  based on the system clock of the slon process. */
+ *	DB-centred timestamps, unfortunately that would only be the
+ *	correct time if each thread were responsible for stowing its own
+ *	activities in sl_components in the database.  This would multiply
+ *	database activity, and the implementation instead passes requests
+ *	to a single thread that uses a single DB connection to record
+ *	things, with the consequence that timestamps must be captured
+ *	based on the system clock of the slon process. */
 
 	tos->start_time = time(NULL);
 	if (actor != NULL)
@@ -423,7 +428,7 @@ stack_pop( /* @out@ */ SlonState * qentry)
 		/* entry_dump(stack_size, qentry); */
 		stack_size--;
 		pthread_mutex_unlock(&stack_lock);
-		return  true;
+		return true;
 	}
 }
 

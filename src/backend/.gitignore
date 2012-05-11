@@ -2,3 +2,4 @@ avl_tree.c
 avl_tree.h
 slony1_funcs.o
 slony1_funcs.so
+slony1_funcs.*.so

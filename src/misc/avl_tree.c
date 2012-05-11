@@ -6,7 +6,7 @@
  *	Copyright (c) 2007-2009, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
- *	
+ *
  * ----------------------------------------------------------------------
  */
 
@@ -17,11 +17,11 @@
  * ----
  */
 static AVLnode *avl_makenode(void);
-static void avl_reset_node(AVLnode *node, AVLfreefunc *freefunc);
-static int avl_insertinto(AVLtree *tree, AVLnode **node,
-			   void *cdata, AVLnode **result);
-static void avl_rotate_left(AVLnode **node);
-static void avl_rotate_right(AVLnode **node);
+static void avl_reset_node(AVLnode * node, AVLfreefunc * freefunc);
+static int avl_insertinto(AVLtree * tree, AVLnode ** node,
+			   void *cdata, AVLnode ** result);
+static void avl_rotate_left(AVLnode ** node);
+static void avl_rotate_right(AVLnode ** node);
 
 
 /* ----
@@ -38,7 +38,7 @@ static void avl_rotate_right(AVLnode **node);
  * ----
  */
 void
-avl_init(AVLtree *tree, AVLcompfunc *compfunc, AVLfreefunc *freefunc)
+avl_init(AVLtree * tree, AVLcompfunc * compfunc, AVLfreefunc * freefunc)
 {
 	tree->root = NULL;
 	tree->compfunc = compfunc;
@@ -55,7 +55,7 @@ avl_init(AVLtree *tree, AVLcompfunc *compfunc, AVLfreefunc *freefunc)
  * ----
  */
 void
-avl_reset(AVLtree *tree)
+avl_reset(AVLtree * tree)
 {
 	avl_reset_node(tree->root, tree->freefunc);
 	tree->root = NULL;
@@ -69,7 +69,7 @@ avl_reset(AVLtree *tree)
  * ----
  */
 void
-avl_reset_node(AVLnode *node, AVLfreefunc *freefunc)
+avl_reset_node(AVLnode * node, AVLfreefunc * freefunc)
 {
 	if (node == NULL)
 		return;
@@ -77,8 +77,9 @@ avl_reset_node(AVLnode *node, AVLfreefunc *freefunc)
 	avl_reset_node(node->lnode, freefunc);
 	avl_reset_node(node->rnode, freefunc);
 
-	if (freefunc != NULL)
-		freefunc(node->cdata);
+	if (freefunc !=NULL)
+		freefunc	(node->cdata);
+
 	free(node);
 }
 
@@ -93,7 +94,7 @@ avl_reset_node(AVLnode *node, AVLfreefunc *freefunc)
  * ----
  */
 AVLnode *
-avl_insert(AVLtree *tree, void *cdata)
+avl_insert(AVLtree * tree, void *cdata)
 {
 	AVLnode    *result;
 
@@ -119,7 +120,7 @@ avl_insert(AVLtree *tree, void *cdata)
  * ----
  */
 AVLnode *
-avl_lookup(AVLtree *tree, void *cdata)
+avl_lookup(AVLtree * tree, void *cdata)
 {
 	AVLnode    *node;
 	int			cmp;
@@ -166,7 +167,7 @@ avl_lookup(AVLtree *tree, void *cdata)
  * ----
  */
 int
-avl_delete(AVLtree *tree, void *cdata)
+avl_delete(AVLtree * tree, void *cdata)
 {
 	AVLnode    *node;
 
@@ -185,8 +186,8 @@ avl_delete(AVLtree *tree, void *cdata)
  * ----
  */
 static int
-avl_insertinto(AVLtree *tree, AVLnode **node,
-			   void *cdata, AVLnode **result)
+avl_insertinto(AVLtree * tree, AVLnode ** node,
+			   void *cdata, AVLnode ** result)
 {
 	int			cmp;
 
@@ -302,7 +303,7 @@ avl_insertinto(AVLtree *tree, AVLnode **node,
 		 * deletion, free the user element data now. The caller is supposed to
 		 * replace it with a new element having the the key.
 		 */
-		if ((*node)->deleted && tree->freefunc != NULL)
+		if ((*node)->deleted && tree->freefunc !=NULL)
 		{
 			(tree->freefunc) ((*node)->cdata);
 			(*node)->cdata = NULL;
@@ -339,7 +340,7 @@ avl_makenode(void)
  * ----
  */
 static void
-avl_rotate_left(AVLnode **node)
+avl_rotate_left(AVLnode ** node)
 {
 	AVLnode    *rtmp;
 
@@ -377,7 +378,7 @@ avl_rotate_left(AVLnode **node)
  * ----
  */
 static void
-avl_rotate_right(AVLnode **node)
+avl_rotate_right(AVLnode ** node)
 {
 	AVLnode    *ltmp;
 

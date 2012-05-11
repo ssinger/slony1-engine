@@ -1,4 +1,4 @@
-/*  */
+/*	*/
 #ifndef _CONFOPTIONS_H_
 #define _CONFOPTIONS_H_
 
@@ -18,8 +18,6 @@ extern char *archive_dir;
 extern int	slon_log_level;
 extern int	sync_interval;
 extern int	sync_interval_timeout;
-extern int	sync_max_rowsize;
-extern int	sync_max_largemem;
 extern int	remote_listen_timeout;
 
 extern int	sync_group_maxsize;
@@ -27,10 +25,12 @@ extern int	desired_sync_time;
 
 extern int	quit_sync_provider;
 extern int	quit_sync_finalsync;
-extern bool  keep_alive;
-extern int  keep_alive_idle;
-extern int  keep_alive_interval;
-extern int  keep_alive_count;
+extern bool keep_alive;
+extern int	keep_alive_idle;
+extern int	keep_alive_interval;
+extern int	keep_alive_count;
+
+extern int	apply_cache_size;
 
 /*
  * ----------
