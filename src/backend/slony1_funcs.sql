@@ -6013,7 +6013,7 @@ $$
 				) values (
 					c_node, pg_catalog.txid_current(), c_tabid,
 					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
-					c_relname, 'T', 0, array[]::text[]);
+					c_relname, 'T', 0, '{}'::text[]);
 		else   -- (1, 3) 
 			insert into @NAMESPACE@.sl_log_2 (
 					log_origin, log_txid, log_tableid, 
@@ -6023,7 +6023,7 @@ $$
 				) values (
 					c_node, pg_catalog.txid_current(), c_tabid,
 					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
-					c_relname, 'T', 0, array[]::text[]);
+					c_relname, 'T', 0, '{}'::text[]);
 		end if;
 		return NULL;
     end
