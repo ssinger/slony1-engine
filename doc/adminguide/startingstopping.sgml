@@ -121,7 +121,7 @@ export SLON_LOG=/var/log/slon.log
 </para>
 </sect2>
 
-<sect2>
+<sect2 id="slononwindows">
 <title>Starting Slon On a MS-Windows System</title>
 <para>
 On a MS-Windows system slon needs to be started as a service with a 
