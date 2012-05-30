@@ -2624,6 +2624,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 */
 	for (i = 0; i < num_nodes; i++)
 	{
+		const char * pidcolumn;
 		nodeinfo[i].no_id = (int)strtol(PQgetvalue(res1, i, 0), NULL, 10);
 		nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
 												 nodeinfo[i].no_id);
@@ -2635,17 +2636,21 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			dstring_free(&query);
 			return -1;
 		}
-
+		if (nodeinfo[i].adminfo->pg_version >= 90200)  
+			pidcolumn="pid";
+		else 
+			pidcolumn="procpid";
 		slon_mkquery(&query,
 					 "lock table \"_%s\".sl_config_lock; "
 					 "select nl_backendpid from \"_%s\".sl_nodelock "
 					 "    where nl_nodeid = \"_%s\".getLocalNodeId('_%s') and "
 					 "       exists (select 1 from pg_catalog.pg_stat_activity "
-					 "                 where procpid = nl_backendpid);",
+					 "                 where %s = nl_backendpid);",
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername);
+					 stmt->hdr.script->clustername,
+					 pidcolumn);
 		res3 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 		if (res3 == NULL)
 		{

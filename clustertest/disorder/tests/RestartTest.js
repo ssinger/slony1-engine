@@ -140,8 +140,15 @@ RestartTest.prototype.killBackend=function(node_id) {
 		con.close();
 		return;
 	}
-	var query = "select pg_terminate_backend(procpid) FROM pg_stat_activity where datname='"
-		+properties.get("database.db" + node_id + ".dbname") + "' AND procpid <> pg_backend_pid() AND"
+	var pidcolumn='';
+	if(version < 92) {
+		pidcolumn='procpid';
+	}
+	else {
+		pidcolumn='pid';
+	}
+	var query = "select pg_terminate_backend("+pidcolumn+") FROM pg_stat_activity where datname='"
+		+properties.get("database.db" + node_id + ".dbname") + "' AND " + pidcolumn +" <> pg_backend_pid() AND"
 	+ " usename='" + properties.get("database.db" + node_id + ".user.slony") + "'";
 	
 	this.coordinator.log(query);
