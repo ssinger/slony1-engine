@@ -117,4 +117,3 @@
            where DDL could be performed in the wrong order with
            respect to logged data changes.  The shift of "script" data
            from ~sl_event~ to ~sl_log_script~ resolves this issue.
-

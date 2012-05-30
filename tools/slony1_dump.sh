@@ -13,11 +13,10 @@
 # ----
 # Check for correct usage
 # ----
-if test $# -lt 2 ; then
-	echo "usage: $0 subscriber-dbname clustername [-omit_copy ]" >&2
+if test $# -ne 2 ; then
+	echo "usage: $0 subscriber-dbname clustername" >&2
 	exit 1
 fi
-
 
 # ----
 # Remember call arguments and get the nodeId of the DB specified
@@ -25,17 +24,6 @@ fi
 dbname=$1
 cluster=$2
 clname="\"_$2\""
-omit_copy=0
-if test $# -eq 3; then
-	if [ "$3" = "-omit_copy" ];
-	then
-		omit_copy=1
-	else
-		echo "usage: $0 subscriber-dbname clustername [-omit_copy ]" >&2
-		exit 1	
-    fi
-fi
-
 pgc="\"pg_catalog\""
 nodeid=`psql -q -At -c "select \"_$cluster\".getLocalNodeId('_$cluster')" $dbname`
 
@@ -87,6 +75,18 @@ start transaction;
 -- ----------------------------------------------------------------------
 create schema $clname;
 
+-- ----------------------------------------------------------------------
+-- TABLE sl_sequence_offline
+-- ----------------------------------------------------------------------
+create table $clname.sl_sequence_offline (
+	seq_id				int4,
+	seq_relname			name NOT NULL,
+	seq_nspname			name NOT NULL,
+
+	CONSTRAINT "sl_sequence-pkey"
+		PRIMARY KEY (seq_id)
+);
+
 
 -- ----------------------------------------------------------------------
 -- TABLE sl_archive_tracking
@@ -100,22 +100,30 @@ create table $clname.sl_archive_tracking (
 -- -----------------------------------------------------------------------------
 -- FUNCTION sequenceSetValue_offline (seq_id, last_value)
 -- -----------------------------------------------------------------------------
-create or replace function $clname.sequenceSetValue_offline(text,text, int8) returns int4
+create or replace function $clname.sequenceSetValue_offline(int4, int8) returns int4
 as '
 declare
-	p_seq_nsp			alias for \$1;
-    p_seq_name          alias for \$2;
-	p_last_value		alias for \$3;
-
+	p_seq_id			alias for \$1;
+	p_last_value		alias for \$2;
+	v_fqname			text;
 begin
-
+	-- ----
+	-- Get the sequences fully qualified name
+	-- ----
+	select "pg_catalog".quote_ident(seq_nspname) || ''.'' ||
+			"pg_catalog".quote_ident(seq_relname) into v_fqname
+		from $clname.sl_sequence_offline
+		where seq_id = p_seq_id;
+	if not found then
+		raise exception ''Slony-I: sequence % not found'', p_seq_id;
+	end if;
 
 	-- ----
 	-- Update it to the new value
 	-- ----
-	execute '' select setval(''''''|| p_seq_nsp || ''.'' || 
-			p_seq_name || '''''', '''''' || p_last_value || '''''')'';
-	return 0;
+	execute ''select setval('''''' || v_fqname ||
+			'''''', '''''' || p_last_value || '''''')'';
+	return p_seq_id;
 end;
 ' language plpgsql;
 -- ---------------------------------------------------------------------------------------
@@ -157,19 +165,155 @@ begin
 	return p_new_seq;
 end;
 ' language plpgsql;
+create table $clname.sl_log_archive (
+	log_origin			int4,
+	log_txid			bigint,
+	log_tableid			int4,
+	log_actionseq		int8,
+	log_tablenspname	text,
+	log_tablerelname	text,
+	log_cmdtype			char,
+	log_cmdupdncols		int4,
+	log_cmdargs			text[]
+) WITHOUT OIDS;
 
+
+
+create or replace function $clname.slon_quote_brute(p_tab_fqname text) returns text
+as \$\$
+declare	
+    v_fqname text default '';
+begin
+    v_fqname := '"' || replace(p_tab_fqname,'"','""') || '"';
+    return v_fqname;
+end;
+\$\$ language plpgsql immutable;
+
+
+create or replace function $clname.log_apply() returns trigger
+as \$\$
+declare
+	v_command	text = 'not implemented yet';
+	v_list1		text = '';
+	v_list2		text = '';
+	v_comma		text = '';
+	v_and		text = '';
+	v_idx		integer = 1;
+	v_nargs		integer;
+	v_i			integer = 0;
+begin
+	v_nargs = array_upper(NEW.log_cmdargs, 1);
+
+	if NEW.log_cmdtype = 'I' then
+		while v_idx < v_nargs loop
+			v_list1 = v_list1 || v_comma ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]);
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_list2 = v_list2 || v_comma || 'null';
+			else 
+			     v_list2 = v_list2 || v_comma ||
+			     	pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);			end if;
+			v_idx = v_idx + 1;
+
+			v_comma = ',';
+		end loop;
+
+		v_command = 'INSERT INTO ' || 
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' (' ||
+			v_list1 || ') VALUES (' || v_list2 || ')';
+
+		execute v_command;
+	end if;
+	if NEW.log_cmdtype = 'U' then
+		v_command = 'UPDATE ONLY ' ||
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' SET ';
+		while v_i < NEW.log_cmdupdncols loop		      	
+			v_command = v_command || v_comma ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else 
+			     v_command = v_command ||
+				pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
+			v_idx = v_idx + 1;
+			v_comma = ',';
+			v_i = v_i + 1;
+		end loop;
+		if NEW.log_cmdupdncols = 0 then
+			v_command = v_command ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[1]) || '=' ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[1]);
+		end if;
+		v_command = v_command || ' WHERE ';
+		while v_idx < v_nargs loop
+			v_command = v_command || v_and ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else
+				v_command = v_command ||
+					  pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
+			v_idx = v_idx + 1;
+
+			v_and = ' AND ';
+		end loop;
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'D' then
+		v_command = 'DELETE FROM ONLY ' ||
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' WHERE ';
+		while v_idx < v_nargs loop
+			v_command = v_command || v_and ||
+				$clname.slon_quote_brute(NEW.log_cmdargs[v_idx]) || '=';
+			v_idx = v_idx + 1;
+			if NEW.log_cmdargs[v_idx] is null then
+			   v_command = v_command || 'null';
+			else
+				v_command = v_command ||
+					  pg_catalog.quote_literal(NEW.log_cmdargs[v_idx]);
+			end if;
+			v_idx = v_idx + 1;
+
+			v_and = ' AND ';
+		end loop;
+
+		execute v_command;
+	end if;
+
+	if NEW.log_cmdtype = 'T' then
+		execute 'TRUNCATE TABLE ONLY ' ||
+			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||
+			$clname.slon_quote_brute(NEW.log_tablerelname) || ' CASCADE';
+	end if;
+
+	return NULL;
+end;
+\$\$ language plpgsql;
+create trigger apply_trigger
+		before INSERT on $clname.sl_log_archive
+		for each row execute procedure $clname.log_apply();
+alter table $clname.sl_log_archive
+	  enable replica trigger apply_trigger;
 set session_replication_role='replica';
 
 _EOF_
 
 
-if [ "$omit_copy" != "1" ]; then
-	for tab in $tables
-	do
-		eval tabname=\$tabname_$tab
-		echo "truncate $tabname cascade;";
-	done
-fi
+
+for tab in $tables
+do
+	eval tabname=\$tabname_$tab
+	echo "truncate $tabname cascade;";
+done
 
 # ----
 # The remainder of this script is written in a way that
@@ -183,13 +327,16 @@ echo "start transaction;"
 echo "set transaction isolation level serializable;"
 
 # ----
-# Provide initial values for all sequences.
+# Fill the sl_sequence_offline table and provide initial 
+# values for all sequences.
 # ----
+echo "select 'copy $clname.sl_sequence_offline from stdin;';"
+echo "select seq_id::text || '	' || seq_relname  || '	' || seq_nspname from $clname.sl_sequence;"
+printf "select E'\\\\\\\\.';"
+
 for seq in $sequences ; do
 	eval seqname=\$seqname_$seq
-	schema=`echo $seqname|cut -d'.' -f1`
-	name=`echo $seqname|cut -d'.' -f2`
-	echo "select E'select $clname.sequenceSetValue_offline(''$schema'',''$name'', ''' || last_value::text || E''');' from $seqname;"
+	echo "select 'select $clname.sequenceSetValue_offline($seq, ''' || last_value::text || ''');' from $seqname;"
 done
 
 # ----
@@ -203,18 +350,16 @@ echo "select 'insert into $clname.sl_archive_tracking values (' ||
 # ----
 # Now dump all the user table data
 # ----
-if [ "$omit_copy" -eq "0" ]; then
-	system_type=`uname`
-	for tab in $tables ; do
-		eval tabname=\$tabname_$tab
+system_type=`uname`
+for tab in $tables ; do
+	eval tabname=\$tabname_$tab
 
-		# Get fieldnames...
- 		fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
- 		echo "select 'copy $tabname $fields from stdin;';"
-		echo "copy $tabname $fields to stdout;"
- 		printf "select E'\\\\\\\\.';"
-	done
-fi
+	# Get fieldnames...
+ 	fields=`psql -At -c "select $clname.copyfields($tab);" $dbname`
+ 	echo "select 'copy $tabname $fields from stdin;';"
+	echo "copy $tabname $fields to stdout;"
+ 	printf "select E'\\\\\\\\.';"
+done
 
 # ----
 # Commit the transaction here in the replica that provided us
