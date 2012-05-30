@@ -436,9 +436,9 @@ regression tests so that it is regularly tested. </para>
 
 <indexterm><primary>launching &slony1; cluster using slon.conf files</primary></indexterm>
 
-<para> This is another shell script which uses the configuration as
-set up by <filename>mkslonconf.sh</filename> and is intended to
-support an approach to running &slony1; involving regularly
+<para> This is a shell script which uses the configuration as set up
+by <filename>mkslonconf.sh</filename> and is intended to support an
+approach to running &slony1; involving regularly
 (<emphasis>e.g.</emphasis> via a cron process) checking to ensure that
 &lslon; processes are running.</para>
 
@@ -479,6 +479,24 @@ under management. </para></listitem>
 
 <para> In effect, you could run this every five minutes, and it would
 launch any missing &lslon; processes. </para>
+</sect2>
+
+<sect2 id="upstartscript"><title> Upstart Script </title>
+
+<indexterm><primary> upstart script </primary></indexterm>
+
+<para> <ulink url="http://upstart.ubuntu.com/"> Upstart</ulink> is a
+recent alternative to <application>/sbin/init</application> to handle
+automatically starting tasks and services when a system boots.  It is
+particularly popular on the Ubuntu Linux distribution.
+</para>
+
+<para> <filename> share/upstart-slon.conf-sample </filename> is a
+sample script for use with <application>upstart</application>.
+Deployment will require some customization in order to indicate where
+&slony1; binaries and configuration are found in a particular
+environment.</para>
+
 </sect2>
 
 <sect2 id="extractschema"><title> <filename> slony1_extract_schema.sh </filename> </title>
