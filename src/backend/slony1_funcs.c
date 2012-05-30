@@ -41,6 +41,7 @@
 #include "utils/lsyscache.h"
 #include "utils/memutils.h"
 #include "utils/hsearch.h"
+#include "utils/timestamp.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
@@ -1066,7 +1067,7 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	if (cmdtype == 's')
 	{
 		bool		localNodeFound = true;
-		Datum		script_insert_args[4];
+		Datum		script_insert_args[5];
 
 		apply_num_script++;
 
@@ -1784,7 +1785,7 @@ Datum
 _Slony_I_logApplySaveStats(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
-	Datum		params[10];
+	Datum		params[11];
 	char	   *nulls = "           ";
 	int32		rc = 0;
 	int			spi_rc;
