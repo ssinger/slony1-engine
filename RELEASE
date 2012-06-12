@@ -4,6 +4,8 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #263 :: CPPFLAGS and LDFLAGS on configure get passed on
+
 - Bug #250 :: Log shipper does not report application name - add in setting of GUC
 
 - Bug #235 :: SYNC GROUP sizes are now dynamically grow from 1 to a
