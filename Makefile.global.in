@@ -45,6 +45,8 @@ FLEX=			@LEX@
 
 #build tool flags
 CFLAGS=			@CFLAGS@
+CPPFLAGS=              @CPPFLAGS@
+LDFLAGS=               @LDFLAGS@
 PTHREAD_CFLAGS=     @PTHREAD_CFLAGS@
 PTHREAD_LIBS=		@PTHREAD_LIBS@
 YFLAGS=			@YFLAGS@
@@ -79,8 +81,7 @@ PERL=			@PERL@
 SED=			@SED@
 subdir=$(slony_subdir)
 
-override CPPFLAGS := -I${pgincludeserverdir} -I${pgincludedir} $(CPPFLAGS)
-LDFLAGS =   -L${pglibdir} -L${pgpkglibdir} -lpq @NLSLIB@
+LDFLAGS +=   -lpq @NLSLIB@
 
 ifeq ($(GCC), yes)
     CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations
