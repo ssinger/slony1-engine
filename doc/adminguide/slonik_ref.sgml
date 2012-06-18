@@ -2353,8 +2353,7 @@ SUBSCRIBE SET (
        
       </varlistentry>
      </variablelist>
-    </para>
-    <para> This uses &fununsubscribeset;. </para>
+    </para>  
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>

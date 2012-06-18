@@ -320,7 +320,7 @@ sees no activity. </listitem>
 <listitem><para> <link linkend="startslon">start_slon.sh</link>,
 written with a view to managing the &lslon; configuration via the
 <link linkend="runtime-config"> slon runtime configuraiton
-</file>.</para></listitem>
+</link>.</para></listitem>
 
 <listitem><para> <link linkend=
 "launchclusters">launch_clusters.sh</link>, which can start up
