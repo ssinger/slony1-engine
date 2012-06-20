@@ -4,6 +4,8 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #268 :: Use pid instead of procpid in pg_stat_activity with PG 9.2+
+
 - Bug #263 :: CPPFLAGS and LDFLAGS on configure get passed on
 
 - Bug #250 :: Log shipper does not report application name - add in setting of GUC
@@ -20,6 +22,15 @@
 - The slony1_funcs.so and .sql files that get installed are now
   versioned.  This allows multiple versions of slony to be installed
   in the same postgresql lib directory.
+
+- Added a RESUBSCRIBE NODE command to reshape clusters. This must be
+  used instead of SUBSCRIBE SET to reshape subscriptions when an origin
+  has more than one set. 
+
+- Bug #178 :: The FAILOVER process has been reworked to be more
+  reliable. Some nodes can no longer be used as failover targets.
+
+- SET ID is no longer an option to EXECUTE SCRIPT. 
 
 *** Major 2.2 change: COPY protocol
 
