@@ -2718,7 +2718,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 *
 	 * 1. Get a list of failover candidates for each failed node.
 	 * 2. validate that we have conninfo to all of them
-	 * 3. blank there paths to the failed nodes
+	 * 3. blank their paths to the failed nodes
 	 * 4. Wait for slons to restart
 	 * 5. for each failed node get the highest xid for each candidate
 	 * 6. execute FAILOVER on the highest canidate
@@ -2943,8 +2943,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			printf("executing preFailover(%d,%d) on %d\n",
 				   node_entry->no_id,
-				   nodeinfo[i].no_id,
-				   nodeinfo[i].failover_candidate);
+				   nodeinfo[i].failover_candidate,
+				   nodeinfo[i].no_id);
 			slon_mkquery(&query,
 						 "lock table \"_%s\".sl_config_lock; "
 						 "select \"_%s\".preFailover(%d,%s); ",
