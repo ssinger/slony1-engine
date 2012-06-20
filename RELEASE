@@ -79,27 +79,31 @@
 
     - DDL handling
 
-	  - The old behaviour was that DDL was treated as a special Slony
-        event, and it never was clear whether that should be executed
-        before or after other replication activity that might have
-        taken place during that Slony event.  This was fine in Slony
-        1.2 and earlier, when the processing of DDL forcibly required
-        that Slony take out locks on the origin on ALL replicated
-        tables; those locks would prevent there from being any other
-        activity going on during the processing of DDL.  But when much
-        of that locking disappeared, in version 2.0, it became
-        possible for there to be replication activity on tables not
-        being modified by DDL, and timing anomalies could occur.
+	  - The old behaviour was that DDL was treated as a special
+            Slony event, and it never was clear whether that should be
+            executed before or after other replication activity that
+            might have taken place during that Slony event.  This was
+            fine in Slony 1.2 and earlier, when the processing of DDL
+            forcibly required that Slony take out locks on the origin
+            on ALL replicated tables; those locks would prevent there
+            from being any other activity going on during the
+            processing of DDL.  But when much of that locking
+            disappeared, in version 2.0, it became possible for there
+            to be replication activity on tables not being modified by
+            DDL, and timing anomalies could occur.
 
-	  - In version 2.2, a third log table, sl_log_script, is added to
-        capture script queries which would notably include DDL.  This
-        table uses the same sequence value that controls order of
-        application for replicated data, so DDL will be applied at
-        exactly the appropriate point in the transaction stream on
-        subscribers.
+	  - In version 2.2, a third log table, sl_log_script, is added
+            to capture script queries which would notably include DDL.
+            This table uses the same sequence value that controls
+            order of application for replicated data, so DDL will be
+            applied at exactly the appropriate point in the
+            transaction stream on subscribers.
+
+          - Note that this rectifies bug #137, *execute script does
+            not get applied in the correct order*
 
     - Expected effects
-	  - Lower processing overhead in slon process :: By using COPY,
+      - Lower processing overhead in slon process :: By using COPY,
            all that need be done is for slon to "stream" data from the
            provider to the subscriber.  There is no longer a need to
            generate or process individual queries.
@@ -110,7 +114,7 @@
            data stream through the buffer; the large query does not
            need to be instantiated in memory, as was the case in older
            versions of Slony.
-	  - Less query processing work on subscriber database :: The use
+      - Less query processing work on subscriber database :: The use
            of prepared statements should dramatically reduce the
            amount of computational effort required for query parsing
            and planning.
