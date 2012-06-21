@@ -3175,6 +3175,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	int			i;
 	PGresult   *res1;
 	SlonikAdmInfo *adminfo1;
+	SlonikStmt_wait_event wait_event;
 
 	dstring_init(&query);
 
@@ -3264,7 +3265,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 			goto cleanup;
 		}
 	}
-	SlonikStmt_wait_event wait_event;
+
 
 	wait_event.hdr = *(SlonikStmt *) stmt;
 	wait_event.wait_origin = nodeinfo[max_node_idx].no_id;
@@ -6078,6 +6079,7 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 	{
 		int			node_list_idx;
 		int			skip = 0;
+		SlonikAdmInfo *activeAdmInfo=NULL;
 
 		for (node_list_idx = 0; skip_node_list[node_list_idx] != -1; node_list_idx++)
 		{
@@ -6091,8 +6093,7 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 		if (skip)
 			continue;
 
-		SlonikAdmInfo *activeAdmInfo =
-		get_active_adminfo(stmt, curAdmInfo->no_id);
+		activeAdmInfo = get_active_adminfo(stmt, curAdmInfo->no_id);
 
 		if (activeAdmInfo == NULL)
 		{

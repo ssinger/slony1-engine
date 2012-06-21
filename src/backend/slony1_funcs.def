@@ -8,7 +8,7 @@ _Slony_I_killBackend
 _Slony_I_seqtrack
 _Slony_I_logTrigger
 _Slony_I_resetSession
-_Slony_1_logApply
-_Slony_1_logApplySetCacheSize
-_Slony_1_logApplySaveStats
+_Slony_I_logApply
+_Slony_I_logApplySetCacheSize
+_Slony_I_logApplySaveStats
 _slon_decode_tgargs
