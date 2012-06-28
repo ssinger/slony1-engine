@@ -24,7 +24,7 @@
   <!ENTITY funsetaddsequence "<xref linkend= function.setaddsequence-p-seq-comment-integer-p-fqname-integer-p-seq-id-text-p-set-id-text>">
   <!ENTITY funsetdropsequence "<xref linkend= function.setdropsequence-p-seq-id-integer>">
   <!ENTITY funsetmovetable "<xref linkend= function.setmovetable-p-new-set-id-integer-p-tab-id-integer>">
-<!ENTITY funddlscript "<xref linkend=function.ddlscript-complete-p-only-on-node-integer-p-script-text-p-set-id-integer>">
+<!ENTITY funddlscript "<xref linkend=function.ddlscript-complete-p-nodes-text>">
 <!ENTITY fundropnode "<xref linkend=function.dropnode-p-no-id-integer>">
 <!ENTITY funenablenode "<xref linkend=function.enablenode-p-no-id-integer>">
 <!ENTITY funfailednode "<xref linkend=function.failednode-p-backup-node-integer-p-failed-node-integer>">
@@ -33,10 +33,10 @@
 <!ENTITY funmoveset "<xref linkend=function.moveset-p-new-origin-integer-p-set-id-integer>">
 <!ENTITY funsetmovesequence "<xref linkend=function.setmovesequence-p-new-set-id-integer-p-seq-id-integer>">
 <!ENTITY funstoretrigger "<xref linkend=function.storetrigger-integer-name>">
-<!ENTITY funsubscribeset "<xref linkend=function.subscribeset-p-omit-copy-integer-p-sub-forward-integer-p-sub-receiver-integer-p-sub-provider-boolean-p-sub-set-boolean>">
+<!ENTITY fsubscribeset "<xref linkend=function.subscribeset-p-omit-copy-integer-p-sub-forward-integer-p-sub-receiver-integer-p-sub-provider-boolean-p-sub-set-boolean>">
 <!ENTITY fununinstallnode "<xref linkend=function.uninstallnode>">
 <!ENTITY fununlockset "<xref linkend=function.unlockset-p-set-id-integer>">
-<!ENTITY fununsubscribeset "<xref linkend=function.unsubscribeset-p-sub-receiver-integer-p-sub-set-integer>">
+<!ENTITY fununsubscribeset "<xref linkend=function.unsubscribeset-p-sub-set-integer-p-sub-receiver-integer-p-force-boolean>">
 <!ENTITY bestpracticelink "<link linkend=bestpractices>Best Practice</link>">
 <!ENTITY rmissingoids "<link linkend=missingoids>error messages indicating missing OIDs</link>">
 <!ENTITY slnode "<xref linkend=table.sl-node>">

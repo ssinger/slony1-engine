@@ -493,7 +493,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text  ;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b1'  ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -4184,8 +4184,8 @@ begin
 			p_sub_set::text, p_sub_receiver::text);
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4,boolean) is
-'unsubscribeSet (sub_set, sub_receiver) 
+comment on function @NAMESPACE@.unsubscribeSet (p_sub_set int4, p_sub_receiver int4,force boolean) is
+'unsubscribeSet (sub_set, sub_receiver,force) 
 
 Unsubscribe node sub_receiver from subscription set sub_set.  This is
 invoked on the receiver node.  It verifies that this does not break
@@ -6013,7 +6013,7 @@ $$
 				) values (
 					c_node, pg_catalog.txid_current(), c_tabid,
 					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
-					c_relname, 'T', 0, array[]::text[]);
+					c_relname, 'T', 0, '{}'::text[]);
 		else   -- (1, 3) 
 			insert into @NAMESPACE@.sl_log_2 (
 					log_origin, log_txid, log_tableid, 
@@ -6023,7 +6023,7 @@ $$
 				) values (
 					c_node, pg_catalog.txid_current(), c_tabid,
 					nextval('@NAMESPACE@.sl_action_seq'), c_nspname,
-					c_relname, 'T', 0, array[]::text[]);
+					c_relname, 'T', 0, '{}'::text[]);
 		end if;
 		return NULL;
     end

@@ -301,6 +301,59 @@ a <command>pg_dump --exclude-schema=_Cluster</command> against
 
 </qandaentry>
 
+<qandaentry id="howtorunslon">
+<question> <para> How should I run &lslon; processes? </para>
+</question>
+
+<answer> <para> A &lslon; process is required for each database that
+participates in replication.  There are a variety of ways of managing
+these processes.  An administrator may find one or another of them to
+be preferable, none are necessarily <quote>wrong</quote>.
+</para>
+
+<itemizedlist>
+
+<listitem><para> <link linkend="slonwatchdog"> Perl Watchdog</link>, a
+script which monitors a node and restarts &lslon; for that node if it
+sees no activity. </listitem>
+
+<listitem><para> <link linkend="startslon">start_slon.sh</link>,
+written with a view to managing the &lslon; configuration via the
+<link linkend="runtime-config"> slon runtime configuraiton
+</link>.</para></listitem>
+
+<listitem><para> <link linkend=
+"launchclusters">launch_clusters.sh</link>, which can start up
+multiple &lslon; processes.  This does a one-time startup of missing
+&lslon; processes, so should be run periodically using a service such
+as cron. </para></listitem>
+
+<listitem><para> <link linkend="upstartscript"> Upstart script </link>
+may be used to start a &lslon; process when the system boots, suitable
+for systems that use Upstart for managing system
+services. </para></listitem> 
+
+<listitem><para> <link linkend="bsd-ports-profile"> BSD Ports Profile
+</link> provides Apache-style profiles, suitable for systems managing
+&slony1; using FreeBSD Ports. </para></listitem>
+
+<listitem><para> <link linkend="slononwindows"> Slon on Windows
+</link> describes the use of &lslon; with the Windows
+<quote>service</quote> concept.</para></listitem>
+
+<listitem><para> Not provided, but a straightforward task, would be to
+create an <quote>init</quote> script suitable for Unix systems that
+use SysV <application>init</application>. </para>
+</listitem>
+</itemizedlist>
+
+<para> A single answer will not fit all, as different operating
+systems have different mechanisms for dealing with persistent
+processes, and as administrators may wish to have one, or several
+&lslon; processes running on a particular server. </para>
+</answer>
+</qandaentry>
+
 <qandaentry id="cannotrenumbernodes">
 <question> <para> I'd like to renumber the node numbers in my cluster.
 How can I renumber nodes? </para> </question>

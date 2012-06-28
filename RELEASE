@@ -4,6 +4,10 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #268 :: Use pid instead of procpid in pg_stat_activity with PG 9.2+
+
+- Bug #263 :: CPPFLAGS and LDFLAGS on configure get passed on
+
 - Bug #250 :: Log shipper does not report application name - add in setting of GUC
 
 - Bug #235 :: SYNC GROUP sizes are now dynamically grow from 1 to a
@@ -18,6 +22,15 @@
 - The slony1_funcs.so and .sql files that get installed are now
   versioned.  This allows multiple versions of slony to be installed
   in the same postgresql lib directory.
+
+- Added a RESUBSCRIBE NODE command to reshape clusters. This must be
+  used instead of SUBSCRIBE SET to reshape subscriptions when an origin
+  has more than one set. 
+
+- Bug #178 :: The FAILOVER process has been reworked to be more
+  reliable. Some nodes can no longer be used as failover targets.
+
+- SET ID is no longer an option to EXECUTE SCRIPT. 
 
 *** Major 2.2 change: COPY protocol
 
@@ -77,27 +90,31 @@
 
     - DDL handling
 
-	  - The old behaviour was that DDL was treated as a special Slony
-        event, and it never was clear whether that should be executed
-        before or after other replication activity that might have
-        taken place during that Slony event.  This was fine in Slony
-        1.2 and earlier, when the processing of DDL forcibly required
-        that Slony take out locks on the origin on ALL replicated
-        tables; those locks would prevent there from being any other
-        activity going on during the processing of DDL.  But when much
-        of that locking disappeared, in version 2.0, it became
-        possible for there to be replication activity on tables not
-        being modified by DDL, and timing anomalies could occur.
+	  - The old behaviour was that DDL was treated as a special
+            Slony event, and it never was clear whether that should be
+            executed before or after other replication activity that
+            might have taken place during that Slony event.  This was
+            fine in Slony 1.2 and earlier, when the processing of DDL
+            forcibly required that Slony take out locks on the origin
+            on ALL replicated tables; those locks would prevent there
+            from being any other activity going on during the
+            processing of DDL.  But when much of that locking
+            disappeared, in version 2.0, it became possible for there
+            to be replication activity on tables not being modified by
+            DDL, and timing anomalies could occur.
 
-	  - In version 2.2, a third log table, sl_log_script, is added to
-        capture script queries which would notably include DDL.  This
-        table uses the same sequence value that controls order of
-        application for replicated data, so DDL will be applied at
-        exactly the appropriate point in the transaction stream on
-        subscribers.
+	  - In version 2.2, a third log table, sl_log_script, is added
+            to capture script queries which would notably include DDL.
+            This table uses the same sequence value that controls
+            order of application for replicated data, so DDL will be
+            applied at exactly the appropriate point in the
+            transaction stream on subscribers.
+
+          - Note that this rectifies bug #137, *execute script does
+            not get applied in the correct order*
 
     - Expected effects
-	  - Lower processing overhead in slon process :: By using COPY,
+      - Lower processing overhead in slon process :: By using COPY,
            all that need be done is for slon to "stream" data from the
            provider to the subscriber.  There is no longer a need to
            generate or process individual queries.
@@ -108,7 +125,7 @@
            data stream through the buffer; the large query does not
            need to be instantiated in memory, as was the case in older
            versions of Slony.
-	  - Less query processing work on subscriber database :: The use
+      - Less query processing work on subscriber database :: The use
            of prepared statements should dramatically reduce the
            amount of computational effort required for query parsing
            and planning.
@@ -117,4 +134,3 @@
            where DDL could be performed in the wrong order with
            respect to logged data changes.  The shift of "script" data
            from ~sl_event~ to ~sl_log_script~ resolves this issue.
-

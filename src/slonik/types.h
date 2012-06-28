@@ -83,6 +83,7 @@ typedef char bool;
 
 #ifdef _MSC_VER
 #define va_copy(aq,ap) aq=ap
+#define strtok_r(a,b,c) strtok_s(a,b,c)
 #endif
 
 #ifdef HAVE_LL_CONSTANTS
