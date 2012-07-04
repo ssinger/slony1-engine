@@ -66,7 +66,9 @@ identifier		({ident_start}{ident_cont}*)
 
 %%
 
-	char   *start_charpos = NULL;
+	char   *instring_buffer = NULL;
+	int     instring_length=0;
+	int     instring_buf_length=0;
 
 	BEGIN(INITIAL);
 
@@ -159,19 +161,37 @@ resubscribe     { return K_RESUBSCRIBE;		}
 {space}+		;
 
 '		{ 
-			start_charpos = yytext;
+			if(instring_buffer==0)
+			{
+				instring_buffer=malloc(256);
+				instring_buf_length=256;
+			}
+			instring_length=0;
+			instring_buffer[instring_length]=*yytext;
 			BEGIN(IN_STRING);
 		}
 <IN_STRING>\\.	{ }
 <IN_STRING>\\	{ }
 <IN_STRING>''	{ }
 <IN_STRING>'	{
-			yyleng += (yytext - start_charpos) - 2;
-			yytext = start_charpos + 1;
+			instring_buffer[instring_length]='\0';
+			yytext = instring_buffer;
+			yyleng=instring_length;
+
 			BEGIN(INITIAL);
 			return T_LITERAL;
 		}
-<IN_STRING>[^'\\]+ {}
+<IN_STRING>[^'\\]+ { 
+				if (  instring_buf_length < instring_length + yyleng+1 )
+				{
+						instring_buffer=realloc(instring_buffer,instring_buf_length*2);
+						instring_buf_length=instring_buf_length*2;
+				}
+				strncpy(instring_buffer+instring_length,yytext,yyleng);
+				instring_length+=yyleng;
+
+				
+		}
 
 <define>{identifier}{space}+.*";" { addSymbol( yytext ); BEGIN(INITIAL); }
 
