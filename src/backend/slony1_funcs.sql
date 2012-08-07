@@ -5032,7 +5032,7 @@ BEGIN
 		-- transaction is committed.
 		-- ----
 		begin
-			lock table @NAMESPACE@.sl_log_2 in exclusive mode nowait;
+			lock table @NAMESPACE@.sl_log_2 in access exclusive mode nowait;
 		exception when lock_not_available then
 			raise notice 'Slony-I: could not lock sl_log_2 - sl_log_2 not truncated';
 			return -1;
@@ -5086,7 +5086,7 @@ BEGIN
 		-- transaction is committed.
 		-- ----
 		begin
-			lock table @NAMESPACE@.sl_log_1 in exclusive mode nowait;
+			lock table @NAMESPACE@.sl_log_1 in access exclusive mode nowait;
 		exception when lock_not_available then
 			raise notice 'Slony-I: could not lock sl_log_1 - sl_log_1 not truncated';
 			return -1;
