@@ -6,6 +6,7 @@
 - Bug #263 :: CPPFLAGS and LDFLAGS get passed from configure
 - Bug #274 :: Include schemadoc.xml as part of the distribution tar(again)
 - Bug #264 :: Add an ORDER BY to the log selection query so the xid's get compressed
+- Bug #258 :: The cleanup thread should no longer block waiting on a lock
 
 ** 2.1.1
 
