@@ -4,6 +4,8 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #272 :: Fix memory overwrite in slonik parsing
+
 - Bug #258 :: The cleanup thread should no longer block waiting on a lock
 
 - Bug #264 :: Add an ORDER BY to the log selection query so the xid's get compressed
