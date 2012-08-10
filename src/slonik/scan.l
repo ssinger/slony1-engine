@@ -161,9 +161,16 @@ resubscribe     { return K_RESUBSCRIBE;		}
 {space}+		;
 
 '		{ 
-			if(instring_buffer==0)
+			if( instring_buffer==NULL )
 			{
 				instring_buffer=malloc(256);
+				if( instring_buffer == NULL)
+				{
+						fprintf(stderr,"insufficient memory\n");
+						exit(1);
+
+
+				}		
 				instring_buf_length=256;
 			}
 			instring_length=0;
