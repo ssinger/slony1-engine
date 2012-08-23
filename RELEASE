@@ -4,6 +4,13 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #272 :: Fix memory overwrite in slonik parsing
+
+- Bug #258 :: The cleanup thread should no longer block waiting on a lock
+
+- Bug #264 :: Add an ORDER BY to the log selection query so the xid's get compressed
+
+- Bug 274  :: Include schemadoc.xml as part of the distribution tar(again)
 - Bug #268 :: Use pid instead of procpid in pg_stat_activity with PG 9.2+
 
 - Bug #263 :: CPPFLAGS and LDFLAGS on configure get passed on
