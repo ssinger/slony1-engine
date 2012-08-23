@@ -4,6 +4,7 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #275 :: fix memory leak in monitor thread
 - Bug #272 :: Fix memory overwrite in slonik parsing
 
 - Bug #258 :: The cleanup thread should no longer block waiting on a lock
