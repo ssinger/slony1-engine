@@ -166,8 +166,8 @@ pg_dump -h $MASTER_HOST -s $MASTERDB | psql -h $NEWSLAVE_HOST $SLAVEDB
 </listitem>
 <listitem><para>Create the node with the <xref linkend="stmtstorenode"> command
 <programlisting>
+cluster name=testcluster;
 node 5 admin conninfo='host=slavehost dbname=slavedb user=slony password=slony';
-clustername=testcluster;
 
 store node(id=5,comment='some slave node',event node=1);
 </programlisting>
@@ -176,13 +176,13 @@ store node(id=5,comment='some slave node',event node=1);
 <listitem><para>Create paths between the new node and its provider node with
 the <xref linkend="stmtstorepath"> command.
 <programlisting>
+cluster name=testcluster;
 node 5 admin conninfo='host=slavehost dbname=slavedb user=slony password=slony';
-clustername=testcluster;
 node 1 admin conninfo='host=masterhost dbname=masterdb user=slony password=slony';
 # also include the admin conninfo lines for any other nodes in your cluster.
 #
 #
-clustername=testcluster;
+cluster name=testcluster;
 store path(server=1,client=5,conninfo='host=masterhost,dbname=masterdb,user=slony,password=slony');
 store path(server=5,client=1,conninfo='host=slavehost,dbname=masterdb,user=slony,password=slony');
 </programlisting>
@@ -191,14 +191,14 @@ store path(server=5,client=1,conninfo='host=slavehost,dbname=masterdb,user=slony
 
 <listitem><para>Subscribe the new node to the relevant replication sets
 <programlisting>
+cluster name=testcluster;
 node 5 admin conninfo='host=slavehost dbname=slavedb user=slony password=slony';
-clustername=testcluster;
 node 1 admin conninfo='host=masterhost dbname=slavedb user=slony password=slony';
 #
 # also include the admin conninfo lines for any other nodes in the cluster
 #
 #
-clustername=testcluster;
+cluster name=testcluster;
 subscribe set(id=1,provider=1, receiver=5,forward=yes);
 </programlisting>
 

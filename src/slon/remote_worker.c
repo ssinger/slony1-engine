@@ -3491,10 +3491,10 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 					 node->no_id);
 
 			(void) slon_mkquery(&query1,
-								"select log_actionseq "
-								"from %s.sl_log_1 where log_origin = %d "
-								"union select log_actionseq "
-								"from %s.sl_log_2 where log_origin = %d; ",
+								"(select log_actionseq "
+								"from %s.sl_log_1 where log_origin = %d order by log_actionseq) "
+								"union (select log_actionseq "
+								"from %s.sl_log_2 where log_origin = %d order by log_actionseq); ",
 								rtcfg_namespace, node->no_id,
 								rtcfg_namespace, node->no_id);
 		}
@@ -3555,10 +3555,10 @@ copy_set(SlonNode *node, SlonConn *local_conn, int set_id,
 					 node->no_id, ssy_seqno);
 
 			(void) slon_mkquery(&query1,
-								"select log_actionseq "
-							 "from %s.sl_log_1 where log_origin = %d and %s "
-								"union select log_actionseq "
-						   "from %s.sl_log_2 where log_origin = %d and %s; ",
+								"(select log_actionseq "
+							 "from %s.sl_log_1 where log_origin = %d and %s order by log_actionseq)"
+								"union (select log_actionseq "
+						   "from %s.sl_log_2 where log_origin = %d and %s order by log_actionseq); ",
 						 rtcfg_namespace, node->no_id, dstring_data(&query2),
 						rtcfg_namespace, node->no_id, dstring_data(&query2));
 		}
