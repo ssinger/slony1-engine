@@ -4,6 +4,7 @@
 - Bug #240 :: Improve notes on VACUUM
 
 ** 2.2.0
+- Bug #276 :: Fixed detection of duplicate value in sl_nodelock
 - Bug #275 :: fix memory leak in monitor thread
 - Bug #272 :: Fix memory overwrite in slonik parsing
 
