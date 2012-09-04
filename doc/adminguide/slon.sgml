@@ -240,7 +240,7 @@
 
      <para> If replication is running behind, slon will gradually
      increase the numbers of <command>SYNC</command>s grouped
-     together, targetting that (based on the time taken for the
+     together, targeting that (based on the time taken for the
      <emphasis>last</emphasis> group of <command>SYNC</command>s) they
      shouldn't take more than the specified
      <envar>desired_sync_time</envar> value.</para>
