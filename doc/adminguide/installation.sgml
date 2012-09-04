@@ -257,7 +257,7 @@ above example</para>
 From the Visual Studio or Microsoft Windows SDK command prompt run
 <programlisting>
 cd src\backend
-nmake /f win32.mak slony1_funcs.dll
+nmake /f win32.mak slony1_funcs.%SLONY_VERSION%.dll
 cd ..\slon
 nmake /f win32.mak slon.exe
 cd ..\slonik
@@ -269,6 +269,23 @@ src\backend\slony1_funcs.$SLONY_VERSION.dll and any of the .sql files in
 src\backend need to be installed in your postgresql $share directory.
 The SQL files also need to be renamed to contain the slony version number in 
 them. For example the slony1_funcs.sql should be renamed slony1_funcs.2.2.1.sql
+
+<programlisting>
+copy slony1_base.sql c:\Program Files\Postgresql\9.1\share\slony1_base.2.2.0.sql
+copy slony1_base.v83.sql c:\Program Files\Postgresql\9.1\share\slony1_base.v83.2.2.0.sql
+copy slony1_base.v84.sql c:\Program Files\Postgresql\9.1\share\slony1_base.v84.2.2.0.sql
+copy slony1_funcs.sql c:\Program Files\Postgresql\9.1\share\slony1_funcs.2.2.0.sql
+copy slony1_funcs.v83.sql c:\Program Files\Postgresql\9.1\share\slony1_funcs.v83.2.2.0.sql
+copy slony1_funcs.v84.sql c:\Program Files\Postgresql\9.1\share\slony1_funcs.v84.2.2.0.sql
+</programlisting>
+
+
+
+</para>
+
+<para>
+pthreadVC.dll from the pthreads-win32 package also needs to be copied to the
+directory you install the slon.exe and slonik.exe binaries in
 </para>
 
 </sect2>

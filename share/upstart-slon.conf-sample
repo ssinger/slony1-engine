@@ -1,0 +1,18 @@
+# slony - slon daemon
+#
+# slon is the slony replication daemon
+
+description    "slony slon daemon"
+
+start on net-device-up
+stop on runlevel [06]
+
+# can't use setuid until upstart 1.4
+#setuid slony
+# which is why we use start-stop-daemon with the --chuid switch
+
+respawn
+
+script
+    exec start-stop-daemon --start --chuid slony --exec /usr/local/slony/bin/slon -- -f /etc/slon.conf >> /var/log/slony/slony.log 2>&1
+end script

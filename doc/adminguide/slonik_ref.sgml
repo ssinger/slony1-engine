@@ -1457,6 +1457,17 @@ STORE PATH ( SERVER = 1, CLIENT = 2,
        This can be omitted if <literal>TABLES</literal> is specified instead
       </para></listitem>
       </varlistentry>
+
+	  <varlistentry><term><literal> KEY = { 'string' | SERIAL }
+    </literal></term> <listitem><para>
+     <emphasis>(Optional)</emphasis> The index name that covers the
+     unique and not null set of columns to be used as the row identifier
+     for replication purposes. Default
+     is to use the table's primary key.  The index name is <emphasis>
+      not </emphasis> fully qualified; you must omit the
+     namespace.</para></listitem>
+		</varlistentry>
+
 	  <varlistentry><term><literal>TABLES = 'string' </literal></term>
 	  <listitem><para>A POSIX regular expression that specifies the
 	    list of tables that should be added.  This regular expression
@@ -2353,8 +2364,7 @@ SUBSCRIBE SET (
        
       </varlistentry>
      </variablelist>
-    </para>
-    <para> This uses &fununsubscribeset;. </para>
+    </para>  
    </refsect1>
    <refsect1><title>Example</title>
     <programlisting>
