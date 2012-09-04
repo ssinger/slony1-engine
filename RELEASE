@@ -2,6 +2,7 @@
 * Slony-I Release Notes
 ** 2.1.3 
 - Bug #276 :: Fixed duplicate key detection on sl_nodelock
+- Bug #278 :: assorted spelling fixes
 
 ** 2.1.2
 - Bug #275 :: Fixed memory leak in monitor thread
@@ -35,6 +36,9 @@ Release Candidate 1
 
 ** 2.1.0 
 ** 2.1.0 RC 2
+
+** 2.2.0
+- Bug #250 :: Log shipper does not report application name - add in setting of GUC
 
 - Bug #236 :: Fix default formatting of timestamp in logs
 
