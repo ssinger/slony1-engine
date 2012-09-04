@@ -123,7 +123,7 @@ be relaxed first.</para>
 <listitem><para>DDL changes that rename a replicated table do not
 inform &slony1; of the new table name.  If you change then name of
 a replicated table you must allow &slony1; to find the new table name
-by calling <xref linkend="function.updaterelname-p-only-on-node-integer-p-set-id-integer">
+by calling <xref linkend="function.updaterelname">
 </para>
 </listitem>
 

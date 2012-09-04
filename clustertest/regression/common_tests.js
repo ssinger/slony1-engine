@@ -123,7 +123,7 @@ function run_slonik(name,coordinator,preamble,script) {
 	
 	};
 	var timeoutObserver = new Packages.info.slony.clustertest.testcoordinator.script.ExecutionObserver(abortTest);
-	var timer = coordinator.addTimerTask('sync failed',60*4 /*2 minutes*/, timeoutObserver );
+	var timer = coordinator.addTimerTask('sync failed',60*8 /*2 minutes*/, timeoutObserver );
 	
 	slonik.run();
 	coordinator.join(slonik);

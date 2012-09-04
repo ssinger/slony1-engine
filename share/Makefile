@@ -11,9 +11,9 @@ slony_subdir = share
 slony_top_builddir = ..
 include $(slony_top_builddir)/Makefile.global
 
-DISTFILES = Makefile slon.conf-example
+DISTFILES = Makefile slon.conf-example upstart-slon.conf-sample
 
-CONF_NAMES = slon.conf-sample
+CONF_NAMES = slon.conf-sample upstart-slon.conf-sample
 
 install: 
 	for file in $(CONF_NAMES); do \

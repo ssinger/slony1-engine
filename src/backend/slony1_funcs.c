@@ -41,6 +41,7 @@
 #include "utils/lsyscache.h"
 #include "utils/memutils.h"
 #include "utils/hsearch.h"
+#include "utils/timestamp.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
@@ -1066,7 +1067,7 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 	if (cmdtype == 's')
 	{
 		bool		localNodeFound = true;
-		Datum		script_insert_args[4];
+		Datum		script_insert_args[5];
 
 		apply_num_script++;
 
@@ -1550,16 +1551,11 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 				 */
 				querytypes = (Oid *) palloc(sizeof(Oid) * 2);
 
-				sprintf(applyQueryPos, "SELECT %s.TruncateOnlyTable("
-						"%s.slon_quote_brute($1) || '.' || "
-						"%s.slon_quote_brute($2));",
-						slon_quote_identifier(NameStr(*cluster_name)),
-						slon_quote_identifier(NameStr(*cluster_name)),
-						slon_quote_identifier(NameStr(*cluster_name)));
+				sprintf(applyQueryPos, "TRUNCATE %s.%s CASCADE;",
+						slon_quote_identifier(nspname),
+						slon_quote_identifier(relname));				
 
-				querytypes[0] = TEXTOID;
-				querytypes[1] = TEXTOID;
-				querynvals = 2;
+				querynvals = 0;
 
 				break;
 
@@ -1689,14 +1685,6 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 			/*
 			 * TRUNCATE
 			 */
-			queryvals = (Datum *) palloc(sizeof(Datum) * 2);
-			querynulls = (char *) palloc(3);
-
-			queryvals[0] = DirectFunctionCall1(textin, CStringGetDatum(nspname));
-			queryvals[1] = DirectFunctionCall1(textin, CStringGetDatum(relname));
-			querynulls[0] = ' ';
-			querynulls[1] = ' ';
-			querynulls[2] = '\0';
 
 			break;
 
@@ -1784,7 +1772,7 @@ Datum
 _Slony_I_logApplySaveStats(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
-	Datum		params[10];
+	Datum		params[11];
 	char	   *nulls = "           ";
 	int32		rc = 0;
 	int			spi_rc;

@@ -2718,7 +2718,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	 *
 	 * 1. Get a list of failover candidates for each failed node.
 	 * 2. validate that we have conninfo to all of them
-	 * 3. blank there paths to the failed nodes
+	 * 3. blank their paths to the failed nodes
 	 * 4. Wait for slons to restart
 	 * 5. for each failed node get the highest xid for each candidate
 	 * 6. execute FAILOVER on the highest canidate
@@ -2867,6 +2867,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		has_candidate = true;
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
+			const char * pidcolumn;
 			nodeinfo[i].no_id = (int) strtol(PQgetvalue(res1, i, 0), NULL, 10);
 			nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
 													 nodeinfo[i].no_id);
@@ -2885,17 +2886,22 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			}
 			else
 				nodeinfo[i].failover_candidate = false;
-
+			
+			if (nodeinfo[i].adminfo->pg_version >= 90200)  
+				pidcolumn="pid";
+			else 
+				pidcolumn="procpid";
 			slon_mkquery(&query,
 						 "lock table \"_%s\".sl_config_lock; "
 						 "select nl_backendpid from \"_%s\".sl_nodelock "
 				   "    where nl_nodeid = \"_%s\".getLocalNodeId('_%s') and "
 				  "       exists (select 1 from pg_catalog.pg_stat_activity "
-						 "                 where procpid = nl_backendpid);",
+						 "                 where %s = nl_backendpid);",
 						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
 						 stmt->hdr.script->clustername,
-						 stmt->hdr.script->clustername);
+						 stmt->hdr.script->clustername,
+						 pidcolumn);
 			res3 = db_exec_select((SlonikStmt *) stmt, nodeinfo[i].adminfo, &query);
 			if (res3 == NULL)
 			{
@@ -2937,8 +2943,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		{
 			printf("executing preFailover(%d,%d) on %d\n",
 				   node_entry->no_id,
-				   nodeinfo[i].no_id,
-				   nodeinfo[i].failover_candidate);
+				   nodeinfo[i].failover_candidate,
+				   nodeinfo[i].no_id);
 			slon_mkquery(&query,
 						 "lock table \"_%s\".sl_config_lock; "
 						 "select \"_%s\".preFailover(%d,%s); ",
@@ -3169,6 +3175,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	int			i;
 	PGresult   *res1;
 	SlonikAdmInfo *adminfo1;
+	SlonikStmt_wait_event wait_event;
 
 	dstring_init(&query);
 
@@ -3258,7 +3265,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 			goto cleanup;
 		}
 	}
-	SlonikStmt_wait_event wait_event;
+
 
 	wait_event.hdr = *(SlonikStmt *) stmt;
 	wait_event.wait_origin = nodeinfo[max_node_idx].no_id;
@@ -6072,6 +6079,7 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 	{
 		int			node_list_idx;
 		int			skip = 0;
+		SlonikAdmInfo *activeAdmInfo=NULL;
 
 		for (node_list_idx = 0; skip_node_list[node_list_idx] != -1; node_list_idx++)
 		{
@@ -6085,8 +6093,7 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 		if (skip)
 			continue;
 
-		SlonikAdmInfo *activeAdmInfo =
-		get_active_adminfo(stmt, curAdmInfo->no_id);
+		activeAdmInfo = get_active_adminfo(stmt, curAdmInfo->no_id);
 
 		if (activeAdmInfo == NULL)
 		{

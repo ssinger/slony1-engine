@@ -161,7 +161,7 @@ set add sequence (set id = 1, origin = 1, id = 23400151, fully qualified name = 
 set add sequence (set id = 1, origin = 1, id = 23400152, fully qualified name = 'public.seq400152');
 set add sequence (set id = 1, origin = 1, id = 23400153, fully qualified name = 'public.seq400153');
 set add sequence (set id = 1, origin = 1, id = 23400154, fully qualified name = 'public.seq400154');
-set add sequence (set id = 1, origin = 1, id = 23400155, fully qualified name = 'public.seq400155');
+set add sequence (set id = 1, origin = 1, id = 23400155, fully qualified name = 'public.seq400155',comment='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
 set add sequence (set id = 1, origin = 1, id = 23400156, fully qualified name = 'public.seq400156');
 set add sequence (set id = 1, origin = 1, id = 23400157, fully qualified name = 'public.seq400157');
 set add sequence (set id = 1, origin = 1, id = 23400158, fully qualified name = 'public.seq400158');
@@ -322,7 +322,7 @@ set add sequence (set id = 1, origin = 1, id = 23400312, fully qualified name = 
 set add sequence (set id = 1, origin = 1, id = 23400313, fully qualified name = 'public.seq400313');
 set add sequence (set id = 1, origin = 1, id = 23400314, fully qualified name = 'public.seq400314');
 set add sequence (set id = 1, origin = 1, id = 23400315, fully qualified name = 'public.seq400315');
-set add sequence (set id = 1, origin = 1, id = 23400316, fully qualified name = 'public.seq400316');
+set add sequence (set id = 1, origin = 1, id = 23400316, fully qualified name = 'public.seq400316',comment='12345678910143430');
 set add sequence (set id = 1, origin = 1, id = 23400317, fully qualified name = 'public.seq400317');
 set add sequence (set id = 1, origin = 1, id = 23400318, fully qualified name = 'public.seq400318');
 set add sequence (set id = 1, origin = 1, id = 23400319, fully qualified name = 'public.seq400319');
