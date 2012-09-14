@@ -11,7 +11,7 @@ slony_subdir = doc
 slony_top_builddir = ..
 include $(slony_top_builddir)/Makefile.global
 
-SUBDIRS = howto adminguide
+SUBDIRS = adminguide
 
 DISTFILES = Makefile
 
