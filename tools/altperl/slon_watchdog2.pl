@@ -44,7 +44,7 @@ while (1) {
   } else {
     $restart = "YES";
     # See if the slon log ends with "FATAL  localListenThread: Another slon daemon is serving this node already"
-    my $lastlog=`/bin/ls -t $LOGDIR/slony1/node$nodenum/$dbname*log | head -1`;
+    my $lastlog=`/bin/ls -t $LOGDIR/node$nodenum/$dbname*log | head -1`;
     my $lastline=`tail -1 $lastlog`;
     if ($lastline =~ /Another slon daemon is serving this node already/) {
       $kick = "YES";   # Yup, need to tell slonik to reset this node

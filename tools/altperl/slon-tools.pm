@@ -160,15 +160,15 @@ sub start_slon {
   $SYNC_CHECK_INTERVAL ||= 1000;
   $DEBUGLEVEL ||= 0;
   $LOG_NAME_SUFFIX ||= '%Y-%m-%d';
-  system("mkdir -p $LOGDIR/slony1/node$nodenum");
+  system("mkdir -p $LOGDIR/node$nodenum");
   my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
   my $logfilesuffix = POSIX::strftime( "$LOG_NAME_SUFFIX",localtime );
   chomp $logfilesuffix;
 
   if ($APACHE_ROTATOR) {
-    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_$logfilesuffix.log\" 10M &";
+    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/node$nodenum/" .  $dbname . "_$logfilesuffix.log\" 10M &";
   } else {
-    $cmd .= "> $LOGDIR/slony1/node$nodenum/$dbname-$logfilesuffix.log 2>&1 &";
+    $cmd .= "> $LOGDIR/node$nodenum/$dbname-$logfilesuffix.log 2>&1 &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
   system ($cmd);
