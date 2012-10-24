@@ -3,6 +3,10 @@
 
 - Bug #240 :: Improve notes on VACUUM
 
+- Bug #278 :: assorted spelling fixes
+
+- Bug #280 :: shared library build should use CFLAGS and LDFLAGS
+
 ** 2.2.0
 - Bug #276 :: Fixed detection of duplicate value in sl_nodelock
 - Bug #275 :: fix memory leak in monitor thread

@@ -208,7 +208,7 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 
 	#--
-	# init the first node.  Its id MUST be 1.  This creates the schema
+	# init the first node.  This creates the schema
 	# _$CLUSTERNAME containing all replication system specific database
 	# objects.
 
