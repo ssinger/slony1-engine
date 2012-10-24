@@ -236,6 +236,7 @@ limit 1)
 sub get_set {
     my $set = shift();
     my $match;
+    my $name;
 
     # If the variables are already set through $ENV{SLONYSET}, just
     # make sure we have an integer for $SET_ID
@@ -254,10 +255,11 @@ sub get_set {
     # Is this a set name or number?
     if ($SLONY_SETS->{$set}) {
 	$match = $SLONY_SETS->{$set};
+	$name  = $set;
     }
     elsif ($set =~ /^(?:set)?(\d+)$/) {
 	$set = $1;
-	my ($name) = grep { $SLONY_SETS->{$_}->{"set_id"} == $set } keys %{$SLONY_SETS};
+	($name) = grep { $SLONY_SETS->{$_}->{"set_id"} == $set } keys %{$SLONY_SETS};
 	$match = $SLONY_SETS->{$name};
     }
     else {
@@ -265,6 +267,7 @@ sub get_set {
     }
 
     # Set the variables for this set.
+    $SET_NAME     = $name;
     $SET_ORIGIN   = ($match->{"origin"} or $MASTERNODE);
     $TABLE_ID     = $match->{"table_id"};
     $SEQUENCE_ID  = $match->{"sequence_id"};

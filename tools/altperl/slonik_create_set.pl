@@ -51,21 +51,19 @@ $slonik .= "# TABLE ADD KEY\n";
 # CREATE SET
 $slonik .= "\n";
 $slonik .= "# CREATE SET\n";
-$slonik .= "    create set (id = $SET_ID, origin = $SET_ORIGIN, comment = 'Set $SET_ID for $CLUSTER_NAME');\n";
+$slonik .= "    create set (id = $SET_ID, origin = $SET_ORIGIN, comment = 'Set $SET_ID ($SET_NAME) for $CLUSTER_NAME');\n";
 
 # SET ADD TABLE
 $slonik .= "\n";
 $slonik .= "# SET ADD TABLE\n";
-$slonik .= "  echo 'Subscription set $SET_ID created';\n";
+$slonik .= "  echo 'Subscription set $SET_ID ($SET_NAME) created';\n";
 $slonik .= "  echo 'Adding tables to the subscription set';\n";
 
 $TABLE_ID = 1 if $TABLE_ID < 1;
 
-
-
 foreach my $table (@PKEYEDTABLES) {
     $table = ensure_namespace($table);
-	$table = lc($table) if $FOLD_CASE;
+    $table = lc($table) if $FOLD_CASE;
     $slonik .= "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     $slonik .= "                 full qualified name = '$table',\n";
     $slonik .= "                 comment = 'Table $table with primary key');\n";
@@ -76,7 +74,7 @@ foreach my $table (@PKEYEDTABLES) {
 foreach my $table (keys %KEYEDTABLES) {
     my $key = $KEYEDTABLES{$table};
     $table = ensure_namespace($table);
-	$table = lc($table) if $FOLD_CASE;
+    $table = lc($table) if $FOLD_CASE;
     $slonik .= "  set add table (set id = $SET_ID, origin = $SET_ORIGIN, id = $TABLE_ID,\n";
     $slonik .= "                 full qualified name = '$table', key='$key',\n";
     $slonik .= "                 comment = 'Table $table with candidate primary key $key');\n";
@@ -92,7 +90,7 @@ $slonik .= "  echo 'Adding sequences to the subscription set';\n";
 $SEQUENCE_ID = 1 if $SEQUENCE_ID < 1;
 foreach my $seq (@SEQUENCES) {
     $seq = ensure_namespace($seq);
-	$seq = lc($seq) if $FOLD_CASE;
+    $seq = lc($seq) if $FOLD_CASE;
     $slonik .= "  set add sequence (set id = $SET_ID, origin = $SET_ORIGIN, id = $SEQUENCE_ID,\n";
     $slonik .= "                    full qualified name = '$seq',\n";
     $slonik .= "                    comment = 'Sequence $seq');\n";
