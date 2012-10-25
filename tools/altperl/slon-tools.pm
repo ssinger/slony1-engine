@@ -123,7 +123,7 @@ sub ps_args {
 
 sub get_pid {
   my ($node) = @_;
-  $node =~ /node(\d*)$/;
+  $node =~ /^(?:node)?(\d+)$/;
   my $nodenum = $1;
   my $pid;
   my $tpid;
