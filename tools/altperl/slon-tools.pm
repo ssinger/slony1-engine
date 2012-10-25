@@ -221,8 +221,13 @@ from "_$CLUSTER_NAME".sl_confirm c, "_$CLUSTER_NAME".sl_subscribe slony_master
 limit 1)
 ;
   };
-  my ($port, $host, $dbname, $dbuser)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum]);
-  my $result=`@@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  my ($port, $host, $dbname, $dbuser, $passwd)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum], $PASSWORD[$nodenum]);
+  my $result;
+  if ($passwd) {
+     $result=`PGPASSWORD=$passwd @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  } else {
+     $result=`@@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  }
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";
