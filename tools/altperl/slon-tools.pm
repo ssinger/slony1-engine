@@ -15,7 +15,8 @@ sub add_node {
 		parent => undef,
 		noforward => undef,
 		sslmode => undef,
-		options => undef
+		options => undef,
+		config => undef
 	       );
   my $K;
   while ($K= shift) {
@@ -71,6 +72,10 @@ sub add_node {
   if ($options) {
     $OPTIONS[$node] = $options;
   }
+  my $config = $PARAMS{ 'config' };
+  if ($config) {
+    $CONFIG[$node] = $config;
+  }
 }
 
 # This is the usual header to a slonik invocation that declares the
@@ -124,9 +129,16 @@ sub get_pid {
   my $nodenum = $1;
   my $pid;
   my $tpid;
-  my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
+  my $command;
+  my ($dsn, $config) = ($DSN[$nodenum], $CONFIG[$nodenum]);
   #  print "Searching for PID for $dbname on port $dbport\n";
-  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME \" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'";
+  if ($config) {
+    my $config_regexp = quotemeta( $config );
+    $command =  ps_args() . "| egrep \"[s]lon -f $config_regexp \" | sort -n | awk '{print \$2}'";
+  } else {
+    $dsn = quotemeta($dsn);
+    $command =  ps_args() . "| egrep \"[s]lon .* $CLUSTER_NAME \" | egrep \"$dsn\" | sort -n | awk '{print \$2}'";
+  }
   #print "Command:\n$command\n";
   open(PSOUT, "$command|");
   while ($tpid = <PSOUT>) {
@@ -156,12 +168,17 @@ sub get_node_name {
 
 sub start_slon {
   my ($nodenum) = @_;
-  my ($dsn, $dbname, $opts) = ($DSN[$nodenum], $DBNAME[$nodenum], $OPTIONS[$nodenum]);
+  my ($dsn, $dbname, $opts, $config) = ($DSN[$nodenum], $DBNAME[$nodenum], $OPTIONS[$nodenum], $CONFIG[$nodenum]);
   $SYNC_CHECK_INTERVAL ||= 1000;
   $DEBUGLEVEL ||= 0;
   $LOG_NAME_SUFFIX ||= '%Y-%m-%d';
   system("mkdir -p $LOGDIR/node$nodenum");
-  my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
+  my $cmd;
+  if ($config) {
+     $cmd = "@@SLONBINDIR@@/slon -f $config ";
+  } else {
+     $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
+  }
   my $logfilesuffix = POSIX::strftime( "$LOG_NAME_SUFFIX",localtime );
   chomp $logfilesuffix;
 
