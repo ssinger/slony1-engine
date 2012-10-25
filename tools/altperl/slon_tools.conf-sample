@@ -55,21 +55,24 @@ if ($ENV{"SLONYNODES"}) {
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node1_config_file.conf');
 
     add_node(node     => 2,
 	     host     => 'server2',
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node2_config_file.conf');
 
     add_node(node     => 3,
 	     host     => 'server3',
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node3_config_file.conf');
 
     # If the node should only receive event notifications from a
     # single node (e.g. if it can't access the other nodes), you can
@@ -82,7 +85,8 @@ if ($ENV{"SLONYNODES"}) {
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node4_config_file.conf');
 
 }
 
@@ -92,7 +96,7 @@ if ($ENV{"SLONYNODES"}) {
 $SLONY_SETS = {
 
     # A unique name for the set
-    "set1" => {
+    "set1_name" => {
 
 	# The set_id, also unique
 	"set_id" => 1,
