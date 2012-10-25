@@ -290,20 +290,25 @@ sub get_set {
 # It does so by looking to see if there is a SUBSCRIBE_SET event corresponding
 # to a sl_subscribe entry that is not yet active.
 sub node_is_subscribing {
-  my $see_if_subscribing = qq {
+  my ($nodenum) = @_;
+  my $query = qq{
 select * from "_$CLUSTER_NAME".sl_event e, "_$CLUSTER_NAME".sl_subscribe s
 where ev_origin = "_$CLUSTER_NAME".getlocalnodeid('_$CLUSTER_NAME') and  -- Event on local node
       ev_type = 'SUBSCRIBE_SET' and                            -- Event is SUBSCRIBE SET
       --- Then, match criteria against sl_subscribe
-      sub_set = ev_data1 and sub_provider = ev_data2 and sub_receiver = ev_data3 and
+      sub_set::text = ev_data1 and sub_provider::text = ev_data2 and sub_receiver::text = ev_data3 and
       (case sub_forward when 'f' then 'f'::text when 't' then 't'::text end) = ev_data4
-
       --- And we're looking for a subscription that is not yet active
       and not sub_active
 limit 1;   --- One such entry is sufficient...
 };
-  my ($port, $host, $dbname, $dbuser)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum]);
-  my $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
+  my ($port, $host, $dbname, $dbuser, $passwd)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum], $PASSWORD[$nodenum]);
+  my $result;
+  if ($passwd) {
+     $result=`PGPASSWORD=$passwd @@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
+  } else {
+     $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
+  }
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";
