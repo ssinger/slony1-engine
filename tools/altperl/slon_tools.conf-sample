@@ -45,6 +45,18 @@ if ($ENV{"SLONYNODES"}) {
     # Which debugging level to use?  [0-4]
     $DEBUGLEVEL = 2;
 
+    # WATCHDOG configuration
+    # WatchDog inicialization (default 1 as in slon_start)
+    # $START_WATCHDOG = 1;
+
+    # Watchdog Sleep Time (default 30 as in slon_start)
+    $SLEEP_TIME = 60;
+
+    # Watchdog version to use 1 or 2 (default 1)
+    # $WATCHDOG_VERSION = 1;
+    # Be verbose (default 1)
+    $WATCHDOG_VERBOSE = 0;
+
     # Include add_node lines for each node in the cluster.  Be sure to
     # use host names that will resolve properly on all nodes
     # (i.e. only use 'localhost' if all nodes are on the same host).
