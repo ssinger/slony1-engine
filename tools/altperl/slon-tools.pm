@@ -132,7 +132,7 @@ sub get_pid {
   #  print "Searching for PID for $dbname on port $dbport\n";
   if ($config) {
     my $config_regexp = quotemeta( $config );
-    $command =  ps_args() . "| egrep \"[s]lon -f $config_regexp \" | sort -n | awk '{print \$2}'";
+    $command =  ps_args() . "| egrep \"[s]lon -f $config_regexp\" | sort -n | awk '{print \$2}'";
   } else {
     $dsn = quotemeta($dsn);
     $command =  ps_args() . "| egrep \"[s]lon .* $CLUSTER_NAME \" | egrep \"$dsn\" | sort -n | awk '{print \$2}'";
