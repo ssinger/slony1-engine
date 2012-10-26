@@ -57,12 +57,12 @@ while (1) {
     # Next, restart the slon process to service the node
     start_slon($nodenum);
     $pid = get_pid($node);
-    print SLONLOG "WATCHDOG: Restarted slon for the $CLUSTER_NAME cluster, PID $pid\n";
+    print SLONLOG "WATCHDOG: Restarted slon for the $CLUSTER_NAME cluster $node, PID $pid\n";
   } else {
     open(LOG, ">>$LOGDIR/slon_watchdog.log");
     print LOG "\n";
     system "date >> $LOGDIR/slon_watchdog.log";
-    print LOG "Found slon daemon running for the $CLUSTER_NAME cluster, PID $pid\n";
+    print LOG "Found slon daemon running for the $CLUSTER_NAME cluster $node, PID $pid\n";
     print LOG "Looks Ok\n";
     print LOG "Sleeping for $sleep +/- " . int($sleep/2) . " seconds\n";
   }
