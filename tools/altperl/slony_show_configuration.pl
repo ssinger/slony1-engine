@@ -28,6 +28,7 @@ my $USAGE =
         noforward : return noforward configuration
         parent : return parent node
         dsn : return dsn connection string
+        cluster : return cluster name
         node-config-file : return node config file name
         node-config-file-quotemeta : retun quoted node config file name
         config-file : return slon-tools config file name
@@ -68,18 +69,18 @@ sub print_configurations {
     print "With set configuration from ", $ENV{"SLONYSET"}, "\n";
   }
   print qq{
-  Slony-I Cluster: $CLUSTER_NAME
-  Logs stored under $LOGDIR
-  Slony Binaries in: @@SLONBINDIR@@
-  };
+Slony-I Cluster: $CLUSTER_NAME
+Logs stored under $LOGDIR
+Slony Binaries in: @@SLONBINDIR@@
+};
   if ($APACHE_ROTATOR) {
     print "Rotating logs using Apache Rotator: $APACHE_ROTATOR\n";
   }
   print qq{
-  Node information
-  --------------------------------
-  };
-  foreach $node (@NODES) {
+Node information
+--------------------------------
+};
+  for $node (@NODES) {
     printf("Node: %2d Host: %15s User: %8s Port: %4d Forwarding? %4s Parent: %2d Database: %10s\n         DSN: %s\n",
          $node, $HOST[$node], $USER[$node], $PORT[$node], $NOFORWARD[$node],
          $PARENT[$node], $DBNAME[$node], $DSN[$node]);
@@ -97,6 +98,8 @@ sub print_property_value {
     # replication configs
     case "parent"    { print $PARENT[$nodenum], "\n"; }
     case "noforward" { print $NOFORWARD[$nodenum], "\n"; }
+    # Misc
+    case "cluster"   { print $CLUSTER_NAME, "\n"; }
     # config files
     case "node-config-file"           { print $CONFIG[$nodenum], "\n"; }
     case "node-config-file-quotemeta" { print quotemeta( $CONFIG[$nodenum] ), "\n"; }
