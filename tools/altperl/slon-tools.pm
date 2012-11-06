@@ -4,6 +4,7 @@
 # Copyright 2004-2009 Afilias Canada
 
 use POSIX;
+use File::Temp qw/ tempfile tempdir /;
 
 sub add_node {
   my %PARAMS = (host=> undef,
@@ -226,7 +227,9 @@ limit 1)
   my ($port, $host, $dbname, $dbuser, $passwd)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum], $PASSWORD[$nodenum]);
   my $result;
   if ($passwd) {
-     $result=`PGPASSWORD=$passwd @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+     my ($fh, $filename) = tempfile();
+     print $fh "$host:$port:$dbname:$dbuser:$password";
+     $result=`PGPASSFILE=$filename @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
   } else {
      $result=`@@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
   }
@@ -312,9 +315,11 @@ limit 1;   --- One such entry is sufficient...
   my ($port, $host, $dbname, $dbuser, $passwd)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum], $PASSWORD[$nodenum]);
   my $result;
   if ($passwd) {
-     $result=`PGPASSWORD=$passwd @@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
+     my ($fh, $filename) = tempfile();
+     print $fh "$host:$port:$dbname:$dbuser:$password";
+     $result=`PGPASSFILE=$filename @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
   } else {
-     $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
+     $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" -U $dbuser --tuples-only $dbname`;
   }
   chomp $result;
   #print "Query was: $query\n";
