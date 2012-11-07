@@ -129,24 +129,24 @@ sub get_pid {
   $node =~ /^(?:node)?(\d+)$/;
   my $nodenum = $1;
   my $pid;
-  my $tpid;
-  my $command;
   my ($dsn, $config) = ($DSN[$nodenum], $CONFIG[$nodenum]);
   #  print "Searching for PID for $dbname on port $dbport\n";
-  if ($config) {
-    my $config_regexp = quotemeta( $config );
-    $command =  ps_args() . "| egrep \"[s]lon -f $config_regexp\" | awk '{print \$2}' | sort -n | head -1";
-  } else {
-    $dsn = quotemeta($dsn);
-    $command =  ps_args() . "| egrep \"[s]lon .* $CLUSTER_NAME \" | egrep \"$dsn\" | awk '{print \$2}' | sort -n | head -1";
+
+  $PIDFILE_DIR ||= '/var/run/slony1';
+  $PIDFILE_PREFIX ||= $CLUSTER_NAME;
+
+  my $pidfile;
+  $pidfile = "$PIDFILE_DIR/$PIDFILE_PREFIX" . "_node$nodenum.pid";
+
+  open my $in, '<' , $pidfile or return '';
+
+  while( <$in> ) {
+    $pid = $_;
   }
+
   #print "Command:\n$command\n";
-  open(PSOUT, "$command|");
-  while ($tpid = <PSOUT>) {
-    chomp $tpid;
-    $pid = $tpid;
-  }
-  close(PSOUT);
+  chomp $pid;
+
   return $pid;
 }
 
@@ -156,23 +156,33 @@ sub start_slon {
   $SYNC_CHECK_INTERVAL ||= 1000;
   $DEBUGLEVEL ||= 0;
   $LOG_NAME_SUFFIX ||= '%Y-%m-%d';
+  $PIDFILE_DIR ||= '/var/run/slony1';
+  $PIDFILE_PREFIX ||= $CLUSTER_NAME;
+
+  # system("mkdir -p $PIDFILE_DIR" );
   system("mkdir -p $LOGDIR/node$nodenum");
-  my $cmd;
+
+  my $cmd,$pidfile;
+
+  $pidfile = "$PIDFILE_DIR/$PIDFILE_PREFIX" . "_node$nodenum.pid";
+
   if ($config) {
-     $cmd = "@@SLONBINDIR@@/slon -f $config ";
+     $cmd = "@@SLONBINDIR@@/slon -p $pidfile -f $config ";
   } else {
-     $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
+     $cmd = "@@SLONBINDIR@@/slon -p $pidfile -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
   }
   my $logfilesuffix = POSIX::strftime( "$LOG_NAME_SUFFIX",localtime );
   chomp $logfilesuffix;
 
   if ($APACHE_ROTATOR) {
-    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/node$nodenum/" .  $dbname . "_$logfilesuffix.log\" 10M &";
+    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/node$nodenum/" . $dbname . "-$logfilesuffix.log\" 10M &";
   } else {
     $cmd .= "> $LOGDIR/node$nodenum/$dbname-$logfilesuffix.log 2>&1 &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
   system ($cmd);
+  # give time to slon daemon start and create pid file
+  sleep 3;
 }
 
 

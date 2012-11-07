@@ -75,21 +75,6 @@ unless ($WATCHDOG_ONLY) {
     }
 }
 
-sub shut_off_processes($$) {
-    my ( $watchdog_suffix , $nodenum ) = @_;
-
-    while ($pid = <PSOUT>) {
-	chomp $pid;
-	if (!($pid)) {
-	    print "No slon$watchdog_suffix is running for the cluster $CLUSTER_NAME, node $nodenum!\n";
-	} else {
-	    $found="y";
-	    kill 9, $pid;
-	    print "slon$watchdog_suffix for cluster $CLUSTER_NAME node $nodenum killed - PID [$pid]\n";
-	}
-    }
-}
-
 sub kill_watchdog($) {
   my ($nodenum) = @_;
 
@@ -99,24 +84,31 @@ sub kill_watchdog($) {
 
   #print "Command:\n$command\n";
   open(PSOUT, "$command|");
-  shut_off_processes('_watchdog',$nodenum);
+
+  while ($pid = <PSOUT>) {
+      chomp $pid;
+      if (!($pid)) {
+          print "No slon_watchdog is running for the cluster $CLUSTER_NAME, node $nodenum!\n";
+      } else {
+          $found="y";
+          kill 9, $pid;
+          print "slon_watchdog for cluster $CLUSTER_NAME node $nodenum killed - PID [$pid]\n";
+      }
+  }
   close(PSOUT);
 }
 
 sub kill_slon_node($) {
   my ($nodenum) = @_;
 
-  my $command;
-  my ($dsn, $config) = ($DSN[$nodenum], $CONFIG[$nodenum]);
-  if ($config) {
-    my $config_regexp = quotemeta( $config );
-    $command =  ps_args() . "| egrep \"[s]lon -f $config_regexp\" | awk '{print \$2}' | sort -n";
-  } else {
-    $dsn = quotemeta($dsn);
-    $command =  ps_args() . "| egrep \"[s]lon .* $CLUSTER_NAME \" | egrep \"$dsn\" | awk '{print \$2}' | sort -n";
-  }
+  my $pid = get_pid($nodenum);
+
   #print "Command:\n$command\n";
-  open(PSOUT, "$command|");
-  shut_off_processes("",$nodenum);
-  close(PSOUT);
+  if (!($pid)) {
+    print "No slon is running for the cluster $CLUSTER_NAME, node $nodenum!\n";
+  } else {
+    $found="y";
+    kill 15, $pid;
+    print "slon for cluster $CLUSTER_NAME node $nodenum killed - PID [$pid]\n";
+  }
 }
