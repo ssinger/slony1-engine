@@ -45,6 +45,11 @@ my $logfile = "$LOGDIR/slon-watchdog.log";
 
 log_to_file( $logfile , "Invoking watchdog for $CLUSTER_NAME node $nodenum, sleep time = $sleep +/- " . int($sleep/2) . " seconds");
 
+# When slon daemon is just started, may not have time to start syncronization
+# and the watchdog will kill the process with no mercy.
+# So sleep to give time to slony try to do their job.
+sleep $sleep;
+
 while (1) {
   my $res = query_slony_status($nodenum);    # See where the node stands
   my $eventsOK;
@@ -109,7 +114,8 @@ while (1) {
       sleep 3;
       kill 15, $pid;
       sleep 3;
-      kill 9, $pid;
+      # if killed with 9 the pid file isn´t deleted and the service don´t restart
+      # kill 9, $pid;
     }
     log_to_file($logfile,"restart slon for $CLUSTER_NAME node $nodenum");
     start_slon($nodenum);

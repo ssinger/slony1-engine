@@ -20,6 +20,16 @@ if ($ENV{"SLONYNODES"}) {
     # contain Slony-related data.
     $CLUSTER_NAME = 'replication';
 
+    # The directory where Slony store PID files.  This
+    # directory will need to be writable by the user that invokes
+    # Slony.
+    $PIDFILE_DIR = /var/run/slony1
+
+    # PID file prefix. Files will be generated as $PIDFILE_PREFIX_node#
+    # in PIDFILE_DIR
+    # If not defined, default to $CLUSTER_NAME
+    # $PIDFILE_PREFIX =
+
     # The directory where Slony should record log messages.  This
     # directory will need to be writable by the user that invokes
     # Slony.
