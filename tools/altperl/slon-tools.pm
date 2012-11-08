@@ -121,8 +121,8 @@ sub ps_args {
     return "/usr/bin/ps auxww";
   } elsif ($sys eq "Darwin") {
     return "/bin/ps auxww";
-  } 
-  return "/usr/bin/ps -auxww";    # This may be questionable for other systems; extend as needed!    
+  }
+  return "/usr/bin/ps -auxww";    # This may be questionable for other systems; extend as needed!
 }
 
 sub get_pid {
