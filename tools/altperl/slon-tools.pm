@@ -246,7 +246,7 @@ limit 1)
   if ($passwd) {
      my ($fh, $filename) = tempfile();
      chmod( 0600, $filename);
-     print $fh "$host:$port:$dbname:$dbuser:$password";
+     print $fh "$host:$port:$dbname:$dbuser:$passwd";
      close $fh;
      $result=`PGPASSFILE=$filename @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
      unlink $filename;
@@ -337,7 +337,7 @@ limit 1;   --- One such entry is sufficient...
   if ($passwd) {
      my ($fh, $filename) = tempfile();
      chmod(0600,$filename);
-     print $fh "$host:$port:$dbname:$dbuser:$password";
+     print $fh "$host:$port:$dbname:$dbuser:$passwd";
      close $fh;
      $result=`PGPASSFILE=$filename @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
      unlink $filename;
