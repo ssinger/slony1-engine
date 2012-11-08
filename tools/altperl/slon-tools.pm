@@ -4,6 +4,7 @@
 # Copyright 2004-2009 Afilias Canada
 
 use POSIX;
+use Errno;
 use File::Temp qw/ tempfile tempdir /;
 
 sub add_node {
@@ -146,6 +147,12 @@ sub get_pid {
 
   #print "Command:\n$command\n";
   chomp $pid;
+
+  #make sure the pid actually exists
+  kill(0,$pid);
+  if ($! == Errno::ESRCH) {
+	  return 0;
+  }
 
   return $pid;
 }
