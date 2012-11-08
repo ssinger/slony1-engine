@@ -23,7 +23,7 @@ if ($ENV{"SLONYNODES"}) {
     # The directory where Slony store PID files.  This
     # directory will need to be writable by the user that invokes
     # Slony.
-    $PIDFILE_DIR = /var/run/slony1
+    $PIDFILE_DIR = '/var/run/slony1';
 
     # PID file prefix. Files will be generated as $PIDFILE_PREFIX_node#
     # in PIDFILE_DIR
