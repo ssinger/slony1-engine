@@ -29,6 +29,7 @@ my $USAGE =
     Kills all running slon and slon_watchdog on this machine for every
     node in the cluster.
 
+    --only-node=i Only kill slon processes for the indicated node
 ";
 
 if ($SHOW_USAGE) {
