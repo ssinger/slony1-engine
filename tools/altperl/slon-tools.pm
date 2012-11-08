@@ -4,6 +4,7 @@
 # Copyright 2004-2009 Afilias Canada
 
 use POSIX;
+use File::Temp qw/ tempfile tempdir /;
 
 sub add_node {
   my %PARAMS = (host=> undef,
@@ -15,7 +16,8 @@ sub add_node {
 		parent => undef,
 		noforward => undef,
 		sslmode => undef,
-		options => undef
+		options => undef,
+		config => undef
 	       );
   my $K;
   while ($K= shift) {
@@ -71,6 +73,10 @@ sub add_node {
   if ($options) {
     $OPTIONS[$node] = $options;
   }
+  my $config = $PARAMS{ 'config' };
+  if ($config) {
+    $CONFIG[$node] = $config;
+  }
 }
 
 # This is the usual header to a slonik invocation that declares the
@@ -120,58 +126,63 @@ sub ps_args {
 
 sub get_pid {
   my ($node) = @_;
-  $node =~ /node(\d*)$/;
+  $node =~ /^(?:node)?(\d+)$/;
   my $nodenum = $1;
   my $pid;
-  my $tpid;
-  my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
+  my ($dsn, $config) = ($DSN[$nodenum], $CONFIG[$nodenum]);
   #  print "Searching for PID for $dbname on port $dbport\n";
-  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME \" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$2}'";
-  #print "Command:\n$command\n";
-  open(PSOUT, "$command|");
-  while ($tpid = <PSOUT>) {
-    chomp $tpid;
-    $pid = $tpid;
-  }
-  close(PSOUT);
-  return $pid;
-}
 
-sub get_node_name {
-  my ($node) = @_;
-  $node =~ /node(\d*)$/;
-  my $nodenum = $1;
-  my $nodename;
-  my $tnodename;
-  my ($dbname, $dbport, $dbhost) = ($DBNAME[$nodenum], $PORT[$nodenum], $HOST[$nodenum]);
-  my $command =  ps_args() . "| egrep \"[s]lon .*$CLUSTER_NAME \" | egrep \"host=$dbhost dbname=$dbname.*port=$dbport\" | sort -n | awk '{print \$15}'";
-  open(PSOUT, "$command|");
-  while ($tnodename = <PSOUT>) {
-    chomp $tnodename;
-    $nodename = $tnodename;
+  $PIDFILE_DIR ||= '/var/run/slony1';
+  $PIDFILE_PREFIX ||= $CLUSTER_NAME;
+
+  my $pidfile;
+  $pidfile = "$PIDFILE_DIR/$PIDFILE_PREFIX" . "_node$nodenum.pid";
+
+  open my $in, '<' , $pidfile or return '';
+
+  while( <$in> ) {
+    $pid = $_;
   }
-  close(PSOUT);
-  return $nodename;
+
+  #print "Command:\n$command\n";
+  chomp $pid;
+
+  return $pid;
 }
 
 sub start_slon {
   my ($nodenum) = @_;
-  my ($dsn, $dbname, $opts) = ($DSN[$nodenum], $DBNAME[$nodenum], $OPTIONS[$nodenum]);
+  my ($dsn, $dbname, $opts, $config) = ($DSN[$nodenum], $DBNAME[$nodenum], $OPTIONS[$nodenum], $CONFIG[$nodenum]);
   $SYNC_CHECK_INTERVAL ||= 1000;
   $DEBUGLEVEL ||= 0;
   $LOG_NAME_SUFFIX ||= '%Y-%m-%d';
-  system("mkdir -p $LOGDIR/slony1/node$nodenum");
-  my $cmd = "@@SLONBINDIR@@/slon -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
+  $PIDFILE_DIR ||= '/var/run/slony1';
+  $PIDFILE_PREFIX ||= $CLUSTER_NAME;
+
+  # system("mkdir -p $PIDFILE_DIR" );
+  system("mkdir -p $LOGDIR/node$nodenum");
+
+  my $cmd,$pidfile;
+
+  $pidfile = "$PIDFILE_DIR/$PIDFILE_PREFIX" . "_node$nodenum.pid";
+
+  if ($config) {
+     $cmd = "@@SLONBINDIR@@/slon -p $pidfile -f $config ";
+  } else {
+     $cmd = "@@SLONBINDIR@@/slon -p $pidfile -s $SYNC_CHECK_INTERVAL -d$DEBUGLEVEL $opts $CLUSTER_NAME '$dsn' ";
+  }
   my $logfilesuffix = POSIX::strftime( "$LOG_NAME_SUFFIX",localtime );
   chomp $logfilesuffix;
 
   if ($APACHE_ROTATOR) {
-    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/slony1/node$nodenum/" .  $dbname . "_$logfilesuffix.log\" 10M &";
+    $cmd .= "2>&1 | $APACHE_ROTATOR \"$LOGDIR/node$nodenum/" . $dbname . "-$logfilesuffix.log\" 10M &";
   } else {
-    $cmd .= "> $LOGDIR/slony1/node$nodenum/$dbname-$logfilesuffix.log 2>&1 &";
+    $cmd .= "> $LOGDIR/node$nodenum/$dbname-$logfilesuffix.log 2>&1 &";
   }
   print "Invoke slon for node $nodenum - $cmd\n";
   system ($cmd);
+  # give time to slon daemon start and create pid file
+  sleep 3;
 }
 
 
@@ -223,8 +234,15 @@ from "_$CLUSTER_NAME".sl_confirm c, "_$CLUSTER_NAME".sl_subscribe slony_master
 limit 1)
 ;
   };
-  my ($port, $host, $dbname, $dbuser)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum]);
-  my $result=`@@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  my ($port, $host, $dbname, $dbuser, $passwd)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum], $PASSWORD[$nodenum]);
+  my $result;
+  if ($passwd) {
+     my ($fh, $filename) = tempfile();
+     print $fh "$host:$port:$dbname:$dbuser:$password";
+     $result=`PGPASSFILE=$filename @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  } else {
+     $result=`@@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  }
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";
@@ -236,6 +254,7 @@ limit 1)
 sub get_set {
     my $set = shift();
     my $match;
+    my $name;
 
     # If the variables are already set through $ENV{SLONYSET}, just
     # make sure we have an integer for $SET_ID
@@ -254,10 +273,11 @@ sub get_set {
     # Is this a set name or number?
     if ($SLONY_SETS->{$set}) {
 	$match = $SLONY_SETS->{$set};
+	$name  = $set;
     }
     elsif ($set =~ /^(?:set)?(\d+)$/) {
 	$set = $1;
-	my ($name) = grep { $SLONY_SETS->{$_}->{"set_id"} == $set } keys %{$SLONY_SETS};
+	($name) = grep { $SLONY_SETS->{$_}->{"set_id"} == $set } keys %{$SLONY_SETS};
 	$match = $SLONY_SETS->{$name};
     }
     else {
@@ -265,6 +285,7 @@ sub get_set {
     }
 
     # Set the variables for this set.
+    $SET_NAME     = $name;
     $SET_ORIGIN   = ($match->{"origin"} or $MASTERNODE);
     $TABLE_ID     = $match->{"table_id"};
     $SEQUENCE_ID  = $match->{"sequence_id"};
@@ -289,20 +310,27 @@ sub get_set {
 # It does so by looking to see if there is a SUBSCRIBE_SET event corresponding
 # to a sl_subscribe entry that is not yet active.
 sub node_is_subscribing {
-  my $see_if_subscribing = qq {
+  my ($nodenum) = @_;
+  my $query = qq{
 select * from "_$CLUSTER_NAME".sl_event e, "_$CLUSTER_NAME".sl_subscribe s
 where ev_origin = "_$CLUSTER_NAME".getlocalnodeid('_$CLUSTER_NAME') and  -- Event on local node
       ev_type = 'SUBSCRIBE_SET' and                            -- Event is SUBSCRIBE SET
       --- Then, match criteria against sl_subscribe
-      sub_set = ev_data1 and sub_provider = ev_data2 and sub_receiver = ev_data3 and
+      sub_set::text = ev_data1 and sub_provider::text = ev_data2 and sub_receiver::text = ev_data3 and
       (case sub_forward when 'f' then 'f'::text when 't' then 't'::text end) = ev_data4
-
       --- And we're looking for a subscription that is not yet active
       and not sub_active
 limit 1;   --- One such entry is sufficient...
 };
-  my ($port, $host, $dbname, $dbuser)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum]);
-  my $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" --tuples-only -U $dbuser $dbname`;
+  my ($port, $host, $dbname, $dbuser, $passwd)= ($PORT[$nodenum], $HOST[$nodenum], $DBNAME[$nodenum], $USER[$nodenum], $PASSWORD[$nodenum]);
+  my $result;
+  if ($passwd) {
+     my ($fh, $filename) = tempfile();
+     print $fh "$host:$port:$dbname:$dbuser:$password";
+     $result=`PGPASSFILE=$filename @@PGBINDIR@@/psql -p $port -h $host -U $dbuser -c "$query" --tuples-only $dbname`;
+  } else {
+     $result=`@@PGBINDIR@@/psql -p $port -h $host -c "$query" -U $dbuser --tuples-only $dbname`;
+  }
   chomp $result;
   #print "Query was: $query\n";
   #print "Result was: $result\n";

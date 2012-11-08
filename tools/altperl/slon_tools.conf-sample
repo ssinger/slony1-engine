@@ -20,6 +20,16 @@ if ($ENV{"SLONYNODES"}) {
     # contain Slony-related data.
     $CLUSTER_NAME = 'replication';
 
+    # The directory where Slony store PID files.  This
+    # directory will need to be writable by the user that invokes
+    # Slony.
+    $PIDFILE_DIR = /var/run/slony1
+
+    # PID file prefix. Files will be generated as $PIDFILE_PREFIX_node#
+    # in PIDFILE_DIR
+    # If not defined, default to $CLUSTER_NAME
+    # $PIDFILE_PREFIX =
+
     # The directory where Slony should record log messages.  This
     # directory will need to be writable by the user that invokes
     # Slony.
@@ -45,6 +55,18 @@ if ($ENV{"SLONYNODES"}) {
     # Which debugging level to use?  [0-4]
     $DEBUGLEVEL = 2;
 
+    # WATCHDOG configuration
+    # WatchDog inicialization (default 1 as in slon_start)
+    # $START_WATCHDOG = 1;
+
+    # Watchdog Sleep Time (default 30 as in slon_start)
+    $SLEEP_TIME = 60;
+
+    # Watchdog version to use 1 or 2 (default 1)
+    # $WATCHDOG_VERSION = 1;
+    # Be verbose (default 1)
+    $WATCHDOG_VERBOSE = 0;
+
     # Include add_node lines for each node in the cluster.  Be sure to
     # use host names that will resolve properly on all nodes
     # (i.e. only use 'localhost' if all nodes are on the same host).
@@ -55,21 +77,24 @@ if ($ENV{"SLONYNODES"}) {
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node1_config_file.conf');
 
     add_node(node     => 2,
 	     host     => 'server2',
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node2_config_file.conf');
 
     add_node(node     => 3,
 	     host     => 'server3',
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node3_config_file.conf');
 
     # If the node should only receive event notifications from a
     # single node (e.g. if it can't access the other nodes), you can
@@ -82,7 +107,8 @@ if ($ENV{"SLONYNODES"}) {
 	     dbname   => 'database',
 	     port     => 5432,
 	     user     => 'postgres',
-             password => '');
+             password => '',
+             config   => '/path/to/node4_config_file.conf');
 
 }
 
@@ -92,7 +118,7 @@ if ($ENV{"SLONYNODES"}) {
 $SLONY_SETS = {
 
     # A unique name for the set
-    "set1" => {
+    "set1_name" => {
 
 	# The set_id, also unique
 	"set_id" => 1,

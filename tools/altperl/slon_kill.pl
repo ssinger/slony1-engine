@@ -10,14 +10,16 @@ use Getopt::Long;
 $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 $WATCHDOG_ONLY = 0;
+$ONLY_NODE = 0;
 
 # Read command-line options
 GetOptions("config=s"   => \$CONFIG_FILE,
 	   "help"       => \$SHOW_USAGE,
-	   "w|watchdog" => \$WATCHDOG_ONLY);
+	   "w|watchdog" => \$WATCHDOG_ONLY,
+	   "only-node=i" => \$ONLY_NODE);
 
 my $USAGE =
-"Usage: slon_kill [--config file] [-w|--watchdog]
+"Usage: slon_kill [--config file] [-w|--watchdog] 
 
     --config file  Location of the slon_tools.conf file
 
@@ -40,41 +42,73 @@ require $CONFIG_FILE;
 print "slon_kill.pl...   Killing all slon and slon_watchdog instances for the cluster $CLUSTER_NAME\n";
 print "1.  Kill slon watchdogs\n";
 
-# kill the watchdog
-my $watchdog_suffix = '_watchdog';
-open(PSOUT, ps_args() . " | egrep '[s]lon_watchdog' | sort -n | awk '{print \$2}'|");
-shut_off_processes($watchdog_suffix);
-$watchdog_suffix = '';
-close(PSOUT);
+$found="n";
+
+# kill the watchdogs
+if($ONLY_NODE) {
+  kill_watchdog($ONLY_NODE);
+} else {
+  for my $nodenum (@NODES) {
+    kill_watchdog($nodenum);
+  }
+}
 if ($found eq 'n') {
     print "No watchdogs found\n";
 }
 
 unless ($WATCHDOG_ONLY) {
     print "\n2. Kill slon processes\n";
-    
-    # kill the slon daemon
+
+    # kill the slon daemons
     $found="n";
-    open(PSOUT, ps_args() . " | egrep \"[s]lon .*$CLUSTER_NAME\" | sort -n | awk '{print \$2}'|");
-    shut_off_processes($watchdog_suffix);
-    close(PSOUT);
+
+    if($ONLY_NODE) {
+      kill_slon_node( $ONLY_NODE );
+    } else {
+      for my $nodenum (@NODES) {
+        kill_slon_node( $nodenum );
+      }
+    }
+
     if ($found eq 'n') {
-	print "No slon processes found\n";
+      print "No slon processes found\n";
     }
 }
 
-sub shut_off_processes($) {
-    my $watchdog_suffix=$_;
+sub kill_watchdog($) {
+  my ($nodenum) = @_;
 
-    $found="n";
-    while ($pid = <PSOUT>) {
-	chomp $pid;
-	if (!($pid)) {
-	    print "No slon $watchdog_suffix is running for the cluster $CLUSTER_NAME!\n";
-	} else {
-	    $found="y";
-	    kill 9, $pid;
-	    print "slon $watchdog_suffix for cluster $CLUSTER_NAME killed - PID [$pid]\n";
-	}
-    }
+  my $config_regexp = quotemeta( $CONFIG_FILE );
+
+  my $command =  ps_args() . "| egrep \"[s]lon_watchdog[2]? .*=$config_regexp node$nodenum \" | awk '{print \$2}' | sort -n";
+
+  #print "Command:\n$command\n";
+  open(PSOUT, "$command|");
+
+  while ($pid = <PSOUT>) {
+      chomp $pid;
+      if (!($pid)) {
+          print "No slon_watchdog is running for the cluster $CLUSTER_NAME, node $nodenum!\n";
+      } else {
+          $found="y";
+          kill 9, $pid;
+          print "slon_watchdog for cluster $CLUSTER_NAME node $nodenum killed - PID [$pid]\n";
+      }
+  }
+  close(PSOUT);
+}
+
+sub kill_slon_node($) {
+  my ($nodenum) = @_;
+
+  my $pid = get_pid($nodenum);
+
+  #print "Command:\n$command\n";
+  if (!($pid)) {
+    print "No slon is running for the cluster $CLUSTER_NAME, node $nodenum!\n";
+  } else {
+    $found="y";
+    kill 15, $pid;
+    print "slon for cluster $CLUSTER_NAME node $nodenum killed - PID [$pid]\n";
+  }
 }
