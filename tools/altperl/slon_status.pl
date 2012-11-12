@@ -36,9 +36,7 @@ if ($node =~ /^(?:node)?(\d+)$/) {
   die $USAGE;
 }
 
-$node_name = get_node_name($node);
-
-if (!$node_name) {
+if ( ! $DBNAME[$nodenum] ) {
   die "There is no such node.\n";
 }
 

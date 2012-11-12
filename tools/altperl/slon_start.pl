@@ -10,6 +10,7 @@ $START_WATCHDOG = 1;
 $SLEEP_TIME     = 30;
 $CONFIG_FILE    = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE     = 0;
+$WATCHDOG_VERSION = 1;
 
 # Read command-line options
 GetOptions("config=s"  => \$CONFIG_FILE,
@@ -67,6 +68,10 @@ unless ($pid) {
   print "PID [$pid]\n";
   if ($START_WATCHDOG) {
     print "Start the watchdog process as well...\n";
-    system "@@TOOLSBIN@@/slon_watchdog --config=$CONFIG_FILE $node $SLEEP_TIME &";
+    if( $WATCHDOG_VERSION eq 2 ) {
+      system "@@TOOLSBIN@@/slon_watchdog2 --config=$CONFIG_FILE $node $SLEEP_TIME &";
+    } else {
+      system "@@TOOLSBIN@@/slon_watchdog --config=$CONFIG_FILE $node $SLEEP_TIME &";
+    }
   }
 }
