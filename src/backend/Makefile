@@ -14,10 +14,10 @@ NAME		= slony1_funcs
 SO_NAME = $(NAME).$(VERSION)$(DLSUFFIX)
 include $(slony_top_builddir)/Makefile.global
 
-override CFLAGS += -I$(slony_top_builddir) $(CFLAGS_SL)
+override CFLAGS += -I$(slony_top_builddir) $(CFLAGS_SL) -fwrapv 
 
 
-SO_OBJS	= $(NAME).o $(WIN32RES)
+SO_OBJS	= slony_logical.o $(NAME).o $(WIN32RES)
 
 BASE_COMMON		= slony1_base.sql
 FUNCS_COMMON	= slony1_funcs.sql

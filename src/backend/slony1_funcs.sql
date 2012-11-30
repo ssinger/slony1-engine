@@ -13,6 +13,13 @@
 -- * C functions in src/backend/slony1_base.c
 -- **********************************************************************
 
+create or replace function @NAMESPACE@. (p_cluster_name name, p_event_type text)
+	returns bigint
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	language C
+	called on null input;
+
+
 
 -- ----------------------------------------------------------------------
 -- FUNCTION createEvent (cluster_name, ev_type [, ev_data [...]])
