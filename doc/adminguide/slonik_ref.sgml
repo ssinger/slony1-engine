@@ -2875,7 +2875,7 @@ EXECUTE SCRIPT (
     <para> Before &slony1; version 1.2, the entire DDL script was
     submitted as one <function>PQexec()</function> request, with the
     implication that the <emphasis>entire</emphasis> script was parsed
-    based on the state of the database before invokation of the
+    based on the state of the database before invocation of the
     script.  This means statements later in the script cannot depend
     on DDL changes made by earlier statements in the same script.
     Thus, you cannot add a column to a table and add constraints to

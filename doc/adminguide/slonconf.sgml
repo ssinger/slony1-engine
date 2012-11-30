@@ -523,7 +523,7 @@
         <para>Maximum time planned for grouped
         <command>SYNC</command>s. If replication is behind,
         <application>slon</application> will try to increase numbers
-        of syncs done targetting that they should take this quantity
+        of syncs done targeting that they should take this quantity
         of time to process.  This is in Range [10000,600000] ms,
         default 60000. </para> 
 

@@ -3,7 +3,19 @@
 
 - Bug #240 :: Improve notes on VACUUM
 
+- Bug #278 :: assorted spelling fixes
+
+- Bug #280 :: shared library build should use CFLAGS and LDFLAGS
+
+- altperl tool improvements including: better support for running multiple slons 
+  on the same server,let start_slon invoke slon with a config file,
+  fix node_is_subscribing, $LOGDIR directory behaviours, use PGPASSWORDFILE 
+  when querying state
+
+
 ** 2.2.0
+- Bug #276 :: Fixed detection of duplicate value in sl_nodelock
+- Bug #275 :: fix memory leak in monitor thread
 - Bug #272 :: Fix memory overwrite in slonik parsing
 
 - Bug #258 :: The cleanup thread should no longer block waiting on a lock

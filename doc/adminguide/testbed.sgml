@@ -11,7 +11,7 @@ distribution, and induced load via running
 <application>pgbench</application>.</para>
 
 <para> Unfortunately, the tests required human intervention to control
-invokation and shutdown of tests, so running them could not be readily
+invocation and shutdown of tests, so running them could not be readily
 automated.</para></listitem>
 
 <listitem><para> <link linkend="oldtestbed"> Test bed framework

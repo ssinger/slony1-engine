@@ -280,7 +280,7 @@ log_timestamp  0    # multilog will insert a tai64n timestamp
 #vac_frequency 3
 
 # Maximum time planned for grouped SYNCs. If replication is behind, slon will
-# try to increase numbers of syncs done targetting that they should take this
+# try to increase numbers of syncs done targeting that they should take this
 # quantity of time to process. If the value is set to 0, this logic will be
 # ignored. 
 # Range [10000,600000] ms, default 60000.
