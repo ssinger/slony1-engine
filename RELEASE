@@ -3,6 +3,7 @@
 ** 2.1.3 
 - Bug #276 :: Fixed duplicate key detection on sl_nodelock
 - Bug #278 :: assorted spelling fixes
+- No bug :: Add in explicit support to recognize PostgreSQL 9.2, rather than warning that it may not be supported
 
 ** 2.1.2
 - Bug #275 :: Fixed memory leak in monitor thread
