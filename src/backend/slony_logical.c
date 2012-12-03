@@ -65,6 +65,7 @@ pg_decode_begin_txn(void *private, StringInfo out, ReorderBufferTXN* txn)
 	 * we can ignore the begin and commit. slony operates
 	 * on SYNC boundaries.
 	 */
+	elog(NOTICE,"inside of begin");
 appendStringInfo(out, "BEGIN %d", txn->xid);
 	return true;
 }
@@ -77,6 +78,7 @@ pg_decode_commit_txn(void *private, StringInfo out, ReorderBufferTXN* txn, XLogR
 	 * we can ignore the begin and commit. slony operates
 	 * on SYNC boundaries.
 	 */
+	elog(NOTICE,"inside of commit");
 	appendStringInfo(out, "COMMIT %d", txn->xid);
 	return true;
 }
@@ -88,19 +90,26 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 				 Oid tableoid, ReorderBufferChange *change)
 {
 
-  
-	Relation relation = RelationIdGetRelation(tableoid);
-	Form_pg_class class_form = RelationGetForm(relation);
-	TupleDesc	tupdesc = RelationGetDescr(relation);
-	MemoryContext context = (MemoryContext)private;
-	MemoryContext old = MemoryContextSwitchTo(context);
-	elog(NOTICE,"inside og pg_decode_change");
 	
+	Relation relation;
+	Form_pg_class class_form;
+	TupleDesc	tupdesc;
+	MemoryContext context;
+	MemoryContext old;
+
+	elog(NOTICE,"inside og pg_decode_change");
+	relation =  RelationIdGetRelation(tableoid);	
+	class_form = RelationGetForm(relation);
+	tupdesc = RelationGetDescr(relation);
+	context = (MemoryContext)private;
+	old = MemoryContextSwitchTo(context);
+
 	RelationClose(relation);
 
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(context);
 appendStringInfo(out, "DO %d", txn->xid);
+	elog(NOTICE,"leaving og pg_decode_change");
 	return true;
 }
 
