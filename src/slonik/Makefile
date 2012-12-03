@@ -18,7 +18,7 @@ endif
 CFLAGS += -I$(slony_top_builddir) -DPGSHARE="\"$(pgsharedir)\"" 
 
 PROG		= slonik
-
+LDFLAGS += -lpq
 ifeq ($(PORTNAME), win)
 PROG            = slonik.exe
 LDFLAGS += -lpgport

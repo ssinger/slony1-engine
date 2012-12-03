@@ -81,7 +81,7 @@ PERL=			@PERL@
 SED=			@SED@
 subdir=$(slony_subdir)
 
-LDFLAGS +=   -lpq @NLSLIB@
+LDFLAGS +=   @NLSLIB@
 
 ifeq ($(GCC), yes)
     CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations

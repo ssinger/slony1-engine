@@ -17,7 +17,7 @@ ifeq ($(PORTNAME), aix)
 endif
 
 CFLAGS += -I$(slony_top_builddir) -DPGSHARE="\"$(pgsharedir)\"" 
-
+LDFLAGS += -lpq
 
 PROG		= slony_logshipper
 
