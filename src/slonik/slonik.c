@@ -34,10 +34,6 @@
 #include "libpq-fe.h"
 #include "slonik.h"
 
-#ifdef HAVE_PGPORT
-#undef USE_REPL_SNPRINTF
-#include "port.h"
-#endif
 
 #ifdef MSVC
 #include "config_msvc.h"
@@ -45,6 +41,13 @@
 #include "config.h"
 #endif
 #include "../parsestatements/scanner.h"
+
+
+#ifdef HAVE_PGPORT
+#undef USE_REPL_SNPRINTF
+#include "port.h"
+#endif
+
 extern int STMTS[MAXSTATEMENTS];
 
 #define MAXPGPATH 256

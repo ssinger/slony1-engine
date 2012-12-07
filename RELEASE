@@ -4,7 +4,8 @@
 - Bug #276 :: Fixed duplicate key detection on sl_nodelock
 - Bug #278 :: assorted spelling fixes
 - No bug :: Add in explicit support to recognize PostgreSQL 9.2, rather than warning that it may not be supported
-
+- No bug :: add --with-pgport option to configure and when set to yes let slonik use these functions to determine
+            the PGSHARE directory at runtime. This defaults to no 
 ** 2.1.2
 - Bug #275 :: Fixed memory leak in monitor thread
 - Bug #272 :: Fix memory overwrite in slonik parsing
