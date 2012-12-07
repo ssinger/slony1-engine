@@ -211,7 +211,7 @@ AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentat
 AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation. Default is $PREFIX/doc. ])
 AC_ARG_WITH(d2mdir,		[  --with-d2mdir=<dir>              Location of docbook2man-spec.pl (Manpages will be skipped if not specified)])
 AC_ARG_WITH(mandir,		[  --with-mandir=<dir>              Location to install the manpages. Default is $PREFIX/man.])
-
+AC_ARG_WITH(pgport,             [  --with-pgport=<yes|no>           Link with pgport [default=no]])
 
 SLON_AC_ARG_BOOL(enable, engine, yes,
               [  --disable-engine     Don't build slony1-engine source. (Used when building documentation only)])
@@ -249,6 +249,8 @@ AC_SUBST(TOOLSBIN, $TOOLSBIN)
 AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
+
+AC_SUBST(HAVE_PGPORT,$HAVE_PGPORT)
 
 if test ${prefix} = "NONE"; then
   SLONBINDIR="${PG_BINDIR}"

@@ -502,6 +502,13 @@ AC_CHECK_DECLS([GetTopTransactionId],[],[],[
 
 AC_SUBST(NLSLIB)
 
+if test "$with_pgport" = "yes"; then
+   AC_MSG_CHECKING(for pgport)
+   AC_DEFINE(HAVE_PGPORT)
+   LIBS="$LIBS -lpgport"
+   AC_TRY_LINK_FUNC(find_my_exec,HAVE_PGPORT=1, AC_MSG_ERROR("pgport was not found. build without --with-pgport=yes to disable"))
+fi
+
 AC_LANG_RESTORE
 ])dnl ACX_LIBPQ
 
