@@ -1,6 +1,9 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+- No bug :: add --with-pgport option to configure and when set to yes let slonik use these functions to determine
+            the PGSHARE directory at runtime. This defaults to no 
+
 - Bug #240 :: Improve notes on VACUUM
 
 - Bug #278 :: assorted spelling fixes
