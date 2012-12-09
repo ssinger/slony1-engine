@@ -26,7 +26,8 @@
 #include "utils/syscache.h"
 #include "utils/typcache.h"
 #include "utils/array.h"
-
+#include "utils/builtins.h"
+#include "fmgr.h"
 
 PG_MODULE_MAGIC;
 
@@ -99,15 +100,25 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	MemoryContext old = MemoryContextSwitchTo(context);
 	int i;
 	HeapTuple tuple;
-	const char	   **cmdargs = NULL;
-	const char	   **cmdargselem = NULL;
+	/**
+	 * we build up an array of Datum's so we can convert this
+	 * to an array and use array_out to get a text representation.
+	 * it might be more efficient to leave everything as 
+	 * cstrings and write our own quoting/escaping code
+	 */
+	Datum		*cmdargs = NULL;
+	Datum		*cmdargselem = NULL;
 	bool	   *cmdnulls = NULL;
 	bool	   *cmdnullselem = NULL;
 	int		   cmddims[1];
 	int        cmdlbs[1];
 	ArrayType  *outvalues;
 	const char * array_text;
+	Oid arraytypeoutput;
+	bool  arraytypeisvarlena;
 	bool       first=true;
+	HeapTuple array_type_tuple;
+	FmgrInfo flinfo;
 
 	elog(NOTICE,"inside og pg_decode_change");
 
@@ -121,8 +132,8 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 		 */
 		tuple=&change->newtuple->tuple;
 		
-		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) * sizeof(char*)  );
-		cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts *2 + 2) * sizeof(char*));
+		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) * sizeof(Datum)  );
+		cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts *2 + 2) * sizeof(bool));
 		
 		
 
@@ -136,19 +147,19 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 			if(tupdesc->attrs[i]->attnum < 0)
 				continue;
 			column= NameStr(tupdesc->attrs[i]->attname);
-			*cmdargselem++=column;
-			cmdnullselem++;
+			*cmdargselem++=PointerGetDatum(cstring_to_text(column));
+			*cmdnullselem++=false;
 			
 			value = columnAsText(tupdesc,tuple,i);
 			if (value == NULL) 
 			{
-				*cmdnullselem++=true;
-				cmdargselem++;
+			  *cmdnullselem++=true;
+			  cmdargselem++;
 			}
 			else
 			{
 				*cmdnullselem++=false;
-				*cmdargselem++=value;
+				*cmdargselem++=PointerGetDatum(cstring_to_text(value));
 			}			
 			
 		}   
@@ -177,22 +188,23 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	}   
 
 
+
+	cmddims[0] = cmdargselem - cmdargs;
+	cmdlbs[0] = 1;
+	outvalues= construct_md_array(cmdargs,cmdnulls,1,cmddims,cmdlbs,
+								 TEXTOID,-1,false,'i');
+	array_type_tuple = SearchSysCache1(TYPEOID,TEXTARRAYOID);
+	array_type_tuple->t_tableOid = InvalidOid;
+	getTypeOutputInfo(TEXTARRAYOID,&arraytypeoutput,&arraytypeisvarlena);
+	fmgr_info(arraytypeoutput,&flinfo);
+	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
+												   PointerGetDatum(outvalues)));
+	
+	appendStringInfo(out,"%s",array_text);
 	RelationClose(relation);
-	while(cmdargs != cmdargselem)
-	{
-		appendStringInfo(out,first ? "%s," : ",%s,",*cmdargs++);
-		first=false;
-		if(*(++cmdnulls)==true)
-		{
-			appendStringInfo(out,"null");
-		}
-		else
-		{
-			appendStringInfo(out,"%s",*cmdargs);
-		}
-		cmdargs++;
-		cmdnulls++;
-	}
+	ReleaseSysCache(array_type_tuple);
+
+	
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(context);
 
@@ -225,7 +237,7 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 	
 	getTypeOutputInfo(typid,
 					  &typeoutput, &typisvarlena);
-	
+
 	ReleaseSysCache(typeTuple);
 	
 	origval = fastgetattr(tuple, idx + 1, tupdesc, &isnull);
