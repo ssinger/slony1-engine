@@ -28,6 +28,7 @@
 #include "utils/array.h"
 #include "utils/builtins.h"
 #include "fmgr.h"
+#include "access/hash.h"
 
 PG_MODULE_MAGIC;
 
@@ -44,6 +45,32 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx);
 
 unsigned int local_id=0;
 
+HTAB * replicated_tables=NULL;
+
+typedef struct  {
+	const char * namespace;
+	const char * table_name;
+	int set;
+	const char* unique_keyname;
+
+} replicated_table;
+
+static uint32
+replicated_table_hash(const void *kp, Size ksize)
+{
+	char	   *key = *((char **) kp);
+
+	return hash_any((void *) key, strlen(key));
+}
+static int
+replicated_table_cmp(const void *kp1, const void *kp2, Size ksize)
+{
+	char	   *key1 = *((char **) kp1);
+	char	   *key2 = *((char **) kp2);
+
+	return strcmp(key1, key2);
+}
+
 
 void
 _PG_init(void)
@@ -52,7 +79,11 @@ _PG_init(void)
 
 void
 pg_decode_init(void **private)
-{
+{	
+	const char * table;
+	bool found;
+	HASHCTL hctl;
+
 	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeInitCB);
 	*private = AllocSetContextCreate(TopMemoryContext,
 									 "text conversion context",
@@ -64,6 +95,23 @@ pg_decode_init(void **private)
 	 * 1. the local_id
 	 */
 	elog(NOTICE,"inside of pg_decode_init");
+	hctl.keysize = sizeof(char*);
+	hctl.entrysize = sizeof(replicated_table);
+	hctl.hash = replicated_table_hash;
+	hctl.match = replicated_table_cmp;
+
+	/**
+	 * build a hash table with information on all replicated tables.
+	 */
+	replicated_tables=hash_create("replicated_tables",10,&hctl,
+								  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
+	table=pstrdup("public.a");
+	replicated_table * entry=hash_search(replicated_tables,
+										 &table,HASH_ENTER,&found);
+	entry->namespace="public";
+	entry->table_name="a";
+	entry->set=1;
+	entry->unique_keyname="a_pk";
 }
 
 
@@ -183,7 +231,19 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 		 * convert all columns into two pairs of arrays.
 		 * one for key columns, one for non-key columns
 		 */
-	  action='U';
+		action='U';
+		
+		/**
+		 * we need to fine the columns that make up the unique key.
+		 * in the log trigger these were arguments to the trigger
+		 * ie (kvvkk).  
+		 * our options are:
+		 *
+		 * 1. search for the unique indexes on the table and pick one
+		 * 2. Lookup the index name from sl_table
+		 * 3. Have the _init() method load a list of all replicated tables
+		 *    for this remote and the associated unique key names.
+		 */
 		
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_DELETE)
