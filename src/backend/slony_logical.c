@@ -42,6 +42,9 @@ extern bool pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* tx
 
 char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx);
 
+unsigned int local_id=0;
+
+
 void
 _PG_init(void)
 {
@@ -56,6 +59,10 @@ pg_decode_init(void **private)
 									 ALLOCSET_DEFAULT_MINSIZE,
 									 ALLOCSET_DEFAULT_INITSIZE,
 									 ALLOCSET_DEFAULT_MAXSIZE);
+	/**
+	 * query the local database to find
+	 * 1. the local_id
+	 */
 	elog(NOTICE,"inside of pg_decode_init");
 }
 
@@ -96,6 +103,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	
 	Relation relation = RelationIdGetRelation(tableoid);	
 	TupleDesc	tupdesc = RelationGetDescr(relation);
+	Form_pg_class class_form = RelationGetForm(relation);
 	MemoryContext context = (MemoryContext)private;
 	MemoryContext old = MemoryContextSwitchTo(context);
 	int i;
@@ -119,6 +127,9 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	bool       first=true;
 	HeapTuple array_type_tuple;
 	FmgrInfo flinfo;
+	char action;
+	int update_cols=0;
+	int table_id=0;
 
 	elog(NOTICE,"inside og pg_decode_change");
 
@@ -131,7 +142,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 		 * convert all columns to a pair of arrays (columns and values)
 		 */
 		tuple=&change->newtuple->tuple;
-		
+		action='I';
 		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) * sizeof(Datum)  );
 		cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts *2 + 2) * sizeof(bool));
 		
@@ -172,6 +183,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 		 * convert all columns into two pairs of arrays.
 		 * one for key columns, one for non-key columns
 		 */
+	  action='U';
 		
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_DELETE)
@@ -179,6 +191,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 		/**
 		 * convert the key columns to a pair of arrays.
 		 */
+	  action='D';
 	}
 	else
 	{
@@ -200,10 +213,19 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
 	
-	appendStringInfo(out,"%s",array_text);
+	appendStringInfo(out,"%d,%d,%d,NULL,%s,%s,%c,%d,%s"
+					 ,local_id
+					 ,txn->xid
+					 ,table_id
+					 ,get_namespace_name(class_form->relnamespace)
+					 ,NameStr(class_form->relname)
+					 ,action
+					 ,update_cols
+					 ,array_text);
 	RelationClose(relation);
 	ReleaseSysCache(array_type_tuple);
-
+	
+	
 	
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(context);
