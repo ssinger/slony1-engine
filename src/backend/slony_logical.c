@@ -48,6 +48,7 @@ unsigned int local_id=0;
 HTAB * replicated_tables=NULL;
 
 typedef struct  {
+	const char * key;
 	const char * namespace;
 	const char * table_name;
 	int set;
@@ -70,6 +71,8 @@ replicated_table_cmp(const void *kp1, const void *kp2, Size ksize)
 
 	return strcmp(key1, key2);
 }
+
+bool is_replicated(const char * namespace,const char * table);
 
 
 void
@@ -108,10 +111,22 @@ pg_decode_init(void **private)
 	table=pstrdup("public.a");
 	replicated_table * entry=hash_search(replicated_tables,
 										 &table,HASH_ENTER,&found);
+	entry->key=table;
 	entry->namespace="public";
 	entry->table_name="a";
 	entry->set=1;
 	entry->unique_keyname="a_pk";
+	
+	table="public.b";
+	entry=hash_search(replicated_tables,
+					  &table,HASH_ENTER,&found);
+	entry->key=table;
+	entry->namespace="public";
+	entry->table_name="b";
+	entry->set=1;
+	entry->unique_keyname="b_pkey";
+	
+
 }
 
 
@@ -178,12 +193,20 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	char action;
 	int update_cols=0;
 	int table_id=0;
-
+	const char * table_name;
+	const char * namespace;
+	
 	elog(NOTICE,"inside og pg_decode_change");
 
-
-
 	
+	namespace=get_namespace_name(class_form->relnamespace);
+	table_name=NameStr(class_form->relname);
+
+	if( ! is_replicated(namespace,table_name) ) 
+	{
+		return false;
+	}
+
 	if(change->action == REORDER_BUFFER_CHANGE_INSERT)
 	{		
 		/**
@@ -277,8 +300,8 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 					 ,local_id
 					 ,txn->xid
 					 ,table_id
-					 ,get_namespace_name(class_form->relnamespace)
-					 ,NameStr(class_form->relname)
+					 ,namespace
+					 ,table_name
 					 ,action
 					 ,update_cols
 					 ,array_text);
@@ -293,6 +316,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	elog(NOTICE,"leaving og pg_decode_change:");
 	return true;
 }
+
 
 
 /**
@@ -331,4 +355,38 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 		return NULL;
 	outputstr = OidOutputFunctionCall(typeoutput, val);
 	return outputstr;
+}
+
+/**
+ * checks to see if the table described by class_form is
+ * replicated from this origin/provider to the recevier
+ * we are running for.
+ */
+bool is_replicated(const char * namespace,const char * table)
+{
+	char * search_key = palloc(strlen(namespace) + strlen(table)+2);
+	replicated_table * entry;
+	bool found;
+
+	sprintf(search_key,"%s.%s",namespace,table);
+    entry=hash_search(replicated_tables,
+					  &search_key,HASH_FIND,&found);
+	
+	return found;
+	
+}
+
+/**
+ * finds information about the unique index of the given name
+ * 
+ * idx_name - the name of the index 
+ * indcols - an array of integers that the attributes that make up the index will 
+ *           be stored in
+ * indsize - the number of attributes that make up the index will be stored here
+ * 
+ */
+bool get_unique_idx(const char * idx_name, int ** indcols, int * indsize)
+{
+  
+
 }
