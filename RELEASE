@@ -15,6 +15,8 @@
   fix node_is_subscribing, $LOGDIR directory behaviours, use PGPASSWORDFILE 
   when querying state
 
+- Bug 284 :: Fix documentation - tutorial
+
 
 ** 2.2.0
 - Bug #276 :: Fixed detection of duplicate value in sl_nodelock
