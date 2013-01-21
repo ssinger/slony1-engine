@@ -387,6 +387,6 @@ bool is_replicated(const char * namespace,const char * table)
  */
 bool get_unique_idx(const char * idx_name, int ** indcols, int * indsize)
 {
-  
+  return true;
 
 }
