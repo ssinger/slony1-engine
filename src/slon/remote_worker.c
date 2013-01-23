@@ -1684,7 +1684,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 		 * If the list of currently replicated sets we receive from this
 		 * provider is empty, we don't need to maintain a connection to it.
 		 */
-		if (provider->set_head == NULL && provider->no_id != event_provider)
+		if (provider->set_head == NULL)
 		{
 			/*
 			 * Tell this helper thread to exit, join him and destroy thread
@@ -1750,47 +1750,39 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	/*
 	 * Step 4.
 	 *
-	 * Make sure the event provider is in the list of providers.
+	 * If we don't have ANY provider at this point, fall back
+	 * on the node that we got this event from.
 	 */
-	if (event_provider >= 0)
+	if (event_provider >= 0 && wd->provider_head == NULL)
 	{
-		for (provider = wd->provider_head; provider;
-			 provider = provider->next)
+		/*
+		 * No provider entry found. Create a new one.
+		 */
+		provider = (ProviderInfo *)
+			malloc(sizeof(ProviderInfo));
+		memset(provider, 0, sizeof(ProviderInfo));
+		provider->no_id = event_provider;
+		provider->wd = wd;
+
+		dstring_init(&provider->helper_query);
+
+		/*
+		 * Add the provider to our work group
+		 */
+		DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
+						provider);
+
+		/*
+		 * Copy the runtime configurations conninfo into the provider
+		 * info.
+		 */
+		rtcfg_node = rtcfg_findNode(provider->no_id);
+		if (rtcfg_node != NULL)
 		{
-			if (provider->no_id == event_provider)
-				break;
-		}
-		if (provider == NULL)
-		{
-			/*
-			 * No provider entry found. Create a new one.
-			 */
-			provider = (ProviderInfo *)
-				malloc(sizeof(ProviderInfo));
-			memset(provider, 0, sizeof(ProviderInfo));
-			provider->no_id = event_provider;
-			provider->wd = wd;
-
-			dstring_init(&provider->helper_query);
-
-			/*
-			 * Add the provider to our work group
-			 */
-			DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
-							provider);
-
-			/*
-			 * Copy the runtime configurations conninfo into the provider
-			 * info.
-			 */
-			rtcfg_node = rtcfg_findNode(provider->no_id);
-			if (rtcfg_node != NULL)
-			{
-				provider->pa_connretry = rtcfg_node->pa_connretry;
-				if (rtcfg_node->pa_conninfo != NULL)
-					provider->pa_conninfo =
-						strdup(rtcfg_node->pa_conninfo);
-			}
+			provider->pa_connretry = rtcfg_node->pa_connretry;
+			if (rtcfg_node->pa_conninfo != NULL)
+				provider->pa_conninfo =
+					strdup(rtcfg_node->pa_conninfo);
 		}
 	}
 }
