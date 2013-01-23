@@ -4758,7 +4758,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	}
 
 	res = PQgetResult(dbconn);
-	if (PQresultStatus(res) < 0)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY OUT: %s",
 				 node->no_id, provider->no_id,
@@ -4768,7 +4768,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	PQclear(res);
 
 	res = PQgetResult(local_conn);
-	if (PQresultStatus(res) < 0)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY IN: %s",
 				 node->no_id, provider->no_id,
