@@ -17,6 +17,15 @@
 
 - Bug 284 :: Fix documentation - tutorial
 
+- Bug 282 :: replication failure where column domain/type is in a
+             schema outside of ~search_path~.  Fix by handling the
+             cast inside of the apply trigger the same way, PL/pgSQL
+             is doing type casting internally.
+
+- Bug 273 :: Slon can try to pull data from a behind provider.  Fix is
+             to not force the event provider to be part of the
+             providers unless we don't find any provider at all
+             otherwise.
 
 ** 2.2.0
 - Bug #276 :: Fixed detection of duplicate value in sl_nodelock
