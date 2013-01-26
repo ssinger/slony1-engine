@@ -29,17 +29,24 @@
 #include "utils/builtins.h"
 #include "fmgr.h"
 #include "access/hash.h"
+#include "replication/logical.h"
 
 PG_MODULE_MAGIC;
 
 void _PG_init(void);
 
 
-extern void pg_decode_init(void **private);
+extern void pg_decode_init(LogicalDecodingContext * ctx, bool is_init);
 
-extern bool pg_decode_begin_txn(void *private, StringInfo out, ReorderBufferTXN* txn);
-extern bool pg_decode_commit_txn(void *private, StringInfo out, ReorderBufferTXN* txn, XLogRecPtr commit_lsn);
-extern bool pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn, Oid tableoid, ReorderBufferChange *change);
+extern bool pg_decode_begin_txn(LogicalDecodingContext * ctx, 
+								ReorderBufferTXN* txn);
+extern bool pg_decode_commit_txn(LogicalDecodingContext * ctx,
+								 ReorderBufferTXN* txn, XLogRecPtr commit_lsn);
+extern bool pg_decode_change(LogicalDecodingContext * ctx, 
+							 ReorderBufferTXN* txn,
+							 Oid tableoid, ReorderBufferChange *change);
+
+extern bool pg_decode_clean(LogicalDecodingContext * ctx);
 
 char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx);
 
@@ -81,14 +88,14 @@ _PG_init(void)
 }
 
 void
-pg_decode_init(void **private)
+pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 {	
 	const char * table;
 	bool found;
 	HASHCTL hctl;
 
 	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeInitCB);
-	*private = AllocSetContextCreate(TopMemoryContext,
+	ctx->output_plugin_private = AllocSetContextCreate(TopMemoryContext,
 									 "text conversion context",
 									 ALLOCSET_DEFAULT_MINSIZE,
 									 ALLOCSET_DEFAULT_INITSIZE,
@@ -131,7 +138,7 @@ pg_decode_init(void **private)
 
 
 bool
-pg_decode_begin_txn(void *private, StringInfo out, ReorderBufferTXN* txn)
+pg_decode_begin_txn(LogicalDecodingContext * ctx, ReorderBufferTXN* txn)
 {
 	AssertVariableIsOfType(&pg_decode_begin_txn, LogicalDecodeBeginCB);
 	/**
@@ -139,12 +146,15 @@ pg_decode_begin_txn(void *private, StringInfo out, ReorderBufferTXN* txn)
 	 * on SYNC boundaries.
 	 */
 	elog(NOTICE,"inside of begin");
-appendStringInfo(out, "BEGIN %d", txn->xid);
+	ctx->prepare_write(ctx,txn->lsn,txn->xid);
+	appendStringInfo(ctx->out, "BEGIN %d", txn->xid);
+	ctx->write(ctx,txn->lsn,txn->xid);
 	return true;
 }
 
 bool
-pg_decode_commit_txn(void *private, StringInfo out, ReorderBufferTXN* txn, XLogRecPtr commit_lsn)
+pg_decode_commit_txn( LogicalDecodingContext * ctx,
+					 ReorderBufferTXN* txn, XLogRecPtr commit_lsn)
 {
 	AssertVariableIsOfType(&pg_decode_commit_txn, LogicalDecodeCommitCB);
 	/**
@@ -152,14 +162,16 @@ pg_decode_commit_txn(void *private, StringInfo out, ReorderBufferTXN* txn, XLogR
 	 * on SYNC boundaries.
 	 */
 	elog(NOTICE,"inside of commit");
-	appendStringInfo(out, "COMMIT %d", txn->xid);
+	ctx->prepare_write(ctx,txn->lsn,txn->xid);
+	appendStringInfo(ctx->out, "COMMIT %d", txn->xid);
+	ctx->write(ctx,txn->lsn,txn->xid);
 	return true;
 }
 
 
 
 bool
-pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
+pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 				 Oid tableoid, ReorderBufferChange *change)
 {
 
@@ -167,7 +179,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	Relation relation = RelationIdGetRelation(tableoid);	
 	TupleDesc	tupdesc = RelationGetDescr(relation);
 	Form_pg_class class_form = RelationGetForm(relation);
-	MemoryContext context = (MemoryContext)private;
+	MemoryContext context = (MemoryContext)ctx->output_plugin_private;
 	MemoryContext old = MemoryContextSwitchTo(context);
 	int i;
 	HeapTuple tuple;
@@ -187,7 +199,6 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	const char * array_text;
 	Oid arraytypeoutput;
 	bool  arraytypeisvarlena;
-	bool       first=true;
 	HeapTuple array_type_tuple;
 	FmgrInfo flinfo;
 	char action;
@@ -195,7 +206,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	int table_id=0;
 	const char * table_name;
 	const char * namespace;
-	
+	ctx->prepare_write(ctx,txn->lsn,txn->xid);
 	elog(NOTICE,"inside og pg_decode_change");
 
 	
@@ -296,7 +307,7 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
 	
-	appendStringInfo(out,"%d,%d,%d,NULL,%s,%s,%c,%d,%s"
+	appendStringInfo(ctx->out,"%d,%d,%d,NULL,%s,%s,%c,%d,%s"
 					 ,local_id
 					 ,txn->xid
 					 ,table_id
@@ -312,12 +323,16 @@ pg_decode_change(void *private, StringInfo out, ReorderBufferTXN* txn,
 	
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(context);
-
+	ctx->write(ctx,txn->lsn,txn->xid);
 	elog(NOTICE,"leaving og pg_decode_change:");
 	return true;
 }
 
 
+bool pg_decode_clean(LogicalDecodingContext * ctx)
+{
+	return true;
+}
 
 /**
  * converts the value stored in the attribute/column specified
