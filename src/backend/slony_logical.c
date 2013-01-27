@@ -225,8 +225,10 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		 */
 		tuple=&change->newtuple->tuple;
 		action='I';
-		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) * sizeof(Datum)  );
-		cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts *2 + 2) * sizeof(bool));
+		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) 
+										* sizeof(Datum)  );
+		cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts *2 + 2) 
+										  * sizeof(bool));
 		
 		
 
@@ -282,10 +284,46 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_DELETE)
 	{
+	  Relation indexrel;
+	  TupleDesc indexdesc;
 		/**
 		 * convert the key columns to a pair of arrays.
 		 */
 	  action='D';
+	  tuple=&change->oldtuple->tuple;
+	  
+	  /**
+	   * populate relation->rd_primary with the primary or candidate
+	   * index used to WAL values that specify which row is being deleted.
+	   */
+	  RelationGetIndexList(relation);
+
+	  indexrel = RelationIdGetRelation(relation->rd_primary);
+	  indexdesc = RelationGetDescr(indexrel);
+	  
+
+	  cmdargs = cmdargselem = palloc( (indexrel->rd_att->natts * 2 + 2)
+									  * sizeof (Datum));
+	  cmdnulls = cmdnullselem = palloc( (indexrel->rd_att->natts * 2 + 2)
+										* sizeof(bool));
+	  for(i = 0; i < indexrel->rd_att->natts; i++)
+	  {
+		  const char * column;
+		  const char * value;
+		  
+		  if(indexdesc->attrs[i]->attisdropped)
+			  /** you can't drop a column from an index, something is wrong */
+			  continue;
+		  if(indexdesc->attrs[i]->attnum < 0)
+			  continue;
+		  column = NameStr(indexdesc->attrs[i]->attname);
+		  *cmdargselem++= PointerGetDatum(cstring_to_text(column));
+		  *cmdnullselem++=false;
+		  value = columnAsText(indexdesc,tuple,i);
+		  *cmdnullselem++=false;
+		  *cmdargselem++=PointerGetDatum(cstring_to_text(value));
+	  }
+	  RelationClose(indexrel);
 	}
 	else
 	{
