@@ -30,6 +30,8 @@
 #include "fmgr.h"
 #include "access/hash.h"
 #include "replication/logical.h"
+#include "nodes/makefuncs.h"
+#include "commands/defrem.h"
 
 PG_MODULE_MAGIC;
 
@@ -59,7 +61,6 @@ typedef struct  {
 	const char * namespace;
 	const char * table_name;
 	int set;
-	const char* unique_keyname;
 
 } replicated_table;
 
@@ -67,7 +68,6 @@ static uint32
 replicated_table_hash(const void *kp, Size ksize)
 {
 	char	   *key = *((char **) kp);
-
 	return hash_any((void *) key, strlen(key));
 }
 static int
@@ -75,7 +75,6 @@ replicated_table_cmp(const void *kp1, const void *kp2, Size ksize)
 {
 	char	   *key1 = *((char **) kp1);
 	char	   *key2 = *((char **) kp2);
-
 	return strcmp(key1, key2);
 }
 
@@ -87,19 +86,46 @@ _PG_init(void)
 {
 }
 
+
+
+
 void
 pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 {	
-	const char * table;
+	char * table;
 	bool found;
 	HASHCTL hctl;
+	int i ;
 
-	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeInitCB);
+	
+
+
+	List * options = list_make1(makeDefElem("schema_table_1"
+											,(Node*)makeString("public")));
+	options = lappend(options,makeDefElem("table_1"
+										  ,(Node*)makeString("a")));
+	options = lappend(options,makeDefElem("schema_table_2"
+										  ,(Node*)makeString("public")));
+	options = lappend(options,makeDefElem("table_2"
+										  ,(Node*)makeString("b")));
+	options = lappend(options,makeDefElem("schema_table_3"
+										  ,(Node*)makeString("public")));
+	options = lappend(options,makeDefElem("table_3"
+										  ,(Node*)makeString("c")));
+
+
 	ctx->output_plugin_private = AllocSetContextCreate(TopMemoryContext,
-									 "text conversion context",
+									 "slony logical  context",
 									 ALLOCSET_DEFAULT_MINSIZE,
 									 ALLOCSET_DEFAULT_INITSIZE,
 									 ALLOCSET_DEFAULT_MAXSIZE);
+
+
+	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeInitCB);
+	MemoryContext context = (MemoryContext)ctx->output_plugin_private;
+	MemoryContext old = MemoryContextSwitchTo(context);
+											
+
 	/**
 	 * query the local database to find
 	 * 1. the local_id
@@ -115,25 +141,23 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	 */
 	replicated_tables=hash_create("replicated_tables",10,&hctl,
 								  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
-	table=pstrdup("public.a");
-	replicated_table * entry=hash_search(replicated_tables,
-										 &table,HASH_ENTER,&found);
-	entry->key=table;
-	entry->namespace="public";
-	entry->table_name="a";
-	entry->set=1;
-	entry->unique_keyname="a_pk";
-	
-	table="public.b";
-	entry=hash_search(replicated_tables,
-					  &table,HASH_ENTER,&found);
-	entry->key=table;
-	entry->namespace="public";
-	entry->table_name="b";
-	entry->set=1;
-	entry->unique_keyname="b_pkey";
-	
+	for(i = 0; i < options->length; i= i + 2 )
+	{
+		DefElem * def_schema = (DefElem*) list_nth(options,i);
+		DefElem * def_table = (DefElem*) list_nth(options,i+1);
+		const char * schema= defGetString(def_schema);
+		const char * table_name = defGetString(def_table);
 
+		table = palloc(strlen(schema) + strlen(table_name)+2);
+		sprintf(table,"%s.%s",schema,table_name);
+		replicated_table * entry=hash_search(replicated_tables,
+											 &table,HASH_ENTER,&found);
+		entry->key=table;
+		entry->namespace=pstrdup(schema);
+		entry->table_name=pstrdup(table_name);
+		entry->set=1;
+	}
+	MemoryContextSwitchTo(old);
 }
 
 
@@ -201,7 +225,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	bool  arraytypeisvarlena;
 	HeapTuple array_type_tuple;
 	FmgrInfo flinfo;
-	char action;
+	char action='?';
 	int update_cols=0;
 	int table_id=0;
 	const char * table_name;
@@ -215,6 +239,8 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 
 	if( ! is_replicated(namespace,table_name) ) 
 	{
+		RelationClose(relation);
+		MemoryContextSwitchTo(old);
 		return false;
 	}
 
@@ -360,7 +386,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	
 	
 	MemoryContextSwitchTo(old);
-	MemoryContextReset(context);
 	ctx->write(ctx,txn->lsn,txn->xid);
 	elog(NOTICE,"leaving og pg_decode_change:");
 	return true;
@@ -427,19 +452,4 @@ bool is_replicated(const char * namespace,const char * table)
 	
 	return found;
 	
-}
-
-/**
- * finds information about the unique index of the given name
- * 
- * idx_name - the name of the index 
- * indcols - an array of integers that the attributes that make up the index will 
- *           be stored in
- * indsize - the number of attributes that make up the index will be stored here
- * 
- */
-bool get_unique_idx(const char * idx_name, int ** indcols, int * indsize)
-{
-  return true;
-
 }
