@@ -1,6 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+- Bug #258 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
+
 - No bug :: add --with-pgport option to configure and when set to yes let slonik use these functions to determine
             the PGSHARE directory at runtime. This defaults to no 
 
