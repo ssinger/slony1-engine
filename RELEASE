@@ -1,6 +1,6 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
-
+*** 2.2.0  b3
 - Bug #258 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
 
 - No bug :: add --with-pgport option to configure and when set to yes let slonik use these functions to determine
@@ -29,7 +29,7 @@
              providers unless we don't find any provider at all
              otherwise.
 
-** 2.2.0
+** 2.2.0 b2
 - Bug #276 :: Fixed detection of duplicate value in sl_nodelock
 - Bug #275 :: fix memory leak in monitor thread
 - Bug #272 :: Fix memory overwrite in slonik parsing
