@@ -33,8 +33,9 @@
 #include "nodes/makefuncs.h"
 #include "commands/defrem.h"
 
+#if 0 
 PG_MODULE_MAGIC;
-
+#endif
 void _PG_init(void);
 
 
@@ -96,7 +97,7 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	bool found;
 	HASHCTL hctl;
 	int i ;
-
+	ListCell * option;
 	
 
 
@@ -141,10 +142,14 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	 */
 	replicated_tables=hash_create("replicated_tables",10,&hctl,
 								  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
+	option=options->head;
 	for(i = 0; i < options->length; i= i + 2 )
 	{
-		DefElem * def_schema = (DefElem*) list_nth(options,i);
-		DefElem * def_table = (DefElem*) list_nth(options,i+1);
+		if(option == NULL || option->next == NULL)
+			break;
+		DefElem * def_schema = (DefElem * ) option->data.ptr_value;
+		DefElem * def_table = (DefElem *) option->next->data.ptr_value;
+
 		const char * schema= defGetString(def_schema);
 		const char * table_name = defGetString(def_table);
 
@@ -156,6 +161,7 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 		entry->namespace=pstrdup(schema);
 		entry->table_name=pstrdup(table_name);
 		entry->set=1;
+		option=option->next->next;
 	}
 	MemoryContextSwitchTo(old);
 }
