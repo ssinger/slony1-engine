@@ -35,6 +35,6 @@ MKLDEXPORT=$(slony_top_builddir)/makefiles/mkldexport.sh
 
 %.$(VERSION)$(DLSUFFIX): %.o %$(EXPSUFF)
 	@echo Making shared library $@ from $<,  $*$(EXPSUFF) and postgres.imp
-	$(CC) $(LDFLAGS_SL) -o $@ $< -Wl,-bI:$(POSTGRES_IMP) -Wl,-bE:$(NAME)$(EXPSUFF) $(LIBS)
+	$(CC) $(LDFLAGS_SL) -o $@ $^ -Wl,-bI:$(POSTGRES_IMP) -Wl,-bE:$(NAME)$(EXPSUFF) $(LIBS)
 
 sqlmansect = 7

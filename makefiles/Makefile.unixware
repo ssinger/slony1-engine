@@ -27,7 +27,7 @@ SO_FLAGS = -G
 endif
 
 %.so: $(SO_OBJS)
-	$(CC) $(SO_FLAGS) -o $@ $<
+	$(CC) $(SO_FLAGS) -o $@ $^
 
 sqlmansect = 5sql
 

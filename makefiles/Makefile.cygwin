@@ -13,7 +13,7 @@ DLSUFFIX = .dll
 CFLAGS_SL =
 
 %.dll: $(SO_OBJS)
-	$(DLLTOOL) --export-all --output-def $*.def $<
+	$(DLLTOOL) --export-all --output-def $*.def $^
 	$(DLLWRAP) -o $@ --def $*.def $< $(DLLINIT) $(SHLIB_LINK)
 	rm -f $*.def
 

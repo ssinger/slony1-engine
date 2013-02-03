@@ -16,9 +16,9 @@ endif
 
 %.so: $(SO_OBJS)
 ifdef ELF_SYSTEM
-	$(LD) -x -Bshareable -o $@ $<
+	$(LD) -x -Bshareable -o $@ $^
 else
-	$(LD) $(LDREL) $(LDOUT) $<.obj -x $<
+	$(LD) $(LDREL) $(LDOUT) $<.obj -x $^
 	@echo building shared object $@
 	@rm -f $@.pic
 	@${AR} cq $@.pic `lorder $<.obj | tsort`

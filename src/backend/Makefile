@@ -61,7 +61,6 @@ splint:
 
 install: all installdirs
 	$(INSTALL_SCRIPT) $(SO_NAME) $(DESTDIR)$(pgpkglibdir)
-	$(INSTALL_SCRIPT) slony_logical.so $(DESTDIR)$(pgpkglibdir)
 	for file in $(SQL_NAMES); do \
 	  $(INSTALL_DATA) $$file $(DESTDIR)$(pgsharedir)/`basename $$file .sql`.$(VERSION).sql || exit ; \
 	done

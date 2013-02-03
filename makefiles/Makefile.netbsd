@@ -13,7 +13,7 @@ CFLAGS_SL = -fpic -DPIC
 
 %.so: $(SO_OBJS)
 ifdef ELF_SYSTEM
-	$(LD) -x -Bshareable -o $@ $<
+	$(LD) -x -Bshareable -o $@ $^
 else
 	$(LD) $(LDREL) $(LDOUT) $<.obj -x $<
 	@echo building shared object $@
