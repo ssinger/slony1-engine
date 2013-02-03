@@ -100,21 +100,6 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	ListCell * option;
 	
 
-
-	List * options = list_make1(makeDefElem("schema_table_1"
-											,(Node*)makeString("public")));
-	options = lappend(options,makeDefElem("table_1"
-										  ,(Node*)makeString("a")));
-	options = lappend(options,makeDefElem("schema_table_2"
-										  ,(Node*)makeString("public")));
-	options = lappend(options,makeDefElem("table_2"
-										  ,(Node*)makeString("b")));
-	options = lappend(options,makeDefElem("schema_table_3"
-										  ,(Node*)makeString("public")));
-	options = lappend(options,makeDefElem("table_3"
-										  ,(Node*)makeString("c")));
-
-
 	ctx->output_plugin_private = AllocSetContextCreate(TopMemoryContext,
 									 "slony logical  context",
 									 ALLOCSET_DEFAULT_MINSIZE,
@@ -142,11 +127,11 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	 */
 	replicated_tables=hash_create("replicated_tables",10,&hctl,
 								  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
-	option=options->head;
-	for(i = 0; i < options->length; i= i + 2 )
+	option=ctx->output_plugin_options->head;
+	
+	while(option != NULL && option->next != NULL)
 	{
-		if(option == NULL || option->next == NULL)
-			break;
+
 		DefElem * def_schema = (DefElem * ) option->data.ptr_value;
 		DefElem * def_table = (DefElem *) option->next->data.ptr_value;
 
