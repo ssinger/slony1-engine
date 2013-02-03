@@ -1305,7 +1305,7 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		 * the data types of the target columns for casting.
 		 */
 		target_rel = RelationIdGetRelation(
-			   get_relname_relid(relname, LookupExplicitNamespace(nspname)));
+										   get_relname_relid(relname, LookupExplicitNamespace(nspname,false)));
 		if (target_rel == NULL)
 			elog(ERROR, "Slony-I: cannot find table %s.%s in logApply()",
 				 slon_quote_identifier(nspname),
