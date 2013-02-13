@@ -1406,7 +1406,9 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 							 querycolnames[i / 2]);
 					getTypeInputInfo(coltype, &typinput,
 							&(cacheEnt->typioparam[i / 2]));
+					oldContext = MemoryContextSwitchTo(applyCacheContext);
 					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
+					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
 						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
 
@@ -1471,7 +1473,9 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 							 colname);
 					getTypeInputInfo(coltype, &typinput,
 							&(cacheEnt->typioparam[i / 2]));
+					oldContext = MemoryContextSwitchTo(applyCacheContext);
 					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
+					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
 						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
 
@@ -1566,7 +1570,9 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 							 colname);
 					getTypeInputInfo(coltype, &typinput,
 							&(cacheEnt->typioparam[i / 2]));
+					oldContext = MemoryContextSwitchTo(applyCacheContext);
 					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
+					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
 						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
 
