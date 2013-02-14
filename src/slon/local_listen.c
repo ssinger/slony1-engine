@@ -94,8 +94,6 @@ localListenThread_main(/* @unused@ */ void *dummy)
 	/*
 	 * Check that we are the only slon daemon connected.
 	 */
-#define NODELOCKERROR "ERROR:  duplicate key violates unique constraint \"sl_nodelock-pkey\""
-
 	(void) slon_mkquery(&query1,
 				 "select %s.cleanupNodelock(); "
 				 "insert into %s.sl_nodelock values ("
@@ -110,7 +108,11 @@ localListenThread_main(/* @unused@ */ void *dummy)
 			slon_log(SLON_FATAL,
 					 "localListenThread: \"%s\" - %s\n",
 					 dstring_data(&query1), PQresultErrorMessage(res));
-			if (strncmp(NODELOCKERROR, PQresultErrorMessage(res), strlen(NODELOCKERROR)) == 0) {
+			/**
+			 * SQL_STATE 23505 == unique_violation
+			 */
+			if(strcmp(PQresultErrorField(res,PG_DIAG_SQLSTATE),"23505") == 0)
+			{
 				slon_log(SLON_FATAL,
 						 "Do you already have a slon running against this node?\n");
 				slon_log(SLON_FATAL,
