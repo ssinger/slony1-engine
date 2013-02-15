@@ -586,7 +586,6 @@ remoteWorkerThread_main(void *cdata)
 							slon_mkquery(&query2, "rollback transaction; ");
 							query_execute(node, local_dbconn, &query2);
 							dstring_reset(&query2);
-
 							slon_retry();
 						}
 					}
@@ -4395,9 +4394,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						"update %s.sl_setsync set "
 						"    ssy_seqno = '%s', ssy_snapshot = '%s', "
 						"    ssy_action_list = '' "
-						"where ssy_setid in (",
+						"where ssy_origin=%d and  ssy_setid in (",
 						rtcfg_namespace,
-						seqbuf, event->ev_snapshot_c);
+						seqbuf, event->ev_snapshot_c,node->no_id);
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
