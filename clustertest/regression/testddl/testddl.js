@@ -27,7 +27,8 @@ function init_tables() {
 	+"set add table (id=2, set id=1, origin=1, fully qualified name = 'public.table2', key='table2_id_key');\n"
 	+"set add table (id=3, set id=1, origin=1, fully qualified name = 'public.table3');\n"
 	+"set add table (id=4, set id=1, origin=1, fully qualified name = 'public.table4');\n"
-	+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.billing_discount');\n"
+	+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.table5');\n"
+	+"set add table (id=6, set id=1, origin=1, fully qualified name = 'public.billing_discount');\n"
 	
 	return script;
 }
@@ -70,6 +71,27 @@ function generate_data() {
 		
 	}
 	//java.lang.System.out.println(sqlScript);
+	return sqlScript;
+}
+
+function generate_table5_transaction() {
+	var sqlScript='';	
+
+	// This transaction inserts rows into table5, then does
+	// DDL as it is supposed to be done by an application, and
+	// continues to insert. The test ensures that the apply
+	// trigger is flushing out the apply query cache to avoid
+	// using incompatible SPI plans.
+	sqlScript += "START TRANSACTION;\n";
+	sqlScript += "INSERT INTO table5(data) VALUES (4);\n";
+	sqlScript += "INSERT INTO table5(data) VALUES (5);\n";
+	sqlScript += "SELECT _slonyregress.ddlcapture('ALTER TABLE public.table5 ALTER COLUMN data TYPE text USING data::text;', NULL);\n";
+	sqlScript += "SELECT _slonyregress.ddlscript_complete(NULL);\n";
+	sqlScript += "INSERT INTO table5(data) VALUES ('six');\n";
+	sqlScript += "INSERT INTO table5(data) VALUES ('seven');\n";
+	sqlScript += "COMMIT;\n";
+		
+	java.lang.System.out.println(sqlScript);
 	return sqlScript;
 }
 
@@ -117,11 +139,18 @@ function do_test(coordinator) {
 		individual_ddl(coordinator,idx);
 	}
 	wait_for_sync(coordinator);
+
 	sql = generate_data();
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
-	
+	wait_for_sync(coordinator);
+
+	sql = generate_table5_transaction();
+	psql = coordinator.createPsqlCommand('db1',sql);
+	psql.run();
+	coordinator.join(psql);
+	wait_for_sync(coordinator);
 }
 
 function get_compare_queries() {
