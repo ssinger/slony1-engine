@@ -515,6 +515,20 @@ if test "$with_pgport" = "yes"; then
                     AC_MSG_ERROR("pgport was not found. build without --with-pgport=yes to disable"))
 fi
 
+
+AC_MSG_CHECKING(for LookupExplicitNamespace 2 args)
+AC_TRY_COMPILE(
+    [#include "postgres.h"
+     #include "catalog/namespace.h"],
+    [LookupExplicitNamespace(NULL,false);],
+    [ac_cv_LookupExplicitNamespace_args=2
+    AC_MSG_RESULT([yes, and it takes $ac_cv_LookupExplicitNamespace_args arguments])],
+	AC_MSG_RESULT([no]) )
+
+if test "$ac_cv_LookupExplicitNamespace_args" = 2; then
+   AC_DEFINE(HAS_LOOKUPEXPLICITNAMESPACE_2)
+fi
+
 AC_LANG_RESTORE
 ])dnl ACX_LIBPQ
 

@@ -1322,8 +1322,14 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		 * Find the target relation in the system cache. We need this to find
 		 * the data types of the target columns for casting.
 		 */
+#ifdef HAS_LOOKUPEXPLICITNAMESPACE_2	       
 		target_rel = RelationIdGetRelation(
-			   get_relname_relid(relname, LookupExplicitNamespace(nspname)));
+			get_relname_relid(relname,
+							  LookupExplicitNamespace(nspname,false)));
+#else
+		target_rel = RelationIdGetRelation(
+			get_relname_relid(relname, LookupExplicitNamespace(nspname)));
+#endif
 		if (target_rel == NULL)
 			elog(ERROR, "Slony-I: cannot find table %s.%s in logApply()",
 				 slon_quote_identifier(nspname),
