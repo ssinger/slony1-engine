@@ -1,9 +1,44 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+*** 2.2.0  b3
+- Bug #285 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
+
+- No bug :: add --with-pgport option to configure and when set to yes let slonik use these functions to determine
+            the PGSHARE directory at runtime. This defaults to no 
 
 - Bug #240 :: Improve notes on VACUUM
 
-** 2.2.0
+- Bug #278 :: assorted spelling fixes
+
+- Bug #280 :: shared library build should use CFLAGS and LDFLAGS
+
+- altperl tool improvements including: better support for running multiple slons 
+  on the same server,let start_slon invoke slon with a config file,
+  fix node_is_subscribing, $LOGDIR directory behaviours, use PGPASSWORDFILE 
+  when querying state
+
+- Bug 284 :: Fix documentation - tutorial
+
+- Bug 282 :: replication failure where column domain/type is in a
+             schema outside of ~search_path~.  Fix by handling the
+             cast inside of the apply trigger the same way, PL/pgSQL
+             is doing type casting internally.
+
+- Bug 273 :: Slon can try to pull data from a behind provider.  Fix is
+             to not force the event provider to be part of the
+             providers unless we don't find any provider at all
+             otherwise.
+
+** 2.2.0 b2
+- Bug #276 :: Fixed detection of duplicate value in sl_nodelock
+- Bug #275 :: fix memory leak in monitor thread
+- Bug #272 :: Fix memory overwrite in slonik parsing
+
+- Bug #258 :: The cleanup thread should no longer block waiting on a lock
+
+- Bug #264 :: Add an ORDER BY to the log selection query so the xid's get compressed
+
+- Bug 274  :: Include schemadoc.xml as part of the distribution tar(again)
 - Bug #268 :: Use pid instead of procpid in pg_stat_activity with PG 9.2+
 
 - Bug #263 :: CPPFLAGS and LDFLAGS on configure get passed on

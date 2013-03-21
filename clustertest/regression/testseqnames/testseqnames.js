@@ -24,7 +24,8 @@ function init_cluster() {
 
 
 function init_tables() {
-	var script=	coordinator.readFile('regression/testseqnames/init_add_tables.ik');
+	//var script=	coordinator.readFile('regression/testseqnames/init_add_tables.ik');
+	var script='include<regression/testseqnames/init_add_tables.ik>';
 
 	return script;
 }

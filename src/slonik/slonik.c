@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #else
+#include <winsock2.h>
 #include <windows.h>
 #define sleep(x) Sleep(x*1000)
 #endif
@@ -41,6 +42,12 @@
 #include "../parsestatements/scanner.h"
 extern int	STMTS[MAXSTATEMENTS];
 
+
+#ifdef HAVE_PGPORT
+#undef USE_REPL_SNPRINTF
+#include "port.h"
+#endif
+
 #define MAXPGPATH 256
 
 /*
@@ -54,6 +61,9 @@ int			last_event_node = -1;
 int			auto_wait_disabled = 0;
 
 static char share_path[MAXPGPATH];
+#if HAVE_PGPORT
+static char myfull_path[MAXPGPATH];
+#endif
 
 
 
@@ -189,10 +199,21 @@ main(int argc, const char *argv[])
 	if (parser_errors)
 		usage();
 
+#ifdef HAVE_PGPORT
 	/*
 	 * We need to find a share directory like PostgreSQL.
 	 */
+        if (find_my_exec(argv[0],myfull_path) < 0)
+        {
+                strcpy(share_path, PGSHARE);
+        }
+        else
+        {
+                get_share_path(myfull_path, share_path);
+        }
+#else
 	strcpy(share_path, PGSHARE);
+#endif
 
 	if (optind < argc)
 	{
@@ -2003,15 +2024,15 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200))	/* 9.x */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90300)) /* 9.x */
 	{
 		/**
-		 * 9.0 and 9.1 are so far just like 8.4
+		 * 9.0 and 9.1 and 9.2 are so far just like 8.4
 		 **/
 		use_major = 8;
 		use_minor = 4;
 	}
-	else	/* above 9.1 ??? */
+	else	/* above 9.2 ??? */
 	{
 		use_major = 8;
 		use_minor = 4;
@@ -2092,10 +2113,10 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90200))	/* 9.0, 9.1 */
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90300)) /* 9.0, 9.1, 9.2 */
 	{
 		/**
-		 * 9.0 and 9.1 are so far just like 8.4
+		 * 9.0 and 9.1 and 9.2 are so far just like 8.4
 		 */
 		use_major = 8;
 		use_minor = 4;

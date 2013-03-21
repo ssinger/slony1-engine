@@ -1,0 +1,176 @@
+##############################################################################
+# Connection settings
+
+# Set the cluster name that this instance of slon is running against
+# default is to read it off the command line
+cluster_name 'sloncluster'
+
+# Set slon's connection info, default is to read it off the command line
+conn_info "host=localhost port=5432 dbname=database user=slony password="
+
+# Execute the following SQL on each node at slon connect time
+# useful to set logging levels, or to tune the planner/memory
+# settings.  You can specify multiple statements by separating
+# them with a ;
+#sql_on_connection="SET log_min_duration_statement TO '1000';"
+
+# Enables sending of TCP KEEP alive requests between slon and the PostgreSQL
+# backends. Defaults to true.
+#tcp_keepalive=true
+
+# The number of seconds of idle activity after which a TCP KEEPALIVE will be
+# sent across the network. The tcp_keepalive parameter must be enabled for this
+# to take effect. The default value is 0 which means use the operating systems
+# default. Setting this parameter has no effect on Win32 systems.
+#tcp_keepalive_idle=0
+
+# The number of keep alive requets to the server that need to be lost before
+# the connection is declared dead. tcp_keep_alive must be turned on for this
+# parameter to take effect. The default value is 0 which means use the
+# operating systems default. Setting this parameter has no effect on Win32
+# systems.
+#tcp_keepalive_count=0
+
+# The number of seconds between TCP keep alive requests. tcp_keepalive must be
+# enabled for this parameter to take effect. The default value is 0 which means
+# use the operating systems default. Setting this parameter has no effect on
+# Win32 systems.
+#tcp_keepalive_interval=0
+
+##############################################################################
+# Logging
+
+# If you want to use syslog then redir output from the slon to /dev/null and
+# remove the log dir.
+
+# If this parameter is 1, messages go both to syslog and the standard
+# output. A value of 2 sends output only to syslog (some messages will
+# still go to the standard output/error).  The default is 0, which means
+# syslog is off.
+# Range:  [0-2], default: 0
+#syslog=0
+
+# Sets the syslog "facility" to be used when syslog enabled.  Valid
+# values are LOCAL0, LOCAL1, LOCAL2, LOCAL3, LOCAL4, LOCAL5, LOCAL6, LOCAL7.
+#syslog_facility=LOCAL0
+
+# Sets the program name used to identify slon messages in syslog.
+#syslog_ident=slon
+
+# Debug log level (higher value ==> more output).  Range: [0,4], default 4
+log_level=0     # 3 and up is generally too high for production
+
+# If true, include the process ID on each log line.  Default is false.
+log_pid=true    # good to know
+
+# If true, include the timestamp on each log line.  Default is true.
+#log_timestamp=true
+
+# A strftime()-conformant format string for use with log timestamps.
+# Default is '%Y-%m-%d %H:%M:%S %Z'
+#log_timestamp_format='%Y-%m-%d %H:%M:%S %Z'
+
+# Location and filename you would like for a file containing the Process ID
+# of the slon process.
+# Where to write the pid file.  Default:  no pid file
+# P.S.: daemontools renders this unnecessary, even undesireable
+# use instead the svc interface to signal the slon.
+#pid_file='/path/to/your/pidfile'
+
+# Should slon run the monitoring thread?
+#monitor_threads=true
+
+# Indicates the number of milliseconds the monitoring thread waits to queue up
+# status entries before dumping such updates into the components table.
+#monitor_interval=
+
+##############################################################################
+# Archive Logging
+
+# Directory in which to stow sync archive files
+# archive_dir="/tmp/somewhere"
+
+# Command to run upon committing a log archive.
+# This command is passed one parameter, namely the full pathname of
+# the archive file
+#command_on_logarchive="/usr/local/bin/movearchivetoarchive"
+
+##############################################################################
+# Event Tuning
+
+# Check for updates at least this often in milliseconds.
+# Range: [10-60000], default 2000
+#sync_interval=2000
+
+# Maximum amount of time in milliseconds before issuing a SYNC event,
+# This prevents a possible race condition in which the action sequence
+# is bumped by the trigger while inserting the log row, which makes
+# this bump is immediately visible to the sync thread, but
+# the resulting log rows are not visible yet.  If the sync is picked
+# up by the subscriber, processed and finished before the transaction
+# commits, this transaction's changes will not be replicated until the
+# next SYNC.  But if all application activity suddenly stops,
+# there will be no more sequence bumps, so the high frequent -s check
+# won't detect that.  Thus, the need for sync_interval_timeout.
+# Range: [0-120000], default 10000
+#sync_interval_timeout=10000
+
+# Maximum number of SYNC events to group together when/if a subscriber
+# falls behind.  SYNCs are batched only if there are that many available
+# and if they are contiguous. Every other event type in between leads to
+# a smaller batch.  And if there is only one SYNC available, even -g60
+# will apply just that one. As soon as a subscriber catches up, it will
+# apply every single SYNC by itself.
+# Range:  [0,100], default: 6
+#sync_group_maxsize=6
+
+# Sets how many cleanup cycles to run before a vacuum is done.
+# Range: [0,100], default: 3
+#vac_frequency=3
+
+# maximum time planned for grouped SYNCs
+# If replication is behind, slon will try to increase numbers of
+# syncs done targetting that they should take this quantity of
+# time to process. in ms
+# Range [10000,600000], default 60000.
+#desired_sync_time=60000
+
+
+# A PostgreSQL value compatible with ::interval which indicates how
+# far behind this node should lag its providers.
+# lag_interval="8 minutes"
+
+
+# Size above which an sl_log_? row's log_cmddata is considered large.
+# Up to 500 rows of this size are allowed in memory at once. Rows larger
+# than that count into the sync_max_largemem space allocated and free'd
+# on demand.
+# Range:  [1024,32768], default: 8192
+#sync_max_rowsize=8192
+
+
+# Maximum amount of memory allowed for large rows. Note that the algorithm
+# will stop fetching rows AFTER this amount is exceeded, not BEFORE. This
+# is done to ensure that a single row exceeding this limit alone does not
+# stall replication.
+# Range:  [1048576,1073741824], default: 5242880
+#sync_max_largemem=5242880
+
+
+# How long should the remote listener wait before treating the event selection
+# criteria as having timed out?
+# Range: [30-30000], default 300
+#remote_listen_timeout 300
+
+
+# An interval in seconds at which the remote worker will output the
+# query used to select log rows together with it's query plan. The
+# default value of 0 turns this feature off.
+# Range: [0-86400], default: 0
+#explain_interval=0
+
+
+# Aging interval to use for deleting old events and for trimming
+# data from sl_log_1/sl_log_2
+#cleanup_interval="10 minutes"
+

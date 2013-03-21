@@ -127,7 +127,7 @@ rm -rf %{buildroot}
 %if %docs
 %files docs
 %defattr(-,root,root,-)
-%doc doc/adminguide  doc/concept  doc/howto  doc/implementation  doc/support
+%doc doc/adminguide  doc/concept  doc/implementation  doc/support
 %endif
 
 %changelog

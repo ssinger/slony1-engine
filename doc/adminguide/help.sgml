@@ -59,8 +59,9 @@ questions. Many people leave themselves logged into IRC and
 only periodically check the channel.  It might take a while
 before someone answers your questions</para></listitem>
 
-<listitem><para> <ulink url="http://pgpool.projects.postgresql.org/"
-      id="pgpool"> <application> pgpool </application> </ulink> </para>
+<listitem><para> <ulink url="http://www.pgpool.net"
+      id="pgpool"> <application>
+      pgpool </application> </ulink> </para>
 
 <para> <application>pgpool</application> is a connection pool server
 for &postgres;; it allows an application to connect to it as if it

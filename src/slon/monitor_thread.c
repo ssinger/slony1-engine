@@ -199,6 +199,7 @@ monitorThread_main(void *dummy)
 						break;
 					}
 					PQclear(res);
+					dstring_free(&monquery);
 				}
 
 				res = PQexec(dbconn, dstring_data(&commitquery));
@@ -208,14 +209,8 @@ monitorThread_main(void *dummy)
 							 "monitorThread: %s - %s\n",
 							 dstring_data(&commitquery),
 							 PQresultErrorMessage(res));
-					PQclear(res);
-					dstring_free(&monquery);
 				}
-				else
-				{
-					dstring_free(&monquery);
-				}
-
+				PQclear(res);
 			}
 			if ((rc = (ScheduleStatus) sched_msleep(NULL, monitor_interval)) != SCHED_STATUS_OK)
 			{

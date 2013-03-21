@@ -242,7 +242,7 @@ check: slony.sgml $(ALLSGML) $(GENERATED_SGML)
 ## Clean
 ##
 
-clean distclean maintainer-clean:
+distclean:
 # HTML
 	rm -f HTML.manifest *.html *.gif
 # man
@@ -253,8 +253,10 @@ clean distclean maintainer-clean:
 	rm -f HTML.index $(GENERATED_SGML)
 # text
 	rm -f INSTALL HISTORY
+	rm -f slony.xml
+clean maintainer-clean : distclean
 # xml
-	rm -f schemadoc.xml slony.xml
+	rm -f schemadoc.xml 
 
 BASEDIR=$(slony_top_builddir)/src/backend
 BASESQL=$(BASEDIR)/slony1_base.sql

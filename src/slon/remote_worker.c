@@ -586,7 +586,6 @@ remoteWorkerThread_main(void *cdata)
 							slon_mkquery(&query2, "rollback transaction; ");
 							query_execute(node, local_dbconn, &query2);
 							dstring_reset(&query2);
-
 							slon_retry();
 						}
 					}
@@ -1684,7 +1683,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 		 * If the list of currently replicated sets we receive from this
 		 * provider is empty, we don't need to maintain a connection to it.
 		 */
-		if (provider->set_head == NULL && provider->no_id != event_provider)
+		if (provider->set_head == NULL)
 		{
 			/*
 			 * Tell this helper thread to exit, join him and destroy thread
@@ -1750,47 +1749,39 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	/*
 	 * Step 4.
 	 *
-	 * Make sure the event provider is in the list of providers.
+	 * If we don't have ANY provider at this point, fall back
+	 * on the node that we got this event from.
 	 */
-	if (event_provider >= 0)
+	if (event_provider >= 0 && wd->provider_head == NULL)
 	{
-		for (provider = wd->provider_head; provider;
-			 provider = provider->next)
+		/*
+		 * No provider entry found. Create a new one.
+		 */
+		provider = (ProviderInfo *)
+			malloc(sizeof(ProviderInfo));
+		memset(provider, 0, sizeof(ProviderInfo));
+		provider->no_id = event_provider;
+		provider->wd = wd;
+
+		dstring_init(&provider->helper_query);
+
+		/*
+		 * Add the provider to our work group
+		 */
+		DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
+						provider);
+
+		/*
+		 * Copy the runtime configurations conninfo into the provider
+		 * info.
+		 */
+		rtcfg_node = rtcfg_findNode(provider->no_id);
+		if (rtcfg_node != NULL)
 		{
-			if (provider->no_id == event_provider)
-				break;
-		}
-		if (provider == NULL)
-		{
-			/*
-			 * No provider entry found. Create a new one.
-			 */
-			provider = (ProviderInfo *)
-				malloc(sizeof(ProviderInfo));
-			memset(provider, 0, sizeof(ProviderInfo));
-			provider->no_id = event_provider;
-			provider->wd = wd;
-
-			dstring_init(&provider->helper_query);
-
-			/*
-			 * Add the provider to our work group
-			 */
-			DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
-							provider);
-
-			/*
-			 * Copy the runtime configurations conninfo into the provider
-			 * info.
-			 */
-			rtcfg_node = rtcfg_findNode(provider->no_id);
-			if (rtcfg_node != NULL)
-			{
-				provider->pa_connretry = rtcfg_node->pa_connretry;
-				if (rtcfg_node->pa_conninfo != NULL)
-					provider->pa_conninfo =
-						strdup(rtcfg_node->pa_conninfo);
-			}
+			provider->pa_connretry = rtcfg_node->pa_connretry;
+			if (rtcfg_node->pa_conninfo != NULL)
+				provider->pa_conninfo =
+					strdup(rtcfg_node->pa_conninfo);
 		}
 	}
 }
@@ -3370,10 +3361,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					 node->no_id);
 
 			(void) slon_mkquery(&query1,
-								"select log_actionseq "
-								"from %s.sl_log_1 where log_origin = %d "
-								"union select log_actionseq "
-								"from %s.sl_log_2 where log_origin = %d; ",
+								"(select log_actionseq "
+								"from %s.sl_log_1 where log_origin = %d order by log_actionseq) "
+								"union (select log_actionseq "
+								"from %s.sl_log_2 where log_origin = %d order by log_actionseq); ",
 								rtcfg_namespace, node->no_id,
 								rtcfg_namespace, node->no_id);
 		}
@@ -3434,10 +3425,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 					 node->no_id, ssy_seqno);
 
 			(void) slon_mkquery(&query1,
-								"select log_actionseq "
-							 "from %s.sl_log_1 where log_origin = %d and %s "
-								"union select log_actionseq "
-						   "from %s.sl_log_2 where log_origin = %d and %s; ",
+								"(select log_actionseq "
+							 "from %s.sl_log_1 where log_origin = %d and %s order by log_actionseq)"
+								"union (select log_actionseq "
+						   "from %s.sl_log_2 where log_origin = %d and %s order by log_actionseq); ",
 						 rtcfg_namespace, node->no_id, dstring_data(&query2),
 						rtcfg_namespace, node->no_id, dstring_data(&query2));
 		}
@@ -4403,9 +4394,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						"update %s.sl_setsync set "
 						"    ssy_seqno = '%s', ssy_snapshot = '%s', "
 						"    ssy_action_list = '' "
-						"where ssy_setid in (",
+						"where ssy_origin=%d and  ssy_setid in (",
 						rtcfg_namespace,
-						seqbuf, event->ev_snapshot_c);
+						seqbuf, event->ev_snapshot_c,node->no_id);
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -4766,7 +4757,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	}
 
 	res = PQgetResult(dbconn);
-	if (PQresultStatus(res) < 0)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY OUT: %s",
 				 node->no_id, provider->no_id,
@@ -4776,7 +4767,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	PQclear(res);
 
 	res = PQgetResult(local_conn);
-	if (PQresultStatus(res) < 0)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY IN: %s",
 				 node->no_id, provider->no_id,

@@ -26,6 +26,8 @@ endif
 ifeq ($(PORTNAME), win32)
 PROG            = slonik.exe
 LDFLAGS += -lpgport
+else ifdef HAVE_PGPORT
+LDFLAGS += -lpgport
 endif
 
 OBJS		= 			\

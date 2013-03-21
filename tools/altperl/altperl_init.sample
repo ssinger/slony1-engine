@@ -1,0 +1,88 @@
+#!/bin/bash
+# postgresql   Script for starting up the Slony-I with altperl functions
+#
+# chkconfig: - 64 36
+# description: Starts and stops the Slon daemon that handles
+#              Slony-I replication.
+# processname: slon
+# pidfile:      /var/run/slon.pid
+#
+
+## EDIT FROM HERE
+
+# Who to run the slony as, usually "slony".  (NOT "root")
+SLONUSER=slony
+SLONTOOLSCONF=/usr/local/etc/slon_tools.conf
+
+# Slony cluster node number to start/stop
+NODENUM=1
+
+# Log file name
+LOGFILE="/var/log/slony1/node$NODENUM.log"
+
+# Altperl Binaries localization
+SLON_START="/usr/local/bin/slon_start"
+SLON_KILL="/usr/local/bin/slon_kill"
+
+## STOP EDITING HERE
+
+# Source function library.
+INITD=/etc/rc.d/init.d
+. $INITD/functions
+
+# Get function listing for cross-distribution logic.
+TYPESET=`typeset -f|grep "declare"`
+
+# Get config.
+. /etc/sysconfig/network
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+   SU=runuser
+else
+   SU=su
+fi
+
+# Check that networking is up.
+# We need it for slon
+[ "${NETWORKING}" = "no" ] && exit 0
+
+# Find the name of the script
+NAME=`basename $0`
+if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+then
+   NAME=${NAME:3}
+fi
+
+# The path that is to be used for the script
+# PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Only start if we can find the postmaster.
+
+# Parse command line parameters.
+case $1 in
+  start)
+        STARTTEXT=$"Starting ${NAME} service"
+
+	echo -n "$STARTTEXT - Slony Node $NODENUM : "
+        $SU - $SLONUSER -c "$SLON_START --config $SLONTOOLSCONF $NODENUM" >> $LOGFILE
+	wait
+	echo "ok"
+	;;
+
+  stop)
+	echo -n "Stopping Slony Node $NODENUM : "
+	$SLON_KILL --only-node $NODENUM >> $LOGFILE
+	wait
+	echo "ok"
+	;;
+
+  *)
+	# Print help
+	echo "Usage: $0 {start|stop}" 1>&2
+	exit 1
+	;;
+esac
+
+exit 0
