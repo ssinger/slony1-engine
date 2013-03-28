@@ -1,5 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+
+- Bug 286 :: Support to compile against PG 9.3
+
 *** 2.2.0  b3
 - Bug #285 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
 
