@@ -6027,7 +6027,8 @@ $$
 		end if;
 		return NULL;
     end
-$$ language plpgsql;
+$$ language plpgsql
+    security definer;
 
 comment on function @NAMESPACE@.log_truncate ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';
