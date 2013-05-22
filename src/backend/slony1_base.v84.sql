@@ -1,5 +1,5 @@
 -- ----------------------------------------------------------------------
--- slony1_base.v83.sql
+-- slony1_base.v84.sql
 --
 --    Version 8.3 specific parts of the basic replication schema.
 --
