@@ -186,6 +186,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_SERVER
 %token	K_SET
 %token	K_SLEEP
+%token	K_SQL
 %token	K_STORE
 %token	K_SUBSCRIBE
 %token	K_SUCCESS
@@ -1431,6 +1432,7 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 						SlonikStmt_ddl_script *new;
 						statement_option opt[] = {
 							STMT_OPTION_STR( O_FILENAME, NULL ),
+							STMT_OPTION_STR( O_SQL, NULL ),
 							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
 							STMT_OPTION_STR( O_EXECUTE_ONLY_LIST, NULL ),
 							STMT_OPTION_INT( O_EXECUTE_ONLY_ON, -1 ),
@@ -1447,9 +1449,10 @@ stmt_ddl_script		: lno K_EXECUTE K_SCRIPT option_list
 						if (assign_options(opt, $4) == 0)
 						{
 							new->ddl_fname		= opt[0].str;
-							new->ev_origin		= opt[1].ival;
-							new->only_on_nodes	= opt[2].str;
-							new->only_on_node   = opt[3].ival;
+							new->ddl_sql		= opt[1].str;
+							new->ev_origin		= opt[2].ival;
+							new->only_on_nodes	= opt[3].str;
+							new->only_on_node   = opt[4].ival;
 							new->ddl_fd			= NULL;
 						}
 						else
@@ -1838,7 +1841,11 @@ option_list_item	: K_ID '=' option_item_id
 						$3->opt_code	= O_SECONDS;
 						$$ = $3;
 					}
-
+					| K_SQL '=' option_item_literal
+					{
+						$3->opt_code	= O_SQL;
+						$$ = $3;
+					}
 					| K_TABLES '=' option_item_literal
 					{
 						$3->opt_code	= O_TABLES;
@@ -1996,6 +2003,7 @@ option_str(option_code opt_code)
 		case O_SEQUENCES:		return "sequences";
 		case O_SERVER:			return "server";
 		case O_SET_ID:			return "set id";
+		case O_SQL:				return "sql";
 		case O_TAB_ID:			return "table id";
 		case O_TABLES:			return "tables";			
 		case O_TIMEOUT:			return "timeout";

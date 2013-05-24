@@ -139,6 +139,7 @@ sequences		{ return K_SEQUENCES;		}
 server			{ return K_SERVER;			}
 set				{ return K_SET;				}
 sleep			{ return K_SLEEP;			}
+sql				{ return K_SQL;				}
 store			{ return K_STORE;			}
 subscribe		{ return K_SUBSCRIBE;		}
 success			{ return K_SUCCESS;			}

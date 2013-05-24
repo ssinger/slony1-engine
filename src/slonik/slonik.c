@@ -1128,10 +1128,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->ddl_fname == NULL)
+					if (stmt->ddl_fname == NULL && stmt->ddl_sql == NULL)
 					{
 						printf("%s:%d: Error: "
-							   "script file name must be specified\n",
+							   "script file name or sql must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->ddl_fname != NULL && stmt->ddl_sql != NULL)
+					{
+						printf("%s:%d: Error: "
+							   "script file name and sql are mutually exclusive\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
@@ -1146,14 +1153,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 
-					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
-					if (stmt->ddl_fd == NULL)
+					if (stmt->ddl_fname != NULL)
 					{
-						printf("%s:%d: Error: "
-							   "%s - %s\n",
-							   hdr->stmt_filename, hdr->stmt_lno,
-							   stmt->ddl_fname, strerror(errno));
-						errors++;
+					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
+						if (stmt->ddl_fd == NULL)
+						{
+							printf("%s:%d: Error: "
+								   "%s - %s\n",
+								   hdr->stmt_filename, hdr->stmt_lno,
+								   stmt->ddl_fname, strerror(errno));
+							errors++;
+						}
 					}
 				}
 				break;
@@ -4763,15 +4773,25 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	dstring_init(&script_content);
 	dstring_init(&script_rewritten);
 
-	while (!feof(stmt->ddl_fd))
+	if (stmt->ddl_fd != NULL)
 	{
-		num_read = fread(buf, 1, sizeof(buf), stmt->ddl_fd);
-		if (num_read == 0)
-			break;
-		dstring_nappend(&script_content, buf, num_read);
+		while (!feof(stmt->ddl_fd))
+		{
+			num_read = fread(buf, 1, sizeof(buf), stmt->ddl_fd);
+			if (num_read == 0)
+				break;
+			dstring_nappend(&script_content, buf, num_read);
+		}
+		fclose(stmt->ddl_fd);
+		stmt->ddl_fd = NULL;
+	} else {
+		if (stmt->ddl_sql == NULL)
+		{
+			printf("internal error - ddl_fd == NULL and ddl_sql == NULL\n");
+			return -1;
+		}
+		dstring_append(&script_content, stmt->ddl_sql);
 	}
-	fclose(stmt->ddl_fd);
-	stmt->ddl_fd = NULL;
 	dstring_terminate(&script_content);
 
 	/*
