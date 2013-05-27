@@ -273,7 +273,9 @@ static int	archive_append_data(SlonNode * node, const char *s, int len);
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
 
+#ifdef UNUSED
 static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
+#endif
 
 /* ----------
  * slon_remoteWorkerThread
@@ -5443,6 +5445,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	slon_log(SLON_DEBUG4, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
 }
 
+#ifdef UNUSED
 /**
  * Checks to see if the node specified is a member of the set.
  *
@@ -5474,6 +5477,7 @@ check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn)
 	PQclear(res);
 	return 1;
 }
+#endif /* UNUSED */
 
 static void
 init_perfmon(PerfMon * perf_info)

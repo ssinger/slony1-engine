@@ -2646,7 +2646,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 
 					}
 					adminfo2->last_event = ev_id;
-					printf("debug: waiting for %d,%ld on %d\n",
+					printf("debug: waiting for %d," INT64_FORMAT " on %d\n",
 						   wait_event.wait_origin, ev_id, wait_event.wait_on);
 					rc = slonik_wait_event(&wait_event);
 					if (rc < 0)
@@ -6129,6 +6129,8 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 				event_id = PQgetvalue(result, 0, 0);
 				if (event_id != NULL)
 					cur_event_id = strtoll(event_id, NULL, 10);
+				else
+					cur_event_id = -1;
 				if (cur_event_id > max_event_id)
 					max_event_id = cur_event_id;
 			}
