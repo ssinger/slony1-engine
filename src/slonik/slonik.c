@@ -6190,6 +6190,8 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 				event_id = PQgetvalue(result, 0, 0);
 				if (event_id != NULL)
 					cur_event_id = strtoll(event_id, NULL, 10);
+				else
+					cur_event_id = -1;
 				if (cur_event_id > max_event_id)
 					max_event_id = cur_event_id;
 			}

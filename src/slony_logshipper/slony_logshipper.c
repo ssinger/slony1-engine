@@ -507,6 +507,13 @@ process_archive(char *fname)
 
 		destinationfname = dstring_data(&destfname);
 	}
+	else
+	{
+		/*
+		 * This is to avoid a "possibly used uninitialized" warning.
+		 */
+		dstring_data(&destfname) = NULL;
+	}
 
 	for (cmd = pre_processing_commands; cmd != NULL; cmd = cmd->next)
 	{
@@ -530,6 +537,7 @@ process_archive(char *fname)
 			errlog(LOG_ERROR, "cannot open %s - %s\n",
 				   dstring_data(&destfname), strerror(errno));
 			fclose(fp);
+			destinationfname = NULL;
 			dstring_free(&destfname);
 			return 1;
 		}
