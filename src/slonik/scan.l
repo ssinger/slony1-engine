@@ -178,7 +178,16 @@ yes				{ return K_YES;				}
 			instring_buffer[instring_length]=*yytext;
 			BEGIN(IN_STRING);
 		}
-<IN_STRING>''	
+<IN_STRING>''	{
+				if (  instring_buf_length < instring_length + yyleng+1 )
+				{
+						instring_buffer=realloc(instring_buffer,instring_buf_length*2);
+						instring_buf_length=instring_buf_length*2;
+				}
+				instring_buffer[instring_length++] = '\'';
+
+				
+		}
 <IN_STRING>[^']+ { 
 				if (  instring_buf_length < instring_length + yyleng+1 )
 				{
