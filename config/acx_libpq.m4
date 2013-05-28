@@ -504,8 +504,16 @@ AC_SUBST(NLSLIB)
 
 if test "$with_pgport" = "yes"; then
    AC_MSG_CHECKING(for pgport)
+   # check if we have pgcommon this is a lib in 9.3+ that
+   # is needed  with PGPORT
+   OLD_LIBS=$LIBS
+   LIBS="$LIBS -lpgcommon"
+   AC_TRY_LINK_FUNC(pg_malloc,[EXTRALIBS=' -lpgcommon'
+                                  AC_MSG_RESULT(yes)],
+                                EXTRALIBS=''  )
+   LIBS=$OLD_LIBS 
    AC_DEFINE(HAVE_PGPORT)
-   LIBS="$LIBS -lpgport"
+   LIBS="$LIBS -lpgport $EXTRALIBS"
    AC_TRY_LINK_FUNC(find_my_exec,[HAVE_PGPORT=1
                                   AC_MSG_RESULT(yes)], 
                     AC_MSG_ERROR("pgport was not found. build without --with-pgport=yes to disable"))
