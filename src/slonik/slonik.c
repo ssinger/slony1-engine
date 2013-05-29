@@ -4944,7 +4944,7 @@ slonik_update_functions(SlonikStmt_update_functions * stmt)
 	PGresult   *res;
 	SlonDString query;
 
-	adminfo = get_checked_adminfo((SlonikStmt *) stmt, stmt->no_id);
+	adminfo = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo == NULL)
 		return -1;
 
@@ -5830,11 +5830,12 @@ slonik_get_last_event_id(SlonikStmt * stmt,
 	dstring_init(&query);
 	slon_mkquery(&query, "select max(ev_seqno) FROM \"_%s\".sl_event"
 				 " , \"_%s\".sl_node "
-				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
+				 " where ev_origin= "
+				 "     (select last_value from \"_%s\".sl_local_node_id) "
 				 " AND %s AND sl_node.no_id="
 				 " ev_origin"
 				 ,script->clustername, script->clustername,
-				 script->clustername, script->clustername, event_filter);
+				 script->clustername, event_filter);
 	node_count = 0;
 	for (curAdmInfo = script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)

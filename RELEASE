@@ -3,6 +3,10 @@
 
 - Bug 286 :: Support to compile against PG 9.3
 
+- Bug 287 :: Fix UPDATE FUNCTIONS so it works when the old shared library is no longer around
+
+- No bug  ::  Make log_truncate() SECURITY DEFINER
+
 *** 2.2.0  b3
 - Bug #285 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
 
