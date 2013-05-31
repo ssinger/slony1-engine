@@ -1911,6 +1911,7 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	char		rex2[257];
 	char		rex3[257];
 	char		rex4[257];
+	char            rex5[257];
 	FILE	   *stmtp;
 
 
@@ -1940,7 +1941,12 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 		rex3[0] = '\0';
 		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
 		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
-		replace_token(buf, rex4, "@NAMESPACE@", rex2);
+#define EXPAND2(x) #x
+#define EXPAND(x) EXPAND2(x)
+		replace_token(rex5,rex4,  "@FUNCVERSION@" ,  EXPAND(SLONY_I_FUNC_VERSION_STRING));
+#undef EXPAND
+#undef EXPAND2
+		replace_token(buf, rex5, "@NAMESPACE@", rex2);
 		rc = strlen(buf);
 		dstring_nappend(&query, buf, rc);
 	}
