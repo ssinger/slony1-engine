@@ -507,12 +507,16 @@ if test "$with_pgport" = "yes"; then
    # check if we have pgcommon this is a lib in 9.3+ that
    # is needed  with PGPORT
    OLD_LIBS=$LIBS
+   AC_DEFINE(HAVE_PGCOMMON)
    LIBS="$LIBS -lpgcommon"
-   AC_TRY_LINK_FUNC(pg_malloc,[EXTRALIBS=' -lpgcommon'
+   AC_TRY_LINK_FUNC(pg_malloc,[HAVE_PGCOMMON=1
                                   AC_MSG_RESULT(yes)],
-                                EXTRALIBS=''  )
+                                HAVE_PGCOMMON=0  )
    LIBS=$OLD_LIBS 
    AC_DEFINE(HAVE_PGPORT)
+   if test $HAVE_PGCOMMON = 1  ; then
+       EXTRALIBS=" -lpgcommon"
+   fi
    LIBS="$LIBS -lpgport $EXTRALIBS"
    AC_TRY_LINK_FUNC(find_my_exec,[HAVE_PGPORT=1
                                   AC_MSG_RESULT(yes)], 
