@@ -7,7 +7,10 @@
 
 - No bug  ::  Make log_truncate() SECURITY DEFINER
 
-- Bug 290 ::  Allow linking with pgport on 9.3+ by including pgcommon
+- Bug 290 :: Allow linking with pgport on 9.3+ by including pgcommon
+
+- Bug 252 :: cloneNodePrepare() store a  valid conninfo in sl_path
+
 
 *** 2.2.0  b3
 - Bug #285 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
