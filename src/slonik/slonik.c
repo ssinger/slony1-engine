@@ -1980,7 +1980,11 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	sprintf(replacements[2].new_str, "\"_%s\"", stmt->script->clustername);
 	replacements[3].old_str = "@FUNCVERSION@";
 	replacements[3].old_len = strlen(replacements[3].old_str);
-	replacements[3].new_str = SLONY_I_FUNC_VERSION_STRING;
+#define EXPAND2(x) #x
+#define EXPAND(x) EXPAND2(x)
+	replacements[3].new_str = EXPAND(SLONY_I_FUNC_VERSION_STRING);
+#undef EXPAND
+#undef EXPAND2
 	replacements[4].old_str = NULL;
 	replacements[4].old_len = 0;
 	replacements[4].new_str = NULL;
