@@ -41,3 +41,7 @@ create table public.evil_index_table (
   "eViL StudlyCaps column" text
 );
 create unique index "user" on public.evil_index_table(id);
+
+create table public."Jan's bad ideas" (
+	id int4 primary key
+);

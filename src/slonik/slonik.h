@@ -417,6 +417,7 @@ struct SlonikStmt_ddl_script_s
 {
 	SlonikStmt	hdr;
 	char	   *ddl_fname;
+	char	   *ddl_sql;
 	int			ev_origin;
 	char	   *only_on_nodes;
 	int			only_on_node;
@@ -682,6 +683,7 @@ typedef enum
 	O_SEQUENCES,
 	O_SERVER,
 	O_SET_ID,
+	O_SQL,
 	O_TAB_ID,
 	O_TABLES,
 	O_TIMEOUT,

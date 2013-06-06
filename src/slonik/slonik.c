@@ -92,6 +92,14 @@ typedef struct
 }	failnode_set;
 
 
+typedef struct
+{
+	char	   *old_str;
+	int			old_len;
+	char	   *new_str;
+}	replacement_token;
+
+
 /*
  * Local functions
  */
@@ -114,8 +122,8 @@ static void script_commit_all(SlonikStmt * stmt,
 static void script_rollback_all(SlonikStmt * stmt,
 					SlonikScript * script);
 static void script_disconnect_all(SlonikScript * script);
-static void replace_token(char *resout, char *lines, const char *token,
-			  const char *replacement);
+static void replace_tokens(SlonDString *dest, SlonDString *src, 
+					replacement_token *replacements);
 static int slonik_set_add_single_table(SlonikStmt_set_add_table * stmt,
 							SlonikAdmInfo * adminfo1,
 							const char *fqname);
@@ -1120,10 +1128,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->ddl_fname == NULL)
+					if (stmt->ddl_fname == NULL && stmt->ddl_sql == NULL)
 					{
 						printf("%s:%d: Error: "
-							   "script file name must be specified\n",
+							   "script file name or sql must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->ddl_fname != NULL && stmt->ddl_sql != NULL)
+					{
+						printf("%s:%d: Error: "
+							   "script file name and sql are mutually exclusive\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
@@ -1138,14 +1153,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 
-					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
-					if (stmt->ddl_fd == NULL)
+					if (stmt->ddl_fname != NULL)
 					{
-						printf("%s:%d: Error: "
-							   "%s - %s\n",
-							   hdr->stmt_filename, hdr->stmt_lno,
-							   stmt->ddl_fname, strerror(errno));
-						errors++;
+					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
+						if (stmt->ddl_fd == NULL)
+						{
+							printf("%s:%d: Error: "
+								   "%s - %s\n",
+								   hdr->stmt_filename, hdr->stmt_lno,
+								   stmt->ddl_fname, strerror(errno));
+							errors++;
+						}
 					}
 				}
 				break;
@@ -1902,22 +1920,22 @@ static int
 load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 {
 	PGresult   *res;
-	SlonDString query;
+	SlonDString file_content;
+	SlonDString file_rewritten;
 	va_list		ap;
 	int			rc;
 	char		fnamebuf[1024];
 	char		buf[4096];
-	char		rex1[257];
-	char		rex2[257];
-	char		rex3[257];
-	char		rex4[257];
-	char            rex5[257];
+	size_t		num_read;
 	FILE	   *stmtp;
-
+	replacement_token	replacements[5];
 
 	if (db_begin_xact(stmt, adminfo, true) < 0)
 		return -1;
 
+	/*
+	 * Open the requested SQL file
+	 */
 	va_start(ap, fname);
 	vsnprintf(fnamebuf, sizeof(fnamebuf), fname, ap);
 	va_end(ap);
@@ -1930,32 +1948,53 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 		return -1;
 	}
 
-	dstring_init(&query);
-
-	sprintf(rex2, "\"_%s\"", stmt->script->clustername);
-
-	while (fgets(rex1, 256, stmtp) != NULL)
+	/*
+	 * Initialize string objects and read the content of the SQL file
+	 * into file_content.
+	 */
+	dstring_init(&file_content);
+	dstring_init(&file_rewritten);
+	while (!feof(stmtp))
 	{
-		rc = strlen(rex1);
-		rex1[rc] = '\0';
-		rex3[0] = '\0';
-		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
-		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
+		num_read = fread(buf, 1, sizeof(buf), stmtp);
+		if (num_read == 0)
+			break;
+		dstring_nappend(&file_content, buf, num_read);
+	}
+	fclose(stmtp);
+	dstring_terminate(&file_content);
+
+	/*
+	 * Setup the string replacement table and call replace_tokens() to
+	 * perform all the substitutions.
+	 */
+	replacements[0].old_str = "@CLUSTERNAME@";
+	replacements[0].old_len = strlen(replacements[0].old_str);
+	replacements[0].new_str = stmt->script->clustername;
+	replacements[1].old_str = "@MODULEVERSION@";
+	replacements[1].old_len = strlen(replacements[1].old_str);
+	replacements[1].new_str = SLONY_I_VERSION_STRING;
+	replacements[2].old_str = "@NAMESPACE@";
+	replacements[2].old_len = strlen(replacements[2].old_str);
+	replacements[2].new_str = alloca(strlen(stmt->script->clustername) + 4);
+	sprintf(replacements[2].new_str, "\"_%s\"", stmt->script->clustername);
+	replacements[3].old_str = "@FUNCVERSION@";
+	replacements[3].old_len = strlen(replacements[3].old_str);
 #define EXPAND2(x) #x
 #define EXPAND(x) EXPAND2(x)
-		replace_token(rex5,rex4,  "@FUNCVERSION@" ,  EXPAND(SLONY_I_FUNC_VERSION_STRING));
+	replacements[3].new_str = EXPAND(SLONY_I_FUNC_VERSION_STRING);
 #undef EXPAND
 #undef EXPAND2
-		replace_token(buf, rex5, "@NAMESPACE@", rex2);
-		rc = strlen(buf);
-		dstring_nappend(&query, buf, rc);
-	}
+	replacements[4].old_str = NULL;
+	replacements[4].old_len = 0;
+	replacements[4].new_str = NULL;
 
-	fclose(stmtp);
+	replace_tokens(&file_rewritten, &file_content, replacements);
 
-	dstring_terminate(&query);
-
-	res = PQexec(adminfo->dbconn, dstring_data(&query));
+	/*
+	 * Execute the resulting SQL.
+	 */
+	res = PQexec(adminfo->dbconn, dstring_data(&file_rewritten));
 
 	rc = PQresultStatus(res);
 	if ((rc != PGRES_TUPLES_OK) && (rc != PGRES_COMMAND_OK) && (rc != PGRES_EMPTY_QUERY))
@@ -1966,10 +2005,14 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 			   PQresultErrorMessage(res),
 			   PQerrorMessage(adminfo->dbconn));
 		PQclear(res);
+		dstring_free(&file_content);
+		dstring_free(&file_rewritten);
+
 		return -1;
 	}
-	dstring_free(&query);
 	PQclear(res);
+	dstring_free(&file_content);
+	dstring_free(&file_rewritten);
 
 	return 0;
 }
@@ -4714,16 +4757,14 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonDString query,
 				equery;
-	SlonDString script;
+	SlonDString script_content;
+	SlonDString script_rewritten;
 	PGresult   *res1;
-	int			rc;
+	size_t		num_read;
 	int			num_statements = -1,
 				stmtno;
 	char		buf[4096];
-	char		rex1[256];
-	char		rex2[256];
-	char		rex3[256];
-	char		rex4[256];
+	replacement_token	replacements[4];
 
 #define PARMCOUNT 1
 
@@ -4736,21 +4777,50 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1, false) < 0)
 		return -1;
 
-	dstring_init(&script);
+	dstring_init(&script_content);
+	dstring_init(&script_rewritten);
 
-	sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
-
-	while (fgets(rex1, 256, stmt->ddl_fd) != NULL)
+	if (stmt->ddl_fd != NULL)
 	{
-		rc = strlen(rex1);
-		rex1[rc] = '\0';
-		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
-		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
-		replace_token(buf, rex4, "@NAMESPACE@", rex2);
-		rc = strlen(buf);
-		dstring_nappend(&script, buf, rc);
+		while (!feof(stmt->ddl_fd))
+		{
+			num_read = fread(buf, 1, sizeof(buf), stmt->ddl_fd);
+			if (num_read == 0)
+				break;
+			dstring_nappend(&script_content, buf, num_read);
+		}
+		fclose(stmt->ddl_fd);
+		stmt->ddl_fd = NULL;
+	} else {
+		if (stmt->ddl_sql == NULL)
+		{
+			printf("internal error - ddl_fd == NULL and ddl_sql == NULL\n");
+			return -1;
+		}
+		dstring_append(&script_content, stmt->ddl_sql);
 	}
-	dstring_terminate(&script);
+	dstring_terminate(&script_content);
+
+	/*
+	 * Setup the string replacement table and call replace_tokens() to
+	 * perform all the substitutions.
+	 */
+	replacements[0].old_str = "@CLUSTERNAME@";
+	replacements[0].old_len = strlen(replacements[0].old_str);
+	replacements[0].new_str = stmt->hdr.script->clustername;
+	replacements[1].old_str = "@MODULEVERSION@";
+	replacements[1].old_len = strlen(replacements[1].old_str);
+	replacements[1].new_str = SLONY_I_VERSION_STRING;
+	replacements[2].old_str = "@NAMESPACE@";
+	replacements[2].old_len = strlen(replacements[2].old_str);
+	replacements[2].new_str = alloca(strlen(stmt->hdr.script->clustername) + 4);
+	sprintf(replacements[2].new_str, "\"_%s\"", stmt->hdr.script->clustername);
+	replacements[3].old_str = NULL;
+	replacements[3].old_len = 0;
+	replacements[3].new_str = NULL;
+
+	replace_tokens(&script_rewritten, &script_content, replacements);
+	dstring_free(&script_content);
 
 	/*
 	 * This prepares the statement that will be run over and over for each DDL
@@ -4783,12 +4853,13 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	 * Split the script into a series of SQL statements - each needs to be
 	 * submitted separately
 	 */
-	num_statements = scan_for_statements(dstring_data(&script));
+	num_statements = scan_for_statements(dstring_data(&script_rewritten));
 
 	/* OOPS!  Something went wrong !!! */
 	if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS))
 	{
 		printf("DDL - number of statements invalid - %d not between 0 and %d\n", num_statements, MAXSTATEMENTS);
+		dstring_free(&script_rewritten);
 		return -1;
 	}
 	dstring_init(&query);
@@ -4809,8 +4880,8 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 			printf("DDL Failure - could not allocate %d bytes of memory\n", endpos - startpos + 1);
 			return -1;
 		}
-		strncpy(dest, dstring_data(&script) + startpos, endpos - startpos);
-		dest[STMTS[stmtno] - startpos] = 0;
+		strncpy(dest, dstring_data(&script_rewritten) + startpos, endpos - startpos);
+		dest[STMTS[stmtno] - startpos] = '\0';
 		slon_mkquery(&query, "%s", dest);
 		free(dest);
 
@@ -4860,14 +4931,14 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 				dstring_data(&query), PQresultErrorMessage(res1));
 		PQclear(res1);
 		dstring_free(&equery);
-		dstring_free(&script);
+		dstring_free(&script_rewritten);
 		dstring_free(&query);
 		return -1;
 	}
 	PQclear(res1);
 
 	dstring_free(&equery);
-	dstring_free(&script);
+	dstring_free(&script_rewritten);
 	dstring_free(&query);
 	return 0;
 }
@@ -5297,49 +5368,40 @@ slon_scanint64(char *str, int64 *result)
 }
 
 
-/*
- * make a copy of the array of lines, with token replaced by replacement
- * the first time it occurs on each line.
- *
- * This does most of what sed was used for in the shell script, but
- * doesn't need any regexp stuff.
- */
+/**
+* Substitute strings in a dstring, creating a new dstring as a result.
+*
+*/
 static void
-replace_token(char *resout, char *lines, const char *token, const char *replacement)
+replace_tokens(SlonDString *dest, SlonDString *src, 
+		replacement_token *replacements)
 {
-	int			numlines = 1;
-	int			i,
-				o;
-	char		result_set[4096];
-	int			toklen,
-				replen;
+	char   *src_cp = dstring_data(src);
 
-	for (i = 0; lines[i]; i++)
-		numlines++;
-
-	toklen = strlen(token);
-	replen = strlen(replacement);
-
-	for (i = o = 0; i < numlines; i++, o++)
+	while (*src_cp != '\0')
 	{
-		/* just copy pointer if NULL or no change needed */
-		if (!lines[i] || (strncmp((const char *) lines + i, token, toklen)))
+		replacement_token  *tp;
+		int					found = false;
+		
+		for (tp = replacements; tp->old_str != NULL; tp++)
 		{
-			if (lines[i] == 0x0d)		/* ||(lines[i] == 0x0a)) */
+			if (strncmp(src_cp, tp->old_str, tp->old_len) == 0)
+			{
+				dstring_append(dest, tp->new_str);
+				src_cp += tp->old_len;
+				found = true;
 				break;
-
-			result_set[o] = lines[i];
-			continue;
+			}
 		}
-		/* if we get here a change is needed - set up new line */
-		strncpy((char *) result_set + o, replacement, replen);
-		o += replen - 1;
-		i += toklen - 1;
-	}
 
-	result_set[o] = '\0';
-	memcpy(resout, result_set, o + 1);
+		if (!found)
+		{
+			dstring_addchar(dest, *src_cp++);
+		}
+	}
+	dstring_terminate(dest);
 }
+
 
 /**
 * checks all nodes (that an admin conninfo exists for)

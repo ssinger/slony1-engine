@@ -115,13 +115,25 @@ function exec_ddl(coordinator) {
 
 
 function individual_ddl(coordinator, nodenum) {
-	
 	premable = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT( FILENAME=\'regression/testddl/ddl_update_part2.sql\''
 		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +');';
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
-	
 }
+
+
+function inline_ddl(coordinator) {
+	premable = get_slonik_preamble();
+	slonikScript = 'EXECUTE SCRIPT('
+	    + 'SQL=\'ALTER TABLE table1 ADD COLUMN processed timestamp with time zone;\''
+		+ ' ,EVENT NODE=1);\n';
+	slonikScript += 'EXECUTE SCRIPT('
+	    + 'SQL=\'UPDATE table1 SET processed = CURRENT_TIMESTAMP;\''
+		+ ' ,EVENT NODE=1);\n';
+	run_slonik('update ddl',coordinator,preamble,slonikScript);
+}
+
+
 function do_test(coordinator) {
 
 	var numrows = random_number(150,350);
@@ -150,6 +162,9 @@ function do_test(coordinator) {
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
+	wait_for_sync(coordinator);
+
+	inline_ddl(coordinator);
 	wait_for_sync(coordinator);
 }
 

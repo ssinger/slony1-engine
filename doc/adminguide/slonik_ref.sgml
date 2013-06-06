@@ -2797,9 +2797,16 @@ FAILOVER(
 	an absolute path on the system where <application>slonik</application> is to run.</para>
        
        <para> The <emphasis>contents</emphasis> of the file are propagated as part of
-	the event, so the file does not need to be accessible on any of the
+	the replication data stream, so the file does not need to be accessible on any of the
 	nodes.</para></listitem>
       
+     </varlistentry>
+     <varlistentry><term><literal> SQL = 'sql-string-to-execute' </literal></term>
+      
+      <listitem><para> Instead of a filename the SQL statements to
+	  	execute can be specified as a string literal in single quotes.
+		</para></listitem>
+
      </varlistentry>
      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
       <listitem><para> (Mandatory unless EXECUTE ONLY ON is given) The ID 
