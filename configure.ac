@@ -252,6 +252,7 @@ AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
 
 AC_SUBST(HAVE_PGPORT,$HAVE_PGPORT)
+AC_SUBST(HAVE_PGCOMMON,$HAVE_PGCOMMON)
 if test "${SLON_BINDIR}" = ""; then
  if test ${prefix} = "NONE"; then
    SLON_BINDIR="${PG_BINDIR}"

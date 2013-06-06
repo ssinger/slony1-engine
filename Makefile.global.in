@@ -59,6 +59,10 @@ ifeq (@HAVE_PGPORT@,1)
 HAVE_PGPORT=           @HAVE_PGPORT@
 endif
 
+ifeq (@HAVE_PGCOMMON@,1)
+HAVE_PGCOMMON=           @HAVE_PGCOMMON@
+endif
+
 # Documentation
 JADE=			@JADE@
 NSGMLS=			@NSGMLS@

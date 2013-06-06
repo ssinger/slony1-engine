@@ -1928,7 +1928,7 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	char		buf[4096];
 	size_t		num_read;
 	FILE	   *stmtp;
-	replacement_token	replacements[4];
+	replacement_token	replacements[5];
 
 	if (db_begin_xact(stmt, adminfo, true) < 0)
 		return -1;
@@ -1978,9 +1978,12 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 	replacements[2].old_len = strlen(replacements[2].old_str);
 	replacements[2].new_str = alloca(strlen(stmt->script->clustername) + 4);
 	sprintf(replacements[2].new_str, "\"_%s\"", stmt->script->clustername);
-	replacements[3].old_str = NULL;
-	replacements[3].old_len = 0;
-	replacements[3].new_str = NULL;
+	replacements[3].old_str = "@FUNCVERSION@";
+	replacements[3].old_len = strlen(replacements[3].old_str);
+	replacements[3].new_str = SLONY_I_FUNC_VERSION_STRING;
+	replacements[4].old_str = NULL;
+	replacements[4].old_len = 0;
+	replacements[4].new_str = NULL;
 
 	replace_tokens(&file_rewritten, &file_content, replacements);
 
