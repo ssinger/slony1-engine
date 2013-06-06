@@ -1,6 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+*** 2.2.0 b4
+
 - Bug 286 :: Support to compile against PG 9.3
 
 - Bug 287 :: Fix UPDATE FUNCTIONS so it works when the old shared library is no longer around
