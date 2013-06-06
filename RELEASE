@@ -5,9 +5,11 @@
 
 - Bug 287 :: Fix UPDATE FUNCTIONS so it works when the old shared library is no longer around
 
-- No bug  ::  Make log_truncate() SECURITY DEFINER
+- No bug  :: Make log_truncate() SECURITY DEFINER
 
-- Bug 290 ::  Allow linking with pgport on 9.3+ by including pgcommon
+- Bug 290 :: Make the symbols in the shared library unique 
+
+- No bug  :: Allow linking with pgport on 9.3+ by including pgcommon
 
 *** 2.2.0  b3
 - Bug #285 :: Fix race condition with MOVE SET where a third node could get updated to the wrong SYNC number
