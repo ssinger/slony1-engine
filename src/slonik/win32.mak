@@ -1,19 +1,19 @@
 CPP=cl.exe
 LINK32=link.exe
 
-!if $(PGVER) = "8.3" 
-PORTLIBS="libpgport.lib"
-!elseif  $(PGVER) = "8.4"
-PORTLIBS="libpgport.lib"
-!elseif  $(PGVER) = "9.0"
-PORTLIBS="libpgport.lib"
-!elseif  $(PGVER) = "9.1"
-PORTLIBS="libpgport.lib"
-!elseif  $(PGVER) = "9.2"
-PORTLIBS="libpgport.lib"
+!if "$(PGVER)" == "8.3" 
+PORTLIBS=libpgport.lib
+!elseif  "$(PGVER)" == "8.4"
+PORTLIBS=libpgport.lib
+!elseif  "$(PGVER)" == "9.0"
+PORTLIBS=libpgport.lib
+!elseif  "$(PGVER)" == "9.1"
+PORTLIBS=libpgport.lib
+!elseif  "$(PGVER)" == "9.2"
+PORTLIBS=libpgport.lib
 !else
-PORTLIBS="libpgport.lib libpgcommon.lib"
-!end
+PORTLIBS=libpgport.lib libpgcommon.lib
+!endif
 
 LINK32_FLAGS=/libpath:$(PG_LIB) libpq.lib $(PORTLIBS) ws2_32.lib kernel32.lib user32.lib advapi32.lib /libpath:$(GETTEXT_LIB) intl.lib
 OBJS = slonik.obj \
