@@ -236,7 +236,10 @@ To compile the &slony1; binaries you will need to
 <itemizedlist>
 <listitem><para>Set the environment variables PGSHARE,PG_INC,PG_LIB,
 PTHREADS_INC,PTHREADS_LIB, GETTEXT_LIB to point to the proper locations
-based on where these applications were installed.  For example</para>
+based on where these applications were installed.  
+The PGVER environment variable should be set the PostgreSQL MAJOR
+number of the PostgreSQL instance you are compiling against(8.4 , 9.1, etc..). 
+For example</para>
 <programlisting>
 set PG_INC=c:\Postgresql\9.0\include
 set PG_LIB=c:\Postgresql\9.0\lib
@@ -245,6 +248,7 @@ set PTHREADS_INC=c:\pthreads-win32\include
 set PTHREADS_LIB=c:\pthreads-win32\lib
 set GETTEXT_LIB=c:\gettext\lib
 set GETTEXT_INC=c:\gettext\include
+set PGVER=9.2
 </programlisting>
 <para>
 Note that the backslash characters must be escaped for PGSHARE as in the
