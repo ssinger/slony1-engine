@@ -49,7 +49,7 @@ analyzing the problem. </para>
 
 <listitem><para>There are several articles here
 <ulink
-      url="http://www.varlena.com/varlena/GeneralBits/Tidbits/index.php#Replication">
+      url="http://www.varlena.com/GeneralBits/Tidbits/index.php#Replication">
 Varlena GeneralBits </ulink> that may be helpful but was written for an older
 version of &slony1;.</para></listitem>
 
