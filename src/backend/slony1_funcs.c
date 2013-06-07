@@ -1496,7 +1496,7 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 					 * Special case if there were no columns updated. We tell
 					 * it to set the first PK column to itself.
 					 */
-					if (cmdupdncols == 0)
+					if (cmdupdncols == 0 && i == 0)
 					{
 						sprintf(applyQueryPos, "%s = %s",
 								slon_quote_identifier(colname),
