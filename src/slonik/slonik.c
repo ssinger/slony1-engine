@@ -16,7 +16,6 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
-#include <malloc.h>
 #ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
@@ -26,6 +25,7 @@
 #else
 #include <winsock2.h>
 #include <windows.h>
+#include <malloc.h>
 #define sleep(x) Sleep(x*1000)
 #endif
 
