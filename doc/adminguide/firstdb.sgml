@@ -144,7 +144,7 @@ variables again so they are available in this session as well.
 <para>The typical command to run <application>pgbench</application> would look like:
 
 <programlisting>
-pgbench -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
+pgbench -n -s 1 -c 5 -t 1000 -U $PGBENCHUSER -h $MASTERHOST $MASTERDBNAME
 </programlisting>
 </para>
 
