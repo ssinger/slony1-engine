@@ -35,7 +35,7 @@ slonik <<_EOF_
 	node 2 admin conninfo = 'dbname=$SLAVEDBNAME host=$SLAVEHOST user=$REPLICATIONUSER';
 create set (id=2, origin=1, comment='a second replication set');
 set add table (set id=2, origin=1, id=5, fully qualified name = 'public.newtable', comment='some new table');
-subscribe set(id=1, provider=1,receiver=2);
+subscribe set(id=2, provider=1,receiver=2);
 wait for event(origin=1, confirmed=all, wait on=1);
 merge set(id=1, add id=2,origin=1);
 
