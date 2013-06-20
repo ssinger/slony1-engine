@@ -29,9 +29,6 @@ configuration:
 
 <itemizedlist>
 
-<listitem><para> You have <option>tcpip_socket=true</option> in your
-<filename>postgresql.conf</filename>;</para> <note> <para> This is no longer needed for &postgres; 8.0 and later versions.</para></note> </listitem>
-
 <listitem><para> You have enabled access in your cluster(s) via
 <filename>pg_hba.conf</filename></para></listitem>
 
