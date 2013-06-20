@@ -17,6 +17,11 @@ and do a <command>make install</command> to build and install it; you
 may discover that included in packaged binary &postgres;
 installations.</para>
 
+<note><para>pgbench creates tables with a slightly different name in 
+&postgres; 8.3 than it does in later versions. If you are using this
+tutorial with &postgres; 8.3 you should remove the 'pgbench_' prefix
+from all of the table names listed below</para></note>
+
 <para>The &slony1; replication engine is trigger-based, allowing us to
 replicate databases (or portions thereof) running under the same
 postmaster.</para>
