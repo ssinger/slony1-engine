@@ -1191,7 +1191,7 @@ and then restart of all node daemons.';
 --	Initiate a failover. This function must be called on all nodes
 --	and then waited for the restart of all node daemons.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4)
+create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4,p_failed_nodes integer[])
 returns int4
 as $$
 declare
@@ -1207,7 +1207,8 @@ begin
 	update @NAMESPACE@.sl_subscribe set 
 		   sub_provider=p_backup_node
 		   where sub_provider=p_failed_node
-		   and sub_receiver<>p_backup_node;
+		   and sub_receiver<>p_backup_node
+		   and sub_receiver <> ALL (p_failed_nodes);
 
 	-- ----
 	-- Terminate all connections of the failed node the hard way
@@ -1226,7 +1227,7 @@ begin
 
         if not v_failed then
 	   	
-		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
+		update @NAMESPACE@.sl_node set no_failed=true where no_id = ANY (p_failed_nodes)
 		and no_failed=false;
 	   -- Rewrite sl_listen table
 	   perform @NAMESPACE@.RebuildListenEntries();	   
@@ -1243,7 +1244,7 @@ begin
 	return p_failed_node;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4) is
+comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4,p_failed_nodes integer[]) is
 'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
 and then waited for the restart of all node daemons.';
 
@@ -1255,7 +1256,7 @@ and then waited for the restart of all node daemons.';
 --	On the node that has the highest sequence number of the failed node,
 --	fake the FAILED_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8)
+create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8, p_failed_nodes integer[])
 returns bigint
 as $$
 declare
@@ -1271,8 +1272,8 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
-	update @NAMESPACE@.sl_node set no_failed=true  where no_id=p_failed_node
-		and no_failed=false;
+	update @NAMESPACE@.sl_node set no_failed=true  where no_id = ANY 
+	(p_failed_nodes) and no_failed=false;
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 	-- ----
@@ -1283,7 +1284,8 @@ begin
 	notify "_@CLUSTERNAME@_Restart";
 
 	select @NAMESPACE@.createEvent('_@CLUSTERNAME@','FAILOVER_NODE',
-								p_failed_node::text,p_ev_seqno::text)
+								p_failed_node::text,p_ev_seqno::text,
+								array_to_string(p_failed_nodes,','))
 			into v_new_event;
 		
 
@@ -1291,8 +1293,8 @@ begin
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8) is
-'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
+comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8,p_failed_nodes integer[] ) is
+'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake,p_failed_nodes)
 
 On the node that has the highest sequence number of the failed node,
 fake the FAILOVER_SET event.';
@@ -1323,6 +1325,7 @@ declare
 	v_row				record;
 	v_last_sync			int8;
 	v_set				int4;
+	v_missing_path      int4;
 begin
 	SELECT max(ev_seqno) into v_last_sync FROM @NAMESPACE@.sl_event where
 		   ev_origin=p_failed_node;
@@ -1358,10 +1361,14 @@ begin
 					and sub_receiver = p_backup_node;
 			update @NAMESPACE@.sl_set
 				set set_origin = p_backup_node
-				where set_id = v_set;
+				where set_id = v_set;		
 			 update @NAMESPACE@.sl_subscribe
-				 		set sub_provider=p_backup_node
-					   where sub_set = v_set;
+						set sub_provider=p_backup_node
+					  	FROM @NAMESPACE@.sl_node receive_node
+					   where sub_set = v_set
+					   and sub_provider=p_failed_node
+					   and sub_receiver=receive_node.no_id
+					   and receive_node.no_failed=false;
 
 			for v_row in select * from @NAMESPACE@.sl_table
 				where tab_set = v_set
@@ -1376,9 +1383,15 @@ begin
 			delete from @NAMESPACE@.sl_subscribe
 					  where sub_set = v_set
 					  and sub_receiver = p_backup_node;
+		
 			update @NAMESPACE@.sl_subscribe
 				 		set sub_provider=p_backup_node
-					   where sub_set = v_set;
+						FROM @NAMESPACE@.sl_node receive_node
+					   where sub_set = v_set
+					    and sub_provider=p_failed_node
+						 and sub_provider=p_failed_node
+					   and sub_receiver=receive_node.no_id
+					   and receive_node.no_failed=false;
 			update @NAMESPACE@.sl_set
 					   set set_origin = p_backup_node
 				where set_id = v_set;
@@ -4700,7 +4713,8 @@ begin
 
 	-- Loop over every possible pair of receiver and event origin
 	for v_row in select N1.no_id as receiver, N2.no_id as origin,
-			  N2.no_failed as failed
+			  N2.no_failed as origin_failed,
+			  N1.no_failed as receiver_failed
 			from @NAMESPACE@.sl_node as N1, @NAMESPACE@.sl_node as N2
 			where N1.no_id <> N2.no_id
 	loop
@@ -4749,7 +4763,7 @@ begin
 				end if;
 		end if;
 
-		if v_row.failed then
+		if v_row.origin_failed then
 		
 		--for every failed node we delete all sl_listen entries
 		--except via providers (listed in sl_subscribe).

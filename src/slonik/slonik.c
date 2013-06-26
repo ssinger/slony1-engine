@@ -170,7 +170,8 @@ static int
 fail_node_promote(SlonikStmt_failed_node * stmt,
 				  failed_node_entry * node_entry,
 				  failnode_node * nodeinfo
-				  ,int *fail_node_ids);
+				  ,int *fail_node_ids,
+				  SlonDString * failed_node_list);
 
 /* ----------
  * main
@@ -2710,6 +2711,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 					}
 
 				}
+#if 0 
 				if (slonik_is_slony_installed((SlonikStmt *) stmt, curAdmInfo) > 0)
 				{
 					rc = slonik_wait_config_caughtup(curAdmInfo, (SlonikStmt *) stmt,
@@ -2717,6 +2719,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 					if (rc < 0)
 						return rc;
 				}
+#endif
 			}
 
 		}
@@ -2780,20 +2783,21 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	failnode_node **max_node_total = NULL;
 	failed_node_entry *node_entry = stmt->nodes;
 	int		   *fail_node_ids = NULL;
-
+	bool         missing_paths=false;
 	int			rc = 0;
 
 
 	/**
 	 *	The failover procedure (at a high level) is as follows
 	 *
-	 * 1. Get a list of failover candidates for each failed node.
-	 * 2. validate that we have conninfo to all of them
-	 * 3. blank their paths to the failed nodes
-	 * 4. Wait for slons to restart
-	 * 5. for each failed node get the highest xid for each candidate
-	 * 6. execute FAILOVER on the highest canidate
-	 * 7. MOVE SET to the backup node.
+	 * 1. Check to see if the failover will leave orphan nodes
+	 * 2. Get a list of failover candidates for each failed node.
+	 * 3. validate that we have conninfo to all of them
+	 * 4. blank their paths to the failed nodes
+	 * 5. Wait for slons to restart
+	 * 6. for each failed node get the highest xid for each candidate
+	 * 7. execute FAILOVER on the highest canidate
+	 * 8. MOVE SET to the backup node.
 	 */
 
 
@@ -2827,6 +2831,68 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	memset(fail_node_ids, -1, sizeof(int) * (num_origins + 1));
 	memset(set_list, 0, sizeof(int *) * num_origins);
 
+
+	/**
+	 * validate that the list of failed nodes is complete.
+	 * This means that for any providers in sl_subscribe 
+	 * that have failed there muts be a path between
+	 * the receiver node and the specified backup node.
+	 *
+	 * If this isn't the case then the user must also include
+	 * the receiver node as a failed node, or add in the path
+	 * before calling FAILOVER.
+	 *
+	 * We only check sl_subscribe on arbitrary backup node
+	 */
+	for (node_entry = stmt->nodes; node_entry != NULL;
+		 node_entry = node_entry->next, cur_origin_idx++)
+	{
+		int num_orphans=0;
+		int res_idx;
+		slon_mkquery(&query,
+					 " select sub_receiver FROM \"_%s\".sl_subscribe left join "
+					 "\"_%s\".sl_path on (pa_server="
+					 " %d and pa_client=sub_receiver) where sub_receiver not "
+					 "in (%s) and sub_provider=%d and sub_receiver <> %d and pa_client is null"
+					 , stmt->hdr.script->clustername
+					 , stmt->hdr.script->clustername
+					 , node_entry->backup_node
+					 ,  dstring_data(&failed_node_list)
+					 ,  node_entry->no_id,node_entry->backup_node);
+		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, node_entry->backup_node);
+		if (adminfo1 == NULL)
+		{
+			printf("%s:%d no admin conninfo for node %d\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+				   node_entry->backup_node);
+			rc = -1;
+			goto cleanup;
+		}			 
+		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
+		if (res1 == NULL)
+		{
+			rc = -1;
+			goto cleanup;
+		}
+		num_orphans = PQntuples(res1);
+		for(res_idx=0; res_idx < num_orphans; res_idx++)
+		{
+			char * receiver=PQgetvalue(res1,res_idx,0);
+			printf("%s:%d can't failover node %s does not have a path to %d\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,receiver,
+				   node_entry->backup_node);
+			missing_paths=true;
+				   
+
+		}
+		PQclear(res1);
+	}
+	if ( missing_paths )
+	{
+		rc=-1;
+		goto cleanup;
+
+	}
 
 
 	/**
@@ -2935,9 +3001,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 * Connect to all these nodes and determine if there is a node daemon
 		 * running on that node.
 		 */
-		has_candidate = true;
+
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
+			has_candidate = true;
 			const char * pidcolumn;
 			nodeinfo[i].no_id = (int) strtol(PQgetvalue(res1, i, 0), NULL, 10);
 			nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
@@ -2995,15 +3062,15 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		}
 		PQclear(res1);
 		PQclear(res2);
-		if (!has_candidate)
+		if (!has_candidate && node_entry->num_sets > 0 )
 		{
 			printf("%s:%d error no failover candidates for %d\n",
 				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno
 				   ,node_entry->no_id);
-			PQclear(res1);
 			rc = -1;
 			goto cleanup;
 		}
+	
 
 		/*
 		 * Execute the preFailover() procedure on all failover candidate nodes
@@ -3063,10 +3130,14 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 node_entry = node_entry->next, cur_origin_idx++)
 	{
 
+		
 		failnode_node *nodeinfo = (failnode_node *) failnodebuf[cur_origin_idx];
+		
+		if ( node_entry->num_nodes == 0 )
+			continue;
 
 		rc = fail_node_promote(stmt, node_entry, nodeinfo,
-							   fail_node_ids);
+							   fail_node_ids,&failed_node_list);
 		if (rc < 0)
 		{
 			goto cleanup;
@@ -3235,7 +3306,8 @@ int
 fail_node_promote(SlonikStmt_failed_node * stmt,
 				  failed_node_entry * node_entry,
 				  failnode_node * nodeinfo,
-				  int *fail_node_ids)
+				  int *fail_node_ids,
+	              SlonDString * failed_node_list)
 {
 	int64		max_seqno = 0;
 	int			max_node_idx = 0;
@@ -3249,6 +3321,16 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	SlonikStmt_wait_event wait_event;
 
 	dstring_init(&query);
+
+	if ( node_entry->num_nodes == 0 && node_entry->num_sets  == 0 ) 
+	{
+		/**
+		 * This node is the origin of no sets but we still need to
+		 * let the rest of the cluster know that this node is considered
+		 * failed.
+		 */
+
+	}
 
 	/*
 	 * For every node determine the one with the event , preferring the backup
@@ -3295,18 +3377,19 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	}
 	adminfo1 = nodeinfo[max_node_idx].adminfo;
 
+
 	/*
 	 * Now execute all FAILED_NODE events on the most ahead candidate
 	 */
 	sprintf(ev_seqno_c, INT64_FORMAT, max_seqno);
 	slon_mkquery(&query,
 				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-				 "select \"_%s\".failedNode2(%d,%d,'%s'); ",
+				 "select \"_%s\".failedNode2(%d,%d,'%s',ARRAY[%s]); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 node_entry->no_id, nodeinfo[max_node_idx].no_id
-				 ,ev_seqno_c);
+				 ,ev_seqno_c,dstring_data(failed_node_list));
 	printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
 		   stmt->hdr.script->clustername,
 		   nodeinfo[max_node_idx].no_id);

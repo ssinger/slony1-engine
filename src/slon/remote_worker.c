@@ -1189,6 +1189,8 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			failed_node = (int) strtol(event->ev_data1, NULL, 10);
 				char	   *seq_no_c = event->ev_data2;
+				char       *failed_node_list  = event->ev_data3;
+
 				PGresult   *res;
 
 				/**
@@ -1200,9 +1202,9 @@ remoteWorkerThread_main(void *cdata)
 				 * The most-ahead failover canidate is the node that
 				 * created the FAILOVER_NODE event (node->id)
 				 */
-				slon_mkquery(&query2, "select %s.failedNode(%d,%d);"
+				slon_mkquery(&query2, "select %s.failedNode(%d,%d,ARRAY[%s]);"
 							 ,rtcfg_namespace,
-							 failed_node, node->no_id);
+							 failed_node, node->no_id,failed_node_list);
 
 				res = PQexec(local_dbconn, dstring_data(&query2));
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
