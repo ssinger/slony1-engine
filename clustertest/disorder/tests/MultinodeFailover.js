@@ -94,6 +94,7 @@ MultinodeFailover.prototype.runTest = function() {
 	load.stop(); 
 	this.coordinator.join(load);
 	this.dropTwoNodes(1,2,3);
+	this.slonikSync(2,4);
 	this.compareDb('db3','db4');
 		//exit(-1);
 	//auto wait for should not require the

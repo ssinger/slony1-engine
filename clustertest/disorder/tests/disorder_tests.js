@@ -55,8 +55,8 @@ var tests =
      ,new BulkAddingTest(coordinator,results)
 	 ,new WaitForTest(coordinator,results)
 	 ,new MultinodeFailover(coordinator,results)
-	 ,new Resubscribe(coordinator,results),
-	 ,new SiteFailover(coordinator,results),
+	 ,new Resubscribe(coordinator,results)
+	 ,new SiteFailover(coordinator,results)
 	 //Below tests are known to fail.
 	 ,new UnsubscribeBeforeEnable(coordinator,results)
      ,new DropSet(coordinator,results) //fails bug 133
@@ -64,7 +64,8 @@ var tests =
     ];
 
 //tests=[new Failover(coordinator,results),
-//	   new MultinodeFailover(coordinator,results)];
+//	   new MultinodeFailover(coordinator,results)
+//	   ,new SiteFailover(coordinator,results)];
 
 var basicTest = new BasicTest(coordinator,results);
 
