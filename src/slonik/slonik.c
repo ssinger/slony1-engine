@@ -2622,6 +2622,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonikAdmInfo *adminfo2;
 	SlonDString query;
+	SlonDString node_list;
 	SlonikAdmInfo *curAdmInfo;
 	int			rc;
 	int			no_id_idx;
@@ -2728,26 +2729,33 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 
 
 	dstring_init(&query);
-
-	for (no_id_idx = 0; stmt->no_id_list[no_id_idx] != -1; no_id_idx++)
+	dstring_init(&node_list);
+	slon_mkquery(&node_list,"%d",stmt->no_id_list[0]);
+	for (no_id_idx = 1; stmt->no_id_list[no_id_idx] != -1; no_id_idx++)
 	{
-		slon_mkquery(&query,
-				  "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-					 "select \"_%s\".dropNode(%d); ",
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 stmt->no_id_list[no_id_idx]);
-		/**
-		 * we disable auto wait because we perform a wait
-		 * above ignoring the node being dropped.
-		 */
-		if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-							   stmt->hdr.script, true) < 0)
-		{
-			dstring_free(&query);
-			return -1;
-		}
+		slon_appendquery(&node_list,",%d",stmt->no_id_list[no_id_idx]);
+		
+	}
+	slon_mkquery(&query,
+				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
+				 "select \"_%s\".dropNode(ARRAY[%s]); ",
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 dstring_data(&node_list));
+	
+	/**
+	 * we disable auto wait because we perform a wait
+	 * above ignoring the node being dropped.
+	 */
+	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
+						   stmt->hdr.script, true) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	for (no_id_idx = 0; stmt->no_id_list[no_id_idx] != -1; no_id_idx++)
+	{	   
 		/**
 		 * if we have a conninfo for the node being dropped
 		 * we want to clear out the last seqid.
@@ -2758,6 +2766,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 			adminfo2->last_event = -1;
 		}
 	}
+	dstring_free(&node_list);
 	dstring_free(&query);
 	return 0;
 }

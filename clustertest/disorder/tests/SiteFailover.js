@@ -115,7 +115,9 @@ SiteFailover.prototype.runTest = function() {
 	 */
 	var slonikPreamble = this.getSlonikPreamble();
 	var slonikScript = 'echo \'SiteFailover.drop nodes\';\n';
-	slonikScript+= 'drop node(id=\'1,3,4\',event node = 2);\nuninstall node(id=1);\nuninstall node(id=3);\uninstall node(id=3);\n';
+	slonikScript+= 'drop node(id=\'1,3,4\',event node = 2);\n'
+		+ 'try { \n uninstall node(id=1);}\n on error { echo \'slony not installed\';}\n'
+		+ 'try{uninstall node(id=3);}on error{echo \'slony not installed\';}\ntry{ uninstall node(id=3);} on error {echo \'slony not installed\';}\n';
 
 	var slonik=this.coordinator.createSlonik('drop node',slonikPreamble,slonikScript);
 	slonik.run();

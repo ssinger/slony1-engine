@@ -754,44 +754,49 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "DROP_NODE") == 0)
 			{
-				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
+				char *      node_list = event->ev_data1;
+				char * saveptr=NULL;
+				char * node_id=NULL;
 
-				if (no_id != rtcfg_nodeid)
-					rtcfg_disableNode(no_id);
-
-				slon_appendquery(&query1,
+				while((node_id=strtok_r(node_id==NULL ? node_list : NULL ,",",&saveptr))!=NULL)					
+				{
+					int			no_id = (int) strtol(node_id, NULL, 10);
+					if (no_id != rtcfg_nodeid)
+						rtcfg_disableNode(no_id);				
+					slon_appendquery(&query1,
 								 "lock table %s.sl_config_lock;"
 								 "select %s.dropNode_int(%d); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 no_id);
 
-				/*
-				 * If this is our own nodeid, then calling disableNode_int()
-				 * will destroy the whole configuration including the entire
-				 * schema. Make sure we call just that and get out of here
-				 * ASAP!
-				 */
-				if (no_id == rtcfg_nodeid)
-				{
-					slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-							 "got DROP NODE for local node ID\n",
-							 node->no_id);
-
-					slon_appendquery(&query1, "commit transaction; ");
-					if (query_execute(node, local_dbconn, &query1) < 0)
+					/*
+					 * If this is our own nodeid, then calling disableNode_int()
+					 * will destroy the whole configuration including the entire
+					 * schema. Make sure we call just that and get out of here
+					 * ASAP!
+					 */
+					if (no_id == rtcfg_nodeid)
+					{
+						slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+								 "got DROP NODE for local node ID\n",
+								 node->no_id);
+					
+						slon_appendquery(&query1, "commit transaction; ");
+						if (query_execute(node, local_dbconn, &query1) < 0)
 						slon_retry();
 
-					(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
-										rtcfg_namespace);
-					if (query_execute(node, local_dbconn, &query1) < 0)
+						(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
+											rtcfg_namespace);
+						if (query_execute(node, local_dbconn, &query1) < 0)
+							slon_retry();
+						
+						(void) slon_mkquery(&query1, "drop schema %s cascade; ",
+											rtcfg_namespace);
+						query_execute(node, local_dbconn, &query1);
+						
 						slon_retry();
-
-					(void) slon_mkquery(&query1, "drop schema %s cascade; ",
-										rtcfg_namespace);
-					query_execute(node, local_dbconn, &query1);
-
-					slon_retry();
+					}
 				}
 
 				/*

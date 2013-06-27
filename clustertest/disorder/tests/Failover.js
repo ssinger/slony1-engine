@@ -51,7 +51,7 @@ Failover.prototype.runTest = function() {
 	 * Node 5 is not a provider.
 	 * This should go off smoothly.
 	 */
-	this.failNode(5,1,false);
+	this.failNode(5,1,true);
   
 	var lag1 = this.measureLag(1,5);
 	java.lang.Thread.sleep(10*1000);

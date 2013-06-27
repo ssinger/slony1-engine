@@ -994,55 +994,65 @@ NOTE: This is not yet implemented!';
 --
 --	Generate the DROP_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.dropNode (p_no_id int4)
+create or replace function @NAMESPACE@.dropNode (p_no_ids int4[])
 returns bigint
 as $$
 declare
 	v_node_row		record;
+	v_idx         integer;
 begin
 	-- ----
 	-- Check that this got called on a different node
 	-- ----
-	if p_no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+	if  @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') = ANY (p_no_ids) then
 		raise exception 'Slony-I: DROP_NODE cannot initiate on the dropped node';
 	end if;
 
-	select * into v_node_row from @NAMESPACE@.sl_node
-			where no_id = p_no_id
-			for update;
-	if not found then
-		raise exception 'Slony-I: unknown node ID %', p_no_id;
-	end if;
+	--
+	-- if any of the deleted nodes are receivers we drop the sl_subscribe line
+	--
+	delete from @NAMESPACE@.sl_subscribe where sub_receiver = ANY (p_no_ids);
 
-	-- ----
-	-- Make sure we do not break other nodes subscriptions with this
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_subscribe
-			where sub_provider = p_no_id)
-	then
+	v_idx:=1;
+	LOOP
+	  EXIT WHEN v_idx>array_length(p_no_ids,1);
+	  select * into v_node_row from @NAMESPACE@.sl_node
+			where no_id = p_no_ids[v_idx]
+			for update;
+	  if not found then
+		 raise exception 'Slony-I: unknown node ID % %', p_no_ids[v_idx],v_idx;
+	  end if;
+	  -- ----
+	  -- Make sure we do not break other nodes subscriptions with this
+	  -- ----
+	  if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_provider = p_no_ids[v_idx])
+	  then
 		raise exception 'Slony-I: Node % is still configured as a data provider',
 				p_no_id;
-	end if;
+	  end if;
 
-	-- ----
-	-- Make sure no set originates there any more
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_set
-			where set_origin = p_no_id)
-	then
-		raise exception 'Slony-I: Node % is still origin of one or more sets',
-				p_no_id;
-	end if;
+	  -- ----
+	  -- Make sure no set originates there any more
+	  -- ----
+	  if exists (select true from @NAMESPACE@.sl_set
+			where set_origin = p_no_ids[v_idx])
+	  then
+	  	  raise exception 'Slony-I: Node % is still origin of one or more sets',
+				p_no_ids[v_idx];
+	  end if;
 
-	-- ----
-	-- Call the internal drop functionality and generate the event
-	-- ----
-	perform @NAMESPACE@.dropNode_int(p_no_id);
+	  -- ----
+	  -- Call the internal drop functionality and generate the event
+	  -- ----
+	  perform @NAMESPACE@.dropNode_int(p_no_ids[v_idx]);
+	  v_idx:=v_idx+1;
+	END LOOP;
 	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DROP_NODE',
-									p_no_id::text);
+									array_to_string(p_no_ids,','));
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.dropNode(p_no_id int4) is
+comment on function @NAMESPACE@.dropNode(p_no_ids int4[]) is
 'generate DROP_NODE event to drop node node_id from replication';
 
 -- ----------------------------------------------------------------------
@@ -1229,14 +1239,15 @@ begin
 	   	
 		update @NAMESPACE@.sl_node set no_failed=true where no_id = ANY (p_failed_nodes)
 		and no_failed=false;
-	   -- Rewrite sl_listen table
-	   perform @NAMESPACE@.RebuildListenEntries();	   
+	end if;	
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();	   
 
-	   -- ----
-	   -- Make sure the node daemon will restart
-	   -- ----
-	   notify "_@CLUSTERNAME@_Restart";
-	end if;
+	-- ----
+	-- Make sure the node daemon will restart
+	-- ----
+	notify "_@CLUSTERNAME@_Restart";
+
 
 	-- ----
 	-- That is it - so far.
