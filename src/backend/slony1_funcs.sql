@@ -1336,7 +1336,6 @@ declare
 	v_row				record;
 	v_last_sync			int8;
 	v_set				int4;
-	v_missing_path      int4;
 begin
 	SELECT max(ev_seqno) into v_last_sync FROM @NAMESPACE@.sl_event where
 		   ev_origin=p_failed_node;
@@ -4724,8 +4723,7 @@ begin
 
 	-- Loop over every possible pair of receiver and event origin
 	for v_row in select N1.no_id as receiver, N2.no_id as origin,
-			  N2.no_failed as origin_failed,
-			  N1.no_failed as receiver_failed
+			  N2.no_failed as failed
 			from @NAMESPACE@.sl_node as N1, @NAMESPACE@.sl_node as N2
 			where N1.no_id <> N2.no_id
 	loop
@@ -4774,7 +4772,7 @@ begin
 				end if;
 		end if;
 
-		if v_row.origin_failed then
+		if v_row.failed then
 		
 		--for every failed node we delete all sl_listen entries
 		--except via providers (listed in sl_subscribe).
