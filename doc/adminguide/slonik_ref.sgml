@@ -2683,6 +2683,12 @@ MOVE SET (
 	  <literal>NODE=(ID=val,BACKUP NODE=val), NODE=(ID=val2, BACKUP NODE=val2)</literal> to FAILOVER.
 	</para>
 
+
+	<para>
+	  Nodes that are  forwarding providers can also be passed to the failover command as a failed
+      node.  The failover process will redirect the subscriptions from these nodes to the backup node. 
+	</para>
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the failed node</para></listitem>
