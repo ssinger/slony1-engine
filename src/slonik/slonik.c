@@ -3164,7 +3164,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		SlonikStmt_lock_set lock_set;
 		SlonikStmt_move_set move_set;
 		SlonikStmt_wait_event wait_event;
-
+		int wait_rc=0;
 		if (node_entry->temp_backup_node == node_entry->backup_node)
 			continue;
 		lock_set.hdr = stmt->hdr;
@@ -3177,6 +3177,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				printf("%s:%d error locking set %d on %d for MOVE SET\n",
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 					   lock_set.set_id, lock_set.set_origin);
+				rc=-1;
 				continue;
 			}
 			move_set.hdr = stmt->hdr;
@@ -3188,6 +3189,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				printf("%s:%d error moving set %d on %d\n",
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 					   lock_set.set_id, lock_set.set_origin);
+				rc=-1;
 				continue;
 			}
 			/**
@@ -3209,14 +3211,15 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				rc = -1;
 				goto cleanup;
 			}
-			rc = slonik_wait_event(&wait_event);
-			if (rc < 0)
+			wait_rc = slonik_wait_event(&wait_event);
+			if (wait_rc < 0)
 			{
 				/**
 				 * pretty serious? how do we recover?
 				 */
 				printf("%s:%d error waiting for event\n",
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				rc=wait_rc;
 			}
 
 		}
