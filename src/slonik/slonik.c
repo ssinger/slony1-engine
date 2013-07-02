@@ -3221,6 +3221,16 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
 				rc=wait_rc;
 			}
+			/**
+			 * commit the transaction - in case the WAIT FOR
+			 * above created one.
+			 */
+			if (db_commit_xact((SlonikStmt *) stmt,
+							   adminfo1) < 0)
+			{
+				rc = -1;
+				goto cleanup;
+			}
 
 		}
 	}
@@ -3333,16 +3343,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	SlonikStmt_wait_event wait_event;
 
 	dstring_init(&query);
-
-	if ( node_entry->num_nodes == 0 && node_entry->num_sets  == 0 ) 
-	{
-		/**
-		 * This node is the origin of no sets but we still need to
-		 * let the rest of the cluster know that this node is considered
-		 * failed.
-		 */
-
-	}
+	
 
 	/*
 	 * For every node determine the one with the event , preferring the backup
@@ -3367,8 +3368,8 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 							  nodeinfo[i].adminfo, &query);
 		if (res1 == NULL)
 		{
-			dstring_free(&query);
-			return -1;
+			rc=-1;
+			goto cleanup;
 		}
 		slon_scanint64(PQgetvalue(res1, 0, 0), &ev_seqno);
 
@@ -3479,6 +3480,8 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 		goto cleanup;
 	}
 
+cleanup:
+
 	/*
 	 * commit all open transactions despite of all possible errors
 	 */
@@ -3488,7 +3491,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 						   nodeinfo[i].adminfo) < 0)
 			rc = -1;
 	}
-cleanup:
+
 	dstring_free(&query);
 	return rc;
 }
