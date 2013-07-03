@@ -1287,7 +1287,7 @@ get_current_at_counter(void)
 	slon_mkquery(&ds, "select at_counter from %s.sl_archive_tracking;",
 				 namespace);
 	res = PQexec(dbconn, dstring_data(&ds));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res)==0 )
 	{
 		errlog(LOG_ERROR, "cannot retrieve archive tracking status: %s\n",
 			   PQresultErrorMessage(res));
