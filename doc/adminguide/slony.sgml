@@ -60,6 +60,7 @@
 <!ENTITY pglistener "<envar>pg_listener</envar>">
 <!ENTITY lslon "<xref linkend=slon>">
 <!ENTITY lslonik "<xref linkend=slonik>">
+<!ENTITY lslonylogshipping "<xref linkend=slony-logshipping>" >
 <!ENTITY lteststate "<xref linkend=testslonystate>">
 
 ]>
@@ -128,6 +129,7 @@
         &slonconf;
 	&slonik;
         &slonikref;  
+    &logshippingref;
 </part>
 <chapter id="appendix">
 <title>Appendix</title>
