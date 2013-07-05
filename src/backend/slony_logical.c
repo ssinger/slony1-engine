@@ -96,7 +96,6 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	char * table;
 	bool found;
 	HASHCTL hctl;
-	int i ;
 	ListCell * option;
 	
 
@@ -215,6 +214,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	Datum		*cmdargselem = NULL;
 	bool	   *cmdnulls = NULL;
 	bool	   *cmdnullselem = NULL;
+	int        cmdnupdates=0;
 	int		   cmddims[1];
 	int        cmdlbs[1];
 	ArrayType  *outvalues;
@@ -288,24 +288,87 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_UPDATE)
 	{
+
+		Relation indexrel;
+		TupleDesc indexdesc;
 		/**
 		 * convert all columns into two pairs of arrays.
 		 * one for key columns, one for non-key columns
 		 */
 		action='U';
 		
+		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 4 +2) 
+										* sizeof(Datum)  );
+		cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts *4 + 2) 
+										  * sizeof(bool));			
+	  
 		/**
-		 * we need to fine the columns that make up the unique key.
-		 * in the log trigger these were arguments to the trigger
-		 * ie (kvvkk).  
-		 * our options are:
-		 *
-		 * 1. search for the unique indexes on the table and pick one
-		 * 2. Lookup the index name from sl_table
-		 * 3. Have the _init() method load a list of all replicated tables
-		 *    for this remote and the associated unique key names.
+		 * compare the old and new tuples looking at each column.
+		 * If the value of the column has changed then we add that
+		 * to the list.
 		 */
+
+		for(i = 0; i < relation->rd_att->natts; i++)
+		{
+			const char * column;			
+			const char * value_old;
+			const char * value_new;
+
+			if(tupdesc->attrs[i]->attisdropped)
+				continue;
+			if(tupdesc->attrs[i]->attnum < 0)
+				continue;
+			column= NameStr(tupdesc->attrs[i]->attname);
+
+			
+			value_new = columnAsText(tupdesc,&change->newtuple->tuple,i);		
+			*cmdargselem++=PointerGetDatum(cstring_to_text(column));
+			*cmdnullselem++=false;
+			
+			if (value_new == NULL) 
+			{
+				*cmdnullselem++=true;
+				cmdargselem++;
+			}
+			else
+			{
+				*cmdnullselem++=false;
+				*cmdargselem++=PointerGetDatum(cstring_to_text(value_new));
+			}			
+			cmdnupdates++;					
+		}
 		
+		/**
+		 * populate relation->rd_primary with the primary or candidate
+		 * index used to WAL values that specify which row is being updated.
+		 */
+		RelationGetIndexList(relation);
+				
+		indexrel = RelationIdGetRelation(relation->rd_primary);
+		indexdesc = RelationGetDescr(indexrel);
+	    for(i = 0; i < indexrel->rd_att->natts; i++)
+		{
+			const char * column;
+			const char * value;
+			
+			if(indexdesc->attrs[i]->attisdropped)
+				/** you can't drop a column from an index, something is wrong */
+				continue;
+			if(indexdesc->attrs[i]->attnum < 0)
+				continue;
+
+			column = NameStr(indexdesc->attrs[i]->attname);
+			*cmdargselem++= PointerGetDatum(cstring_to_text(column));
+			*cmdnullselem++=false;
+
+			if(change->oldtuple != NULL )
+				value = columnAsText(indexdesc,&change->oldtuple->tuple,i);
+			else
+				value = columnAsText(indexdesc,&change->newtuple->tuple,i);
+			*cmdnullselem++=false;
+			*cmdargselem++=PointerGetDatum(cstring_to_text(value));
+		}
+		RelationClose(indexrel);
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_DELETE)
 	{
@@ -369,7 +432,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	fmgr_info(arraytypeoutput,&flinfo);
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
-	
+	ReleaseSysCache(array_type_tuple);
 	appendStringInfo(ctx->out,"%d,%d,%d,NULL,%s,%s,%c,%d,%s"
 					 ,local_id
 					 ,txn->xid
@@ -379,7 +442,8 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 					 ,action
 					 ,update_cols
 					 ,array_text);
-	ReleaseSysCache(array_type_tuple);
+
+
 	
 	
 	
