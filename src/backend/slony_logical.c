@@ -47,7 +47,7 @@ extern bool pg_decode_commit_txn(LogicalDecodingContext * ctx,
 								 ReorderBufferTXN* txn, XLogRecPtr commit_lsn);
 extern bool pg_decode_change(LogicalDecodingContext * ctx, 
 							 ReorderBufferTXN* txn,
-							 Oid tableoid, ReorderBufferChange *change);
+							 Relation relation, ReorderBufferChange *change);
 
 extern bool pg_decode_clean(LogicalDecodingContext * ctx);
 
@@ -122,32 +122,40 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	hctl.hash = replicated_table_hash;
 	hctl.match = replicated_table_cmp;
 
+
 	/**
 	 * build a hash table with information on all replicated tables.
 	 */
 	replicated_tables=hash_create("replicated_tables",10,&hctl,
 								  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
-	option=ctx->output_plugin_options->head;
-	
-	while(option != NULL && option->next != NULL)
+	if (ctx->output_plugin_options != NULL) 
 	{
 
-		DefElem * def_schema = (DefElem * ) option->data.ptr_value;
-		DefElem * def_table = (DefElem *) option->next->data.ptr_value;
 
-		const char * schema= defGetString(def_schema);
-		const char * table_name = defGetString(def_table);
+	
+		option=ctx->output_plugin_options->head;
+	
+		while(option != NULL && option->next != NULL)
+		{
 
-		table = palloc(strlen(schema) + strlen(table_name)+2);
-		sprintf(table,"%s.%s",schema,table_name);
-		replicated_table * entry=hash_search(replicated_tables,
-											 &table,HASH_ENTER,&found);
-		entry->key=table;
-		entry->namespace=pstrdup(schema);
-		entry->table_name=pstrdup(table_name);
-		entry->set=1;
-		option=option->next->next;
+			DefElem * def_schema = (DefElem * ) option->data.ptr_value;
+			DefElem * def_table = (DefElem *) option->next->data.ptr_value;
+			
+			const char * schema= defGetString(def_schema);
+			const char * table_name = defGetString(def_table);
+			
+			table = palloc(strlen(schema) + strlen(table_name)+2);
+			sprintf(table,"%s.%s",schema,table_name);
+			replicated_table * entry=hash_search(replicated_tables,
+												 &table,HASH_ENTER,&found);
+			entry->key=table;
+			entry->namespace=pstrdup(schema);
+			entry->table_name=pstrdup(table_name);
+			entry->set=1;
+			option=option->next->next;
+		}
 	}
+
 	MemoryContextSwitchTo(old);
 }
 
@@ -187,15 +195,14 @@ pg_decode_commit_txn( LogicalDecodingContext * ctx,
 
 bool
 pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
-				 Oid tableoid, ReorderBufferChange *change)
+				 Relation relation, ReorderBufferChange *change)
 {
 
 	
-	Relation relation = RelationIdGetRelation(tableoid);	
 	TupleDesc	tupdesc = RelationGetDescr(relation);
 	Form_pg_class class_form = RelationGetForm(relation);
 	MemoryContext context = (MemoryContext)ctx->output_plugin_private;
-	MemoryContext old = MemoryContextSwitchTo(context);
+	MemoryContext old;
 	int i;
 	HeapTuple tuple;
 	/**
@@ -221,6 +228,8 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	int table_id=0;
 	const char * table_name;
 	const char * namespace;
+
+	old = MemoryContextSwitchTo(context);
 	ctx->prepare_write(ctx,txn->lsn,txn->xid);
 	elog(NOTICE,"inside og pg_decode_change");
 
@@ -230,7 +239,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 
 	if( ! is_replicated(namespace,table_name) ) 
 	{
-		RelationClose(relation);
 		MemoryContextSwitchTo(old);
 		return false;
 	}
@@ -371,7 +379,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 					 ,action
 					 ,update_cols
 					 ,array_text);
-	RelationClose(relation);
 	ReleaseSysCache(array_type_tuple);
 	
 	
