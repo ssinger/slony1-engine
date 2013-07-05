@@ -290,7 +290,7 @@ Could listen paths be missing so that confirmations are not propagating?
      select datname, $pid_column, usename, date_trunc('minutes', now() - query_start), substr($query_column,0,20)
      from pg_stat_activity
      where  (now() - query_start) > '$ELDERLY_TXN'::interval and
-           $not_idle_condition '
+           $not_idle_condition 
      order by query_start;
   };
 
