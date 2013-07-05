@@ -114,6 +114,10 @@ if ($state eq 'IN_COPY') {
 		elsif ($fields{'log_cmdtype'} eq 'T') {
 			print_truncate(\%fields,\@parsed);
 		}
+		elsif ($fields{'log_cmdtype'} eq 'S') {
+			print @data[2..scalar(@data)-3];
+			print "\n";
+		}
 
 		
 	}
