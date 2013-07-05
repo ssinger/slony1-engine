@@ -83,6 +83,13 @@ Slon will generate a file in the archive directory for each SYNC event that it p
 contain COPY statements that insert data into the sl_log_archive table.  A trigger, that was installed by slony1_dumps.sh 
 will intercept these inserts and make the approriate changes to your replicated tables</para>
 
+<para>Slon will generate log shipping files that contain data for all tables in any replication set that the node is subscribed for.
+There is no support in slon to only data for some of the replication sets in the log shipping files.  If slon is unable to create
+the log shipping files, for example because you run out of disk space, then slon will stop processing new SYNC events and replication for
+that subscriber will fall behind.</para>
+
+
+
 </sect2>
 
 <sect2>
@@ -112,6 +119,32 @@ then the script tools/logshipping_toinsert.pl can be used to convert the COPY st
 to INSERT/UPDATE/DELETE statements.  INSERT/UPDATE/DELETE statements should be easier to apply against
 databases other than PostgreSQL or in environments where you can't create the sl_log_archive table.
 </para>
+</sect2>
+
+<sect2>
+<title>Cluster Reconfiguration Events</title>
+<para>
+Most cluster reconfiguration events such as adding or dropping nodes or paths do not effect the nodes
+receiving the log files and are ignored by log shipping.  However the following clsuter configuration
+events are supported.
+
+<itemizedlist>
+<listitem><para>UNSUBSCRIBE_SET is supported such that when the subscriber node generated the .SQL files
+is unsubscribed to a particular set then any new SQL files generated will not contain updates
+to the tables in that set.SET_DROP_TABLE, SET_DROP_SEQUENCE are handled in a similar fashion.</para></listitem>
+<listitem><para> MOVE SET - I a sets origin is moved from another node to the node running generating the 
+SQL files then changes for those tables will no longer be included in the SQL files generated because
+slon only includes changes in the .SQL files that the node is a subscriber for. A MOVE_SET that makes
+the subscriber an origin means that the changes to those tables will no longer be included in the SQL files generated
+</para></listitem>
+<listitem><para>SUBSCRIBE_SET events are handled properly.  This means that when the node generating the SQL files
+subscribes to a new set the data in the tables in that set will be included as part of the SQL files with a COPY command.
+</para></listitem>
+</itemizedlist>
+</para>
+
+</sect2>
+
 
 
 </sect1>
