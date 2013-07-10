@@ -1,6 +1,15 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
 
+*** 2.2.0 b5
+
+- Bug 296 :: Fixes for FAILOVER when non-origin nodes fail at the same time
+
+- Bug 297 :: Make test_slony_state-dbi.pl work with PG 9.2
+
+- Bug 298 :: Make the log shipping apply trigger apply EXECUTE SCRIPT changes
+
+
 *** 2.2.0 b4
 
 - Bug 286 :: Support to compile against PG 9.3
