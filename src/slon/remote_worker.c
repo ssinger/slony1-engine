@@ -3698,7 +3698,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				archive_terminate(node);
 				return 10;
 			}
-			sprintf(conn_symname, "subscriber_%d_provider_%d",
+			sprintf(conn_symname, "origin_%d_provider_%d",
 					node->no_id, provider->no_id);
 
 

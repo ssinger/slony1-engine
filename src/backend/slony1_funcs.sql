@@ -1029,7 +1029,7 @@ begin
 			where sub_provider = p_no_ids[v_idx])
 	  then
 		raise exception 'Slony-I: Node % is still configured as a data provider',
-				p_no_id;
+				p_no_ids[v_idx];
 	  end if;
 
 	  -- ----

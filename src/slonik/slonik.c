@@ -2697,7 +2697,9 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 						stmt->hdr.script->adminfo_list->next = fake_admin_info;
 
 					}
-					adminfo2->last_event = ev_id;
+					else
+						adminfo2->last_event = ev_id;
+
 					printf("debug: waiting for %d," INT64_FORMAT " on %d\n",
 						   wait_event.wait_origin, ev_id, wait_event.wait_on);
 					rc = slonik_wait_event(&wait_event);
