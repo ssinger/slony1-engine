@@ -21,7 +21,7 @@
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -32,7 +32,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text) 
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -43,7 +43,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -54,7 +54,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -65,7 +65,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -76,7 +76,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -87,7 +87,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -98,7 +98,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -109,7 +109,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text, ev_data8 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -126,7 +126,7 @@ Create an sl_event entry';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.denyAccess ()
 	returns trigger
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_denyAccess'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_denyAccess'
 	language C
 	security definer;
 
@@ -144,7 +144,7 @@ grant execute on function @NAMESPACE@.denyAccess () to public;
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.lockedSet ()
 	returns trigger
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_lockedSet'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_lockedSet'
 	language C;
 
 comment on function @NAMESPACE@.lockedSet () is 
@@ -156,7 +156,7 @@ comment on function @NAMESPACE@.lockedSet () is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getLocalNodeId (p_cluster name) returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getLocalNodeId'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_getLocalNodeId'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getLocalNodeId (p_cluster name) to public;
@@ -171,7 +171,7 @@ comment on function @NAMESPACE@.getLocalNodeId (p_cluster name) is
 --	object.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getModuleVersion () returns text
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getModuleVersion'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_getModuleVersion'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getModuleVersion () to public;
@@ -181,7 +181,7 @@ comment on function @NAMESPACE@.getModuleVersion () is
 
 
 create or replace function @NAMESPACE@.resetSession() returns text
-	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_resetSession'
+	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_@FUNCVERSION@_resetSession'
 	   language C;
 
 -- ----------------------------------------------------------------------
@@ -191,7 +191,7 @@ create or replace function @NAMESPACE@.resetSession() returns text
 --	does the actual work of updating the user tables.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApply () returns trigger
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logApply'
 	language C
 	security definer;
 
@@ -203,7 +203,7 @@ create or replace function @NAMESPACE@.logApply () returns trigger
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApplySetCacheSize (p_size int4) 
 returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySetCacheSize'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logApplySetCacheSize'
 	language C;
 
 -- ----------------------------------------------------------------------
@@ -214,7 +214,7 @@ returns int4
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApplySaveStats (p_cluster name, p_origin int4, p_duration interval) 
 returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySaveStats'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logApplySaveStats'
 	language C;
 
 
@@ -238,7 +238,7 @@ schema/functions.';
 select @NAMESPACE@.checkmoduleversion();
 
 create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
-'$libdir/slony1_funcs.@MODULEVERSION@','_slon_decode_tgargs' language C security definer;
+'$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_@FUNCVERSION@_slon_decode_tgargs' language C security definer;
 
 comment on function @NAMESPACE@.decode_tgargs(bytea) is 
 'Translates the contents of pg_trigger.tgargs to an array of text arguments';
@@ -277,7 +277,7 @@ drop function @NAMESPACE@.check_namespace_validity();
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logTrigger () returns trigger
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logTrigger'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logTrigger'
 	language C
 	security definer;
 
@@ -320,7 +320,7 @@ comment on function @NAMESPACE@.terminateNodeConnections (p_failed_node int4) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.killBackend (p_pid int4, p_signame text) returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_killBackend'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_killBackend'
 	language C;
 
 comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
@@ -332,7 +332,7 @@ comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.seqtrack (p_seqid int4, p_seqval int8) returns int8
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_seqtrack'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_seqtrack'
 	strict language C;
 
 comment on function @NAMESPACE@.seqtrack(p_seqid int4, p_seqval int8) is
@@ -493,7 +493,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b2'  ;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b4'  ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -994,55 +994,65 @@ NOTE: This is not yet implemented!';
 --
 --	Generate the DROP_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.dropNode (p_no_id int4)
+create or replace function @NAMESPACE@.dropNode (p_no_ids int4[])
 returns bigint
 as $$
 declare
 	v_node_row		record;
+	v_idx         integer;
 begin
 	-- ----
 	-- Check that this got called on a different node
 	-- ----
-	if p_no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+	if  @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') = ANY (p_no_ids) then
 		raise exception 'Slony-I: DROP_NODE cannot initiate on the dropped node';
 	end if;
 
-	select * into v_node_row from @NAMESPACE@.sl_node
-			where no_id = p_no_id
+	--
+	-- if any of the deleted nodes are receivers we drop the sl_subscribe line
+	--
+	delete from @NAMESPACE@.sl_subscribe where sub_receiver = ANY (p_no_ids);
+
+	v_idx:=1;
+	LOOP
+	  EXIT WHEN v_idx>array_length(p_no_ids,1);
+	  select * into v_node_row from @NAMESPACE@.sl_node
+			where no_id = p_no_ids[v_idx]
 			for update;
-	if not found then
-		raise exception 'Slony-I: unknown node ID %', p_no_id;
-	end if;
-
-	-- ----
-	-- Make sure we do not break other nodes subscriptions with this
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_subscribe
-			where sub_provider = p_no_id)
-	then
+	  if not found then
+		 raise exception 'Slony-I: unknown node ID % %', p_no_ids[v_idx],v_idx;
+	  end if;
+	  -- ----
+	  -- Make sure we do not break other nodes subscriptions with this
+	  -- ----
+	  if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_provider = p_no_ids[v_idx])
+	  then
 		raise exception 'Slony-I: Node % is still configured as a data provider',
-				p_no_id;
-	end if;
+				p_no_ids[v_idx];
+	  end if;
 
-	-- ----
-	-- Make sure no set originates there any more
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_set
-			where set_origin = p_no_id)
-	then
-		raise exception 'Slony-I: Node % is still origin of one or more sets',
-				p_no_id;
-	end if;
+	  -- ----
+	  -- Make sure no set originates there any more
+	  -- ----
+	  if exists (select true from @NAMESPACE@.sl_set
+			where set_origin = p_no_ids[v_idx])
+	  then
+	  	  raise exception 'Slony-I: Node % is still origin of one or more sets',
+				p_no_ids[v_idx];
+	  end if;
 
-	-- ----
-	-- Call the internal drop functionality and generate the event
-	-- ----
-	perform @NAMESPACE@.dropNode_int(p_no_id);
+	  -- ----
+	  -- Call the internal drop functionality and generate the event
+	  -- ----
+	  perform @NAMESPACE@.dropNode_int(p_no_ids[v_idx]);
+	  v_idx:=v_idx+1;
+	END LOOP;
 	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DROP_NODE',
-									p_no_id::text);
+									array_to_string(p_no_ids,','));
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.dropNode(p_no_id int4) is
+comment on function @NAMESPACE@.dropNode(p_no_ids int4[]) is
 'generate DROP_NODE event to drop node node_id from replication';
 
 -- ----------------------------------------------------------------------
@@ -1191,7 +1201,7 @@ and then restart of all node daemons.';
 --	Initiate a failover. This function must be called on all nodes
 --	and then waited for the restart of all node daemons.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4)
+create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4,p_failed_nodes integer[])
 returns int4
 as $$
 declare
@@ -1207,7 +1217,8 @@ begin
 	update @NAMESPACE@.sl_subscribe set 
 		   sub_provider=p_backup_node
 		   where sub_provider=p_failed_node
-		   and sub_receiver<>p_backup_node;
+		   and sub_receiver<>p_backup_node
+		   and sub_receiver <> ALL (p_failed_nodes);
 
 	-- ----
 	-- Terminate all connections of the failed node the hard way
@@ -1226,16 +1237,17 @@ begin
 
         if not v_failed then
 	   	
-		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
+		update @NAMESPACE@.sl_node set no_failed=true where no_id = ANY (p_failed_nodes)
 		and no_failed=false;
-	   -- Rewrite sl_listen table
-	   perform @NAMESPACE@.RebuildListenEntries();	   
+	end if;	
+	-- Rewrite sl_listen table
+	perform @NAMESPACE@.RebuildListenEntries();	   
 
-	   -- ----
-	   -- Make sure the node daemon will restart
-	   -- ----
-	   notify "_@CLUSTERNAME@_Restart";
-	end if;
+	-- ----
+	-- Make sure the node daemon will restart
+	-- ----
+	notify "_@CLUSTERNAME@_Restart";
+
 
 	-- ----
 	-- That is it - so far.
@@ -1243,7 +1255,7 @@ begin
 	return p_failed_node;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4) is
+comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4,p_failed_nodes integer[]) is
 'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
 and then waited for the restart of all node daemons.';
 
@@ -1255,7 +1267,7 @@ and then waited for the restart of all node daemons.';
 --	On the node that has the highest sequence number of the failed node,
 --	fake the FAILED_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8)
+create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8, p_failed_nodes integer[])
 returns bigint
 as $$
 declare
@@ -1271,8 +1283,8 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
-	update @NAMESPACE@.sl_node set no_failed=true  where no_id=p_failed_node
-		and no_failed=false;
+	update @NAMESPACE@.sl_node set no_failed=true  where no_id = ANY 
+	(p_failed_nodes) and no_failed=false;
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 	-- ----
@@ -1283,7 +1295,8 @@ begin
 	notify "_@CLUSTERNAME@_Restart";
 
 	select @NAMESPACE@.createEvent('_@CLUSTERNAME@','FAILOVER_NODE',
-								p_failed_node::text,p_ev_seqno::text)
+								p_failed_node::text,p_ev_seqno::text,
+								array_to_string(p_failed_nodes,','))
 			into v_new_event;
 		
 
@@ -1291,8 +1304,8 @@ begin
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8) is
-'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
+comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8,p_failed_nodes integer[] ) is
+'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake,p_failed_nodes)
 
 On the node that has the highest sequence number of the failed node,
 fake the FAILOVER_SET event.';
@@ -1358,10 +1371,14 @@ begin
 					and sub_receiver = p_backup_node;
 			update @NAMESPACE@.sl_set
 				set set_origin = p_backup_node
-				where set_id = v_set;
+				where set_id = v_set;		
 			 update @NAMESPACE@.sl_subscribe
-				 		set sub_provider=p_backup_node
-					   where sub_set = v_set;
+						set sub_provider=p_backup_node
+					  	FROM @NAMESPACE@.sl_node receive_node
+					   where sub_set = v_set
+					   and sub_provider=p_failed_node
+					   and sub_receiver=receive_node.no_id
+					   and receive_node.no_failed=false;
 
 			for v_row in select * from @NAMESPACE@.sl_table
 				where tab_set = v_set
@@ -1376,9 +1393,15 @@ begin
 			delete from @NAMESPACE@.sl_subscribe
 					  where sub_set = v_set
 					  and sub_receiver = p_backup_node;
+		
 			update @NAMESPACE@.sl_subscribe
 				 		set sub_provider=p_backup_node
-					   where sub_set = v_set;
+						FROM @NAMESPACE@.sl_node receive_node
+					   where sub_set = v_set
+					    and sub_provider=p_failed_node
+						 and sub_provider=p_failed_node
+					   and sub_receiver=receive_node.no_id
+					   and receive_node.no_failed=false;
 			update @NAMESPACE@.sl_set
 					   set set_origin = p_backup_node
 				where set_id = v_set;
@@ -1497,12 +1520,12 @@ begin
 
 	insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select pa_server, p_no_id, 'Event pending', pa_connretry
+		select pa_server, p_no_id, '<event pending>', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_client = p_no_provider;
 	insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select p_no_id, pa_client, 'Event pending', pa_connretry
+		select p_no_id, pa_client, '<event pending>', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_server = p_no_provider;
 
@@ -6027,7 +6050,8 @@ $$
 		end if;
 		return NULL;
     end
-$$ language plpgsql;
+$$ language plpgsql
+    security definer;
 
 comment on function @NAMESPACE@.log_truncate ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';

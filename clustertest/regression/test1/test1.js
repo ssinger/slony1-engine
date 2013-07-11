@@ -89,6 +89,9 @@ function generate_data() {
 		sqlScript += "insert into x1 (data) values (E'"+txta+"');\n";
 		sqlScript += "insert into x2 (data) select data from x1 order by random() limit 2;\n";
 		sqlScript += "insert into x3 (data) select data from x2 order by random() limit 2;\n";
+
+		// This triggered bug 291
+		sqlScript += "update table5 set d1 = d1;\n";
 	}	
 	return sqlScript;
 }

@@ -507,6 +507,13 @@ process_archive(char *fname)
 
 		destinationfname = dstring_data(&destfname);
 	}
+	else
+	{
+		/*
+		 * This is to avoid a "possibly used uninitialized" warning.
+		 */
+		dstring_data(&destfname) = NULL;
+	}
 
 	for (cmd = pre_processing_commands; cmd != NULL; cmd = cmd->next)
 	{
@@ -530,6 +537,7 @@ process_archive(char *fname)
 			errlog(LOG_ERROR, "cannot open %s - %s\n",
 				   dstring_data(&destfname), strerror(errno));
 			fclose(fp);
+			destinationfname = NULL;
 			dstring_free(&destfname);
 			return 1;
 		}
@@ -1279,7 +1287,7 @@ get_current_at_counter(void)
 	slon_mkquery(&ds, "select at_counter from %s.sl_archive_tracking;",
 				 namespace);
 	res = PQexec(dbconn, dstring_data(&ds));
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res)==0 )
 	{
 		errlog(LOG_ERROR, "cannot retrieve archive tracking status: %s\n",
 			   PQresultErrorMessage(res));

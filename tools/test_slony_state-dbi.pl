@@ -214,7 +214,7 @@ necessary.
   while (my @row = $res->fetchrow_array) {
     my ($origin, $minsync, $maxsync, $minage, $maxage, $agehi) = @row;
     printf "%7s %9d %9d %12s %12s %4s\n", $origin, $minsync, $maxsync, $minage, $maxage, $agehi;
-    if ($agehi eq 't') {
+    if ($agehi eq '1') {
       add_problem($origin, "Events not propagating to node $origin",
 		  qq{Events not propagating quickly in sl_event -
 For origin node $origin, earliest propagated event of age $minage > $WANTAGE
@@ -248,7 +248,7 @@ Could listen paths be missing so that events are not propagating?
   while (my @row = $res->fetchrow_array) {
     my ($origin, $receiver, $minsync, $maxsync, $minage, $maxage, $agehi) = @row;
     printf "%9s  %9s  %9s  %9s  %12s  %12s %4s\n", $origin, $receiver, $minsync, $maxsync, $minage, $maxage, $agehi;
-    if ($agehi eq 't') {
+    if ($agehi eq '1') {
       add_problem($origin, "Confirmations not propagating from $origin to $receiver",
 		  qq{Confirmations not propagating quickly in sl_confirm -
 
@@ -269,11 +269,28 @@ Could listen paths be missing so that confirmations are not propagating?
   print "================================================================================\n";
 
   my $ELDERLY_TXN = "01:30:00";
+  my $pid_column='';
+  my $query_column='';
+  my $not_idle_condition='';
+
+  
+  if ($dbh->{private_dbdpg}{version}>=90200)
+  {
+	  $pid_column='pid';
+	  $query_column='query';
+	  $not_idle_condition="state<>'idle' " ;
+  }
+  else {
+	  $pid_column='procpid';
+	  $query_column='current_query';
+	  $not_idle_condition="current_query <> '<IDLE>' ";
+	  
+  }
   my $old_conn_query = qq{
-     select datname, procpid, usename, date_trunc('minutes', now() - query_start), substr(current_query,0,20)
+     select datname, $pid_column, usename, date_trunc('minutes', now() - query_start), substr($query_column,0,20)
      from pg_stat_activity
      where  (now() - query_start) > '$ELDERLY_TXN'::interval and
-            current_query <> '<IDLE>'
+           $not_idle_condition 
      order by query_start;
   };
 

@@ -25,9 +25,9 @@
   <!ENTITY funsetdropsequence "<xref linkend= function.setdropsequence-p-seq-id-integer>">
   <!ENTITY funsetmovetable "<xref linkend= function.setmovetable-p-new-set-id-integer-p-tab-id-integer>">
 <!ENTITY funddlscript "<xref linkend=function.ddlscript-complete-p-nodes-text>">
-<!ENTITY fundropnode "<xref linkend=function.dropnode-p-no-id-integer>">
+<!ENTITY fundropnode "<xref linkend=function.dropnode-p-no-ids-integerarray>">
 <!ENTITY funenablenode "<xref linkend=function.enablenode-p-no-id-integer>">
-<!ENTITY funfailednode "<xref linkend=function.failednode-p-backup-node-integer-p-failed-node-integer>">
+<!ENTITY funfailednode "<xref linkend=function.failednode-p-failed-nodes-integer-p-backup-node-integer-p-failed-node-integerarray>">
 <!ENTITY funinitializelocalnode "<xref linkend=function.initializelocalnode-p-comment-integer-p-local-node-id-text>">
 <!ENTITY funlockset "<xref linkend=function.lockset-p-set-id-integer>">
 <!ENTITY funmoveset "<xref linkend=function.moveset-p-new-origin-integer-p-set-id-integer>">
@@ -60,6 +60,7 @@
 <!ENTITY pglistener "<envar>pg_listener</envar>">
 <!ENTITY lslon "<xref linkend=slon>">
 <!ENTITY lslonik "<xref linkend=slonik>">
+<!ENTITY lslonylogshipping "<xref linkend=slony-logshipping>" >
 <!ENTITY lteststate "<xref linkend=testslonystate>">
 
 ]>
@@ -128,6 +129,7 @@
         &slonconf;
 	&slonik;
         &slonikref;  
+    &logshippingref;
 </part>
 <chapter id="appendix">
 <title>Appendix</title>

@@ -99,6 +99,7 @@ function get_compare_queries() {
 	             ,"SELECT id, \"user\" from \"Schema.name\".\"user\" order by id"
 	             ,"SELECT \"user\", description from \"Schema.name\".\"Capital Idea\" order by \"user\""
 	             ,"SELECT id, name, \"eViL StudlyCaps column\" from public.evil_index_table order by id"
+				 ,"SELECT id from \"Jan's bad ideas\" order by id"
 
 	            ];
 

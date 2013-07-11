@@ -273,7 +273,9 @@ static int	archive_append_data(SlonNode * node, const char *s, int len);
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
 
+#ifdef UNUSED
 static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
+#endif
 
 /* ----------
  * slon_remoteWorkerThread
@@ -586,7 +588,6 @@ remoteWorkerThread_main(void *cdata)
 							slon_mkquery(&query2, "rollback transaction; ");
 							query_execute(node, local_dbconn, &query2);
 							dstring_reset(&query2);
-
 							slon_retry();
 						}
 					}
@@ -753,44 +754,49 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "DROP_NODE") == 0)
 			{
-				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
+				char *      node_list = event->ev_data1;
+				char * saveptr=NULL;
+				char * node_id=NULL;
 
-				if (no_id != rtcfg_nodeid)
-					rtcfg_disableNode(no_id);
-
-				slon_appendquery(&query1,
+				while((node_id=strtok_r(node_id==NULL ? node_list : NULL ,",",&saveptr))!=NULL)					
+				{
+					int			no_id = (int) strtol(node_id, NULL, 10);
+					if (no_id != rtcfg_nodeid)
+						rtcfg_disableNode(no_id);				
+					slon_appendquery(&query1,
 								 "lock table %s.sl_config_lock;"
 								 "select %s.dropNode_int(%d); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 no_id);
 
-				/*
-				 * If this is our own nodeid, then calling disableNode_int()
-				 * will destroy the whole configuration including the entire
-				 * schema. Make sure we call just that and get out of here
-				 * ASAP!
-				 */
-				if (no_id == rtcfg_nodeid)
-				{
-					slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-							 "got DROP NODE for local node ID\n",
-							 node->no_id);
-
-					slon_appendquery(&query1, "commit transaction; ");
-					if (query_execute(node, local_dbconn, &query1) < 0)
+					/*
+					 * If this is our own nodeid, then calling disableNode_int()
+					 * will destroy the whole configuration including the entire
+					 * schema. Make sure we call just that and get out of here
+					 * ASAP!
+					 */
+					if (no_id == rtcfg_nodeid)
+					{
+						slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+								 "got DROP NODE for local node ID\n",
+								 node->no_id);
+					
+						slon_appendquery(&query1, "commit transaction; ");
+						if (query_execute(node, local_dbconn, &query1) < 0)
 						slon_retry();
 
-					(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
-										rtcfg_namespace);
-					if (query_execute(node, local_dbconn, &query1) < 0)
+						(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
+											rtcfg_namespace);
+						if (query_execute(node, local_dbconn, &query1) < 0)
+							slon_retry();
+						
+						(void) slon_mkquery(&query1, "drop schema %s cascade; ",
+											rtcfg_namespace);
+						query_execute(node, local_dbconn, &query1);
+						
 						slon_retry();
-
-					(void) slon_mkquery(&query1, "drop schema %s cascade; ",
-										rtcfg_namespace);
-					query_execute(node, local_dbconn, &query1);
-
-					slon_retry();
+					}
 				}
 
 				/*
@@ -1188,6 +1194,8 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			failed_node = (int) strtol(event->ev_data1, NULL, 10);
 				char	   *seq_no_c = event->ev_data2;
+				char       *failed_node_list  = event->ev_data3;
+
 				PGresult   *res;
 
 				/**
@@ -1199,9 +1207,9 @@ remoteWorkerThread_main(void *cdata)
 				 * The most-ahead failover canidate is the node that
 				 * created the FAILOVER_NODE event (node->id)
 				 */
-				slon_mkquery(&query2, "select %s.failedNode(%d,%d);"
+				slon_mkquery(&query2, "select %s.failedNode(%d,%d,ARRAY[%s]);"
 							 ,rtcfg_namespace,
-							 failed_node, node->no_id);
+							 failed_node, node->no_id,failed_node_list);
 
 				res = PQexec(local_dbconn, dstring_data(&query2));
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -3690,7 +3698,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				archive_terminate(node);
 				return 10;
 			}
-			sprintf(conn_symname, "subscriber_%d_provider_%d",
+			sprintf(conn_symname, "origin_%d_provider_%d",
 					node->no_id, provider->no_id);
 
 
@@ -4395,9 +4403,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						"update %s.sl_setsync set "
 						"    ssy_seqno = '%s', ssy_snapshot = '%s', "
 						"    ssy_action_list = '' "
-						"where ssy_setid in (",
+						"where ssy_origin=%d and  ssy_setid in (",
 						rtcfg_namespace,
-						seqbuf, event->ev_snapshot_c);
+						seqbuf, event->ev_snapshot_c,node->no_id);
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -5444,6 +5452,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	slon_log(SLON_DEBUG4, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
 }
 
+#ifdef UNUSED
 /**
  * Checks to see if the node specified is a member of the set.
  *
@@ -5475,6 +5484,7 @@ check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn)
 	PQclear(res);
 	return 1;
 }
+#endif /* UNUSED */
 
 static void
 init_perfmon(PerfMon * perf_info)

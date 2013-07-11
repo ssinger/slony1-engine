@@ -28,6 +28,9 @@ PROG            = slonik.exe
 LDFLAGS += -lpgport
 else ifdef HAVE_PGPORT
 LDFLAGS += -lpgport
+ifdef HAVE_PGCOMMON
+LDFLAGS += -lpgcommon
+endif
 endif
 
 OBJS		= 			\

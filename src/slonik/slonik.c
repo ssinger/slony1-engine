@@ -25,6 +25,7 @@
 #else
 #include <winsock2.h>
 #include <windows.h>
+#include <malloc.h>
 #define sleep(x) Sleep(x*1000)
 #endif
 
@@ -92,6 +93,14 @@ typedef struct
 }	failnode_set;
 
 
+typedef struct
+{
+	char	   *old_str;
+	int			old_len;
+	char	   *new_str;
+}	replacement_token;
+
+
 /*
  * Local functions
  */
@@ -114,8 +123,8 @@ static void script_commit_all(SlonikStmt * stmt,
 static void script_rollback_all(SlonikStmt * stmt,
 					SlonikScript * script);
 static void script_disconnect_all(SlonikScript * script);
-static void replace_token(char *resout, char *lines, const char *token,
-			  const char *replacement);
+static void replace_tokens(SlonDString *dest, SlonDString *src, 
+					replacement_token *replacements);
 static int slonik_set_add_single_table(SlonikStmt_set_add_table * stmt,
 							SlonikAdmInfo * adminfo1,
 							const char *fqname);
@@ -161,7 +170,8 @@ static int
 fail_node_promote(SlonikStmt_failed_node * stmt,
 				  failed_node_entry * node_entry,
 				  failnode_node * nodeinfo
-				  ,int *fail_node_ids);
+				  ,int *fail_node_ids,
+				  SlonDString * failed_node_list);
 
 /* ----------
  * main
@@ -1120,10 +1130,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
-					if (stmt->ddl_fname == NULL)
+					if (stmt->ddl_fname == NULL && stmt->ddl_sql == NULL)
 					{
 						printf("%s:%d: Error: "
-							   "script file name must be specified\n",
+							   "script file name or sql must be specified\n",
+							   hdr->stmt_filename, hdr->stmt_lno);
+						errors++;
+					}
+					if (stmt->ddl_fname != NULL && stmt->ddl_sql != NULL)
+					{
+						printf("%s:%d: Error: "
+							   "script file name and sql are mutually exclusive\n",
 							   hdr->stmt_filename, hdr->stmt_lno);
 						errors++;
 					}
@@ -1138,14 +1155,17 @@ script_check_stmts(SlonikScript * script, SlonikStmt * hdr)
 					if (script_check_adminfo(hdr, stmt->ev_origin) < 0)
 						errors++;
 
-					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
-					if (stmt->ddl_fd == NULL)
+					if (stmt->ddl_fname != NULL)
 					{
-						printf("%s:%d: Error: "
-							   "%s - %s\n",
-							   hdr->stmt_filename, hdr->stmt_lno,
-							   stmt->ddl_fname, strerror(errno));
-						errors++;
+					stmt->ddl_fd = fopen(stmt->ddl_fname, "r");
+						if (stmt->ddl_fd == NULL)
+						{
+							printf("%s:%d: Error: "
+								   "%s - %s\n",
+								   hdr->stmt_filename, hdr->stmt_lno,
+								   stmt->ddl_fname, strerror(errno));
+							errors++;
+						}
 					}
 				}
 				break;
@@ -1902,21 +1922,22 @@ static int
 load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 {
 	PGresult   *res;
-	SlonDString query;
+	SlonDString file_content;
+	SlonDString file_rewritten;
 	va_list		ap;
 	int			rc;
 	char		fnamebuf[1024];
 	char		buf[4096];
-	char		rex1[257];
-	char		rex2[257];
-	char		rex3[257];
-	char		rex4[257];
+	size_t		num_read;
 	FILE	   *stmtp;
-
+	replacement_token	replacements[5];
 
 	if (db_begin_xact(stmt, adminfo, true) < 0)
 		return -1;
 
+	/*
+	 * Open the requested SQL file
+	 */
 	va_start(ap, fname);
 	vsnprintf(fnamebuf, sizeof(fnamebuf), fname, ap);
 	va_end(ap);
@@ -1929,27 +1950,53 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 		return -1;
 	}
 
-	dstring_init(&query);
-
-	sprintf(rex2, "\"_%s\"", stmt->script->clustername);
-
-	while (fgets(rex1, 256, stmtp) != NULL)
+	/*
+	 * Initialize string objects and read the content of the SQL file
+	 * into file_content.
+	 */
+	dstring_init(&file_content);
+	dstring_init(&file_rewritten);
+	while (!feof(stmtp))
 	{
-		rc = strlen(rex1);
-		rex1[rc] = '\0';
-		rex3[0] = '\0';
-		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->script->clustername);
-		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
-		replace_token(buf, rex4, "@NAMESPACE@", rex2);
-		rc = strlen(buf);
-		dstring_nappend(&query, buf, rc);
+		num_read = fread(buf, 1, sizeof(buf), stmtp);
+		if (num_read == 0)
+			break;
+		dstring_nappend(&file_content, buf, num_read);
 	}
-
 	fclose(stmtp);
+	dstring_terminate(&file_content);
 
-	dstring_terminate(&query);
+	/*
+	 * Setup the string replacement table and call replace_tokens() to
+	 * perform all the substitutions.
+	 */
+	replacements[0].old_str = "@CLUSTERNAME@";
+	replacements[0].old_len = strlen(replacements[0].old_str);
+	replacements[0].new_str = stmt->script->clustername;
+	replacements[1].old_str = "@MODULEVERSION@";
+	replacements[1].old_len = strlen(replacements[1].old_str);
+	replacements[1].new_str = SLONY_I_VERSION_STRING;
+	replacements[2].old_str = "@NAMESPACE@";
+	replacements[2].old_len = strlen(replacements[2].old_str);
+	replacements[2].new_str = alloca(strlen(stmt->script->clustername) + 4);
+	sprintf(replacements[2].new_str, "\"_%s\"", stmt->script->clustername);
+	replacements[3].old_str = "@FUNCVERSION@";
+	replacements[3].old_len = strlen(replacements[3].old_str);
+#define EXPAND2(x) #x
+#define EXPAND(x) EXPAND2(x)
+	replacements[3].new_str = EXPAND(SLONY_I_FUNC_VERSION_STRING);
+#undef EXPAND
+#undef EXPAND2
+	replacements[4].old_str = NULL;
+	replacements[4].old_len = 0;
+	replacements[4].new_str = NULL;
 
-	res = PQexec(adminfo->dbconn, dstring_data(&query));
+	replace_tokens(&file_rewritten, &file_content, replacements);
+
+	/*
+	 * Execute the resulting SQL.
+	 */
+	res = PQexec(adminfo->dbconn, dstring_data(&file_rewritten));
 
 	rc = PQresultStatus(res);
 	if ((rc != PGRES_TUPLES_OK) && (rc != PGRES_COMMAND_OK) && (rc != PGRES_EMPTY_QUERY))
@@ -1960,10 +2007,14 @@ load_sql_script(SlonikStmt * stmt, SlonikAdmInfo * adminfo, char *fname,...)
 			   PQresultErrorMessage(res),
 			   PQerrorMessage(adminfo->dbconn));
 		PQclear(res);
+		dstring_free(&file_content);
+		dstring_free(&file_rewritten);
+
 		return -1;
 	}
-	dstring_free(&query);
 	PQclear(res);
+	dstring_free(&file_content);
+	dstring_free(&file_rewritten);
 
 	return 0;
 }
@@ -2571,6 +2622,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonikAdmInfo *adminfo2;
 	SlonDString query;
+	SlonDString node_list;
 	SlonikAdmInfo *curAdmInfo;
 	int			rc;
 	int			no_id_idx;
@@ -2645,8 +2697,10 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 						stmt->hdr.script->adminfo_list->next = fake_admin_info;
 
 					}
-					adminfo2->last_event = ev_id;
-					printf("debug: waiting for %d,%ld on %d\n",
+					else
+						adminfo2->last_event = ev_id;
+
+					printf("debug: waiting for %d," INT64_FORMAT " on %d\n",
 						   wait_event.wait_origin, ev_id, wait_event.wait_on);
 					rc = slonik_wait_event(&wait_event);
 					if (rc < 0)
@@ -2660,6 +2714,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 					}
 
 				}
+#if 0 
 				if (slonik_is_slony_installed((SlonikStmt *) stmt, curAdmInfo) > 0)
 				{
 					rc = slonik_wait_config_caughtup(curAdmInfo, (SlonikStmt *) stmt,
@@ -2667,6 +2722,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 					if (rc < 0)
 						return rc;
 				}
+#endif
 			}
 
 		}
@@ -2675,26 +2731,33 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 
 
 	dstring_init(&query);
-
-	for (no_id_idx = 0; stmt->no_id_list[no_id_idx] != -1; no_id_idx++)
+	dstring_init(&node_list);
+	slon_mkquery(&node_list,"%d",stmt->no_id_list[0]);
+	for (no_id_idx = 1; stmt->no_id_list[no_id_idx] != -1; no_id_idx++)
 	{
-		slon_mkquery(&query,
-				  "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-					 "select \"_%s\".dropNode(%d); ",
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 stmt->hdr.script->clustername,
-					 stmt->no_id_list[no_id_idx]);
-		/**
-		 * we disable auto wait because we perform a wait
-		 * above ignoring the node being dropped.
-		 */
-		if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
-							   stmt->hdr.script, true) < 0)
-		{
-			dstring_free(&query);
-			return -1;
-		}
+		slon_appendquery(&node_list,",%d",stmt->no_id_list[no_id_idx]);
+		
+	}
+	slon_mkquery(&query,
+				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
+				 "select \"_%s\".dropNode(ARRAY[%s]); ",
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 stmt->hdr.script->clustername,
+				 dstring_data(&node_list));
+	
+	/**
+	 * we disable auto wait because we perform a wait
+	 * above ignoring the node being dropped.
+	 */
+	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo1, &query,
+						   stmt->hdr.script, true) < 0)
+	{
+		dstring_free(&query);
+		return -1;
+	}
+	for (no_id_idx = 0; stmt->no_id_list[no_id_idx] != -1; no_id_idx++)
+	{	   
 		/**
 		 * if we have a conninfo for the node being dropped
 		 * we want to clear out the last seqid.
@@ -2705,6 +2768,7 @@ slonik_drop_node(SlonikStmt_drop_node * stmt)
 			adminfo2->last_event = -1;
 		}
 	}
+	dstring_free(&node_list);
 	dstring_free(&query);
 	return 0;
 }
@@ -2730,20 +2794,21 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	failnode_node **max_node_total = NULL;
 	failed_node_entry *node_entry = stmt->nodes;
 	int		   *fail_node_ids = NULL;
-
+	bool         missing_paths=false;
 	int			rc = 0;
 
 
 	/**
 	 *	The failover procedure (at a high level) is as follows
 	 *
-	 * 1. Get a list of failover candidates for each failed node.
-	 * 2. validate that we have conninfo to all of them
-	 * 3. blank their paths to the failed nodes
-	 * 4. Wait for slons to restart
-	 * 5. for each failed node get the highest xid for each candidate
-	 * 6. execute FAILOVER on the highest canidate
-	 * 7. MOVE SET to the backup node.
+	 * 1. Check to see if the failover will leave orphan nodes
+	 * 2. Get a list of failover candidates for each failed node.
+	 * 3. validate that we have conninfo to all of them
+	 * 4. blank their paths to the failed nodes
+	 * 5. Wait for slons to restart
+	 * 6. for each failed node get the highest xid for each candidate
+	 * 7. execute FAILOVER on the highest canidate
+	 * 8. MOVE SET to the backup node.
 	 */
 
 
@@ -2777,6 +2842,68 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	memset(fail_node_ids, -1, sizeof(int) * (num_origins + 1));
 	memset(set_list, 0, sizeof(int *) * num_origins);
 
+
+	/**
+	 * validate that the list of failed nodes is complete.
+	 * This means that for any providers in sl_subscribe 
+	 * that have failed there muts be a path between
+	 * the receiver node and the specified backup node.
+	 *
+	 * If this isn't the case then the user must also include
+	 * the receiver node as a failed node, or add in the path
+	 * before calling FAILOVER.
+	 *
+	 * We only check sl_subscribe on arbitrary backup node
+	 */
+	for (node_entry = stmt->nodes; node_entry != NULL;
+		 node_entry = node_entry->next, cur_origin_idx++)
+	{
+		int num_orphans=0;
+		int res_idx;
+		slon_mkquery(&query,
+					 " select sub_receiver FROM \"_%s\".sl_subscribe left join "
+					 "\"_%s\".sl_path on (pa_server="
+					 " %d and pa_client=sub_receiver) where sub_receiver not "
+					 "in (%s) and sub_provider=%d and sub_receiver <> %d and pa_client is null"
+					 , stmt->hdr.script->clustername
+					 , stmt->hdr.script->clustername
+					 , node_entry->backup_node
+					 ,  dstring_data(&failed_node_list)
+					 ,  node_entry->no_id,node_entry->backup_node);
+		adminfo1 = get_active_adminfo((SlonikStmt *) stmt, node_entry->backup_node);
+		if (adminfo1 == NULL)
+		{
+			printf("%s:%d no admin conninfo for node %d\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+				   node_entry->backup_node);
+			rc = -1;
+			goto cleanup;
+		}			 
+		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
+		if (res1 == NULL)
+		{
+			rc = -1;
+			goto cleanup;
+		}
+		num_orphans = PQntuples(res1);
+		for(res_idx=0; res_idx < num_orphans; res_idx++)
+		{
+			char * receiver=PQgetvalue(res1,res_idx,0);
+			printf("%s:%d can't failover node %s does not have a path to %d\n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,receiver,
+				   node_entry->backup_node);
+			missing_paths=true;
+				   
+
+		}
+		PQclear(res1);
+	}
+	if ( missing_paths )
+	{
+		rc=-1;
+		goto cleanup;
+
+	}
 
 
 	/**
@@ -2885,9 +3012,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 * Connect to all these nodes and determine if there is a node daemon
 		 * running on that node.
 		 */
-		has_candidate = true;
+
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
+			has_candidate = true;
 			const char * pidcolumn;
 			nodeinfo[i].no_id = (int) strtol(PQgetvalue(res1, i, 0), NULL, 10);
 			nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
@@ -2945,15 +3073,15 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		}
 		PQclear(res1);
 		PQclear(res2);
-		if (!has_candidate)
+		if (!has_candidate && node_entry->num_sets > 0 )
 		{
 			printf("%s:%d error no failover candidates for %d\n",
 				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno
 				   ,node_entry->no_id);
-			PQclear(res1);
 			rc = -1;
 			goto cleanup;
 		}
+	
 
 		/*
 		 * Execute the preFailover() procedure on all failover candidate nodes
@@ -3013,10 +3141,14 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		 node_entry = node_entry->next, cur_origin_idx++)
 	{
 
+		
 		failnode_node *nodeinfo = (failnode_node *) failnodebuf[cur_origin_idx];
+		
+		if ( node_entry->num_nodes == 0 )
+			continue;
 
 		rc = fail_node_promote(stmt, node_entry, nodeinfo,
-							   fail_node_ids);
+							   fail_node_ids,&failed_node_list);
 		if (rc < 0)
 		{
 			goto cleanup;
@@ -3034,7 +3166,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 		SlonikStmt_lock_set lock_set;
 		SlonikStmt_move_set move_set;
 		SlonikStmt_wait_event wait_event;
-
+		int wait_rc=0;
 		if (node_entry->temp_backup_node == node_entry->backup_node)
 			continue;
 		lock_set.hdr = stmt->hdr;
@@ -3047,6 +3179,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				printf("%s:%d error locking set %d on %d for MOVE SET\n",
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 					   lock_set.set_id, lock_set.set_origin);
+				rc=-1;
 				continue;
 			}
 			move_set.hdr = stmt->hdr;
@@ -3058,6 +3191,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				printf("%s:%d error moving set %d on %d\n",
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 					   lock_set.set_id, lock_set.set_origin);
+				rc=-1;
 				continue;
 			}
 			/**
@@ -3079,14 +3213,25 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				rc = -1;
 				goto cleanup;
 			}
-			rc = slonik_wait_event(&wait_event);
-			if (rc < 0)
+			wait_rc = slonik_wait_event(&wait_event);
+			if (wait_rc < 0)
 			{
 				/**
 				 * pretty serious? how do we recover?
 				 */
 				printf("%s:%d error waiting for event\n",
 					   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno);
+				rc=wait_rc;
+			}
+			/**
+			 * commit the transaction - in case the WAIT FOR
+			 * above created one.
+			 */
+			if (db_commit_xact((SlonikStmt *) stmt,
+							   adminfo1) < 0)
+			{
+				rc = -1;
+				goto cleanup;
 			}
 
 		}
@@ -3185,7 +3330,8 @@ int
 fail_node_promote(SlonikStmt_failed_node * stmt,
 				  failed_node_entry * node_entry,
 				  failnode_node * nodeinfo,
-				  int *fail_node_ids)
+				  int *fail_node_ids,
+	              SlonDString * failed_node_list)
 {
 	int64		max_seqno = 0;
 	int			max_node_idx = 0;
@@ -3199,6 +3345,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	SlonikStmt_wait_event wait_event;
 
 	dstring_init(&query);
+	
 
 	/*
 	 * For every node determine the one with the event , preferring the backup
@@ -3223,8 +3370,8 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 							  nodeinfo[i].adminfo, &query);
 		if (res1 == NULL)
 		{
-			dstring_free(&query);
-			return -1;
+			rc=-1;
+			goto cleanup;
 		}
 		slon_scanint64(PQgetvalue(res1, 0, 0), &ev_seqno);
 
@@ -3245,18 +3392,19 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	}
 	adminfo1 = nodeinfo[max_node_idx].adminfo;
 
+
 	/*
 	 * Now execute all FAILED_NODE events on the most ahead candidate
 	 */
 	sprintf(ev_seqno_c, INT64_FORMAT, max_seqno);
 	slon_mkquery(&query,
 				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-				 "select \"_%s\".failedNode2(%d,%d,'%s'); ",
+				 "select \"_%s\".failedNode2(%d,%d,'%s',ARRAY[%s]); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 node_entry->no_id, nodeinfo[max_node_idx].no_id
-				 ,ev_seqno_c);
+				 ,ev_seqno_c,dstring_data(failed_node_list));
 	printf("NOTICE: executing \"_%s\".failedNode2 on node %d\n",
 		   stmt->hdr.script->clustername,
 		   nodeinfo[max_node_idx].no_id);
@@ -3334,6 +3482,8 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 		goto cleanup;
 	}
 
+cleanup:
+
 	/*
 	 * commit all open transactions despite of all possible errors
 	 */
@@ -3343,7 +3493,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 						   nodeinfo[i].adminfo) < 0)
 			rc = -1;
 	}
-cleanup:
+
 	dstring_free(&query);
 	return rc;
 }
@@ -4708,16 +4858,14 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	SlonikAdmInfo *adminfo1;
 	SlonDString query,
 				equery;
-	SlonDString script;
+	SlonDString script_content;
+	SlonDString script_rewritten;
 	PGresult   *res1;
-	int			rc;
+	size_t		num_read;
 	int			num_statements = -1,
 				stmtno;
 	char		buf[4096];
-	char		rex1[256];
-	char		rex2[256];
-	char		rex3[256];
-	char		rex4[256];
+	replacement_token	replacements[4];
 
 #define PARMCOUNT 1
 
@@ -4730,21 +4878,50 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	if (db_begin_xact((SlonikStmt *) stmt, adminfo1, false) < 0)
 		return -1;
 
-	dstring_init(&script);
+	dstring_init(&script_content);
+	dstring_init(&script_rewritten);
 
-	sprintf(rex2, "\"_%s\"", stmt->hdr.script->clustername);
-
-	while (fgets(rex1, 256, stmt->ddl_fd) != NULL)
+	if (stmt->ddl_fd != NULL)
 	{
-		rc = strlen(rex1);
-		rex1[rc] = '\0';
-		replace_token(rex3, rex1, "@CLUSTERNAME@", stmt->hdr.script->clustername);
-		replace_token(rex4, rex3, "@MODULEVERSION@", SLONY_I_VERSION_STRING);
-		replace_token(buf, rex4, "@NAMESPACE@", rex2);
-		rc = strlen(buf);
-		dstring_nappend(&script, buf, rc);
+		while (!feof(stmt->ddl_fd))
+		{
+			num_read = fread(buf, 1, sizeof(buf), stmt->ddl_fd);
+			if (num_read == 0)
+				break;
+			dstring_nappend(&script_content, buf, num_read);
+		}
+		fclose(stmt->ddl_fd);
+		stmt->ddl_fd = NULL;
+	} else {
+		if (stmt->ddl_sql == NULL)
+		{
+			printf("internal error - ddl_fd == NULL and ddl_sql == NULL\n");
+			return -1;
+		}
+		dstring_append(&script_content, stmt->ddl_sql);
 	}
-	dstring_terminate(&script);
+	dstring_terminate(&script_content);
+
+	/*
+	 * Setup the string replacement table and call replace_tokens() to
+	 * perform all the substitutions.
+	 */
+	replacements[0].old_str = "@CLUSTERNAME@";
+	replacements[0].old_len = strlen(replacements[0].old_str);
+	replacements[0].new_str = stmt->hdr.script->clustername;
+	replacements[1].old_str = "@MODULEVERSION@";
+	replacements[1].old_len = strlen(replacements[1].old_str);
+	replacements[1].new_str = SLONY_I_VERSION_STRING;
+	replacements[2].old_str = "@NAMESPACE@";
+	replacements[2].old_len = strlen(replacements[2].old_str);
+	replacements[2].new_str = alloca(strlen(stmt->hdr.script->clustername) + 4);
+	sprintf(replacements[2].new_str, "\"_%s\"", stmt->hdr.script->clustername);
+	replacements[3].old_str = NULL;
+	replacements[3].old_len = 0;
+	replacements[3].new_str = NULL;
+
+	replace_tokens(&script_rewritten, &script_content, replacements);
+	dstring_free(&script_content);
 
 	/*
 	 * This prepares the statement that will be run over and over for each DDL
@@ -4777,12 +4954,13 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 	 * Split the script into a series of SQL statements - each needs to be
 	 * submitted separately
 	 */
-	num_statements = scan_for_statements(dstring_data(&script));
+	num_statements = scan_for_statements(dstring_data(&script_rewritten));
 
 	/* OOPS!  Something went wrong !!! */
 	if ((num_statements < 0) || (num_statements >= MAXSTATEMENTS))
 	{
 		printf("DDL - number of statements invalid - %d not between 0 and %d\n", num_statements, MAXSTATEMENTS);
+		dstring_free(&script_rewritten);
 		return -1;
 	}
 	dstring_init(&query);
@@ -4803,8 +4981,8 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 			printf("DDL Failure - could not allocate %d bytes of memory\n", endpos - startpos + 1);
 			return -1;
 		}
-		strncpy(dest, dstring_data(&script) + startpos, endpos - startpos);
-		dest[STMTS[stmtno] - startpos] = 0;
+		strncpy(dest, dstring_data(&script_rewritten) + startpos, endpos - startpos);
+		dest[STMTS[stmtno] - startpos] = '\0';
 		slon_mkquery(&query, "%s", dest);
 		free(dest);
 
@@ -4854,14 +5032,14 @@ slonik_ddl_script(SlonikStmt_ddl_script * stmt)
 				dstring_data(&query), PQresultErrorMessage(res1));
 		PQclear(res1);
 		dstring_free(&equery);
-		dstring_free(&script);
+		dstring_free(&script_rewritten);
 		dstring_free(&query);
 		return -1;
 	}
 	PQclear(res1);
 
 	dstring_free(&equery);
-	dstring_free(&script);
+	dstring_free(&script_rewritten);
 	dstring_free(&query);
 	return 0;
 }
@@ -4874,7 +5052,7 @@ slonik_update_functions(SlonikStmt_update_functions * stmt)
 	PGresult   *res;
 	SlonDString query;
 
-	adminfo = get_checked_adminfo((SlonikStmt *) stmt, stmt->no_id);
+	adminfo = get_active_adminfo((SlonikStmt *) stmt, stmt->no_id);
 	if (adminfo == NULL)
 		return -1;
 
@@ -5291,49 +5469,40 @@ slon_scanint64(char *str, int64 *result)
 }
 
 
-/*
- * make a copy of the array of lines, with token replaced by replacement
- * the first time it occurs on each line.
- *
- * This does most of what sed was used for in the shell script, but
- * doesn't need any regexp stuff.
- */
+/**
+* Substitute strings in a dstring, creating a new dstring as a result.
+*
+*/
 static void
-replace_token(char *resout, char *lines, const char *token, const char *replacement)
+replace_tokens(SlonDString *dest, SlonDString *src, 
+		replacement_token *replacements)
 {
-	int			numlines = 1;
-	int			i,
-				o;
-	char		result_set[4096];
-	int			toklen,
-				replen;
+	char   *src_cp = dstring_data(src);
 
-	for (i = 0; lines[i]; i++)
-		numlines++;
-
-	toklen = strlen(token);
-	replen = strlen(replacement);
-
-	for (i = o = 0; i < numlines; i++, o++)
+	while (*src_cp != '\0')
 	{
-		/* just copy pointer if NULL or no change needed */
-		if (!lines[i] || (strncmp((const char *) lines + i, token, toklen)))
+		replacement_token  *tp;
+		int					found = false;
+		
+		for (tp = replacements; tp->old_str != NULL; tp++)
 		{
-			if (lines[i] == 0x0d)		/* ||(lines[i] == 0x0a)) */
+			if (strncmp(src_cp, tp->old_str, tp->old_len) == 0)
+			{
+				dstring_append(dest, tp->new_str);
+				src_cp += tp->old_len;
+				found = true;
 				break;
-
-			result_set[o] = lines[i];
-			continue;
+			}
 		}
-		/* if we get here a change is needed - set up new line */
-		strncpy((char *) result_set + o, replacement, replen);
-		o += replen - 1;
-		i += toklen - 1;
-	}
 
-	result_set[o] = '\0';
-	memcpy(resout, result_set, o + 1);
+		if (!found)
+		{
+			dstring_addchar(dest, *src_cp++);
+		}
+	}
+	dstring_terminate(dest);
 }
+
 
 /**
 * checks all nodes (that an admin conninfo exists for)
@@ -5769,11 +5938,12 @@ slonik_get_last_event_id(SlonikStmt * stmt,
 	dstring_init(&query);
 	slon_mkquery(&query, "select max(ev_seqno) FROM \"_%s\".sl_event"
 				 " , \"_%s\".sl_node "
-				 " where ev_origin=\"_%s\".getLocalNodeId('_%s') "
+				 " where ev_origin= "
+				 "     (select last_value from \"_%s\".sl_local_node_id) "
 				 " AND %s AND sl_node.no_id="
 				 " ev_origin"
 				 ,script->clustername, script->clustername,
-				 script->clustername, script->clustername, event_filter);
+				 script->clustername, event_filter);
 	node_count = 0;
 	for (curAdmInfo = script->adminfo_list;
 		 curAdmInfo != NULL; curAdmInfo = curAdmInfo->next)
@@ -6129,6 +6299,8 @@ get_last_escaped_event_id(SlonikStmt * stmt,
 				event_id = PQgetvalue(result, 0, 0);
 				if (event_id != NULL)
 					cur_event_id = strtoll(event_id, NULL, 10);
+				else
+					cur_event_id = -1;
 				if (cur_event_id > max_event_id)
 					max_event_id = cur_event_id;
 			}

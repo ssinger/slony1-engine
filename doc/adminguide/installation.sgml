@@ -228,7 +228,7 @@ building these).</para></listitem>
 <listitem><para>The Microsoft SDK 6.1 or Visual Studio 2008 (other versions
 might work)</para></listitem>
 <listitem><para><ulink url="http://sourceforge.net/projects/gettext/">gettext 
-for win32</ulink></para></listitem>
+for win32</ulink> or <ulink url="http://ftp.acc.umu.se/pub/GNOME/binaries/win64/dependencies/">gettext for win64</para></listitem>
 </itemizedlist>
 
 <para>
@@ -237,7 +237,9 @@ To compile the &slony1; binaries you will need to
 <listitem><para>Set the environment variables PGSHARE,PG_INC,PG_LIB,
 PTHREADS_INC,PTHREADS_LIB, GETTEXT_LIB to point to the proper locations
 based on where these applications were installed.  You will also
-need to set SLONY_VERSION to the version of slony you are building.
+need to set SLONY_VERSION to the version of slony you are building.  
+The PGVER environment variable should be set the PostgreSQL MAJOR
+number of the PostgreSQL instance you are compiling against(8.4 , 9.1, etc..). 
 For example</para>
 <programlisting>
 set PG_INC=c:\Postgresql\9.0\include
@@ -246,7 +248,9 @@ set PGSHARE=c:\\Postgresql\\9.0\\share
 set PTHREADS_INC=c:\pthreads-win32\include
 set PTHREADS_LIB=c:\pthreads-win32\lib
 set GETTEXT_LIB=c:\gettext\lib
+set GETTEXT_INC=c:\gettext\include
 set SLONY_VERSION=2.2.0
+set PGVER=9.2
 </programlisting>
 <para>
 Note that the backslash characters must be escaped for PGSHARE as in the
@@ -371,7 +375,7 @@ system security.
 by registering slon configuration files with the service.</para>
 
 <screen>
-C:\Program Files\PostgreSQL\8.3\bin> slon -addengine c:\node1.conf
+C:\Program Files\PostgreSQL\8.3\bin> slon -addengine my_slon c:\node1.conf
 Engine added.
 </screen>
 

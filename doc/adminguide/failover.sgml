@@ -265,6 +265,23 @@ they wish to support.
 </para>
 </sect2>
 
+<sect2 id="multiplefailures">
+<title>Multiple Node Failures</title>
+<para>
+If multiple nodes fail at the same time, maybe because an entire data-center has failed,
+then all failed nodes should be passed to the failover command. If we consider a cluster where  node 1 the origin of a set and provides a subscription to
+node 2 and node 3 then node 2 provides a subscription to node 4, what should happen if  both nodes 1 and 2 fail?
+Slony can be told about the failed nodes with the following command
+<programlisting>
+FAILOVER (node=(id=1, backup node=3), node=(id=2, backup node=3));
+</programlisting>
+
+This command requires that a paths exist between node 3 and 4. It will then redirect node 4 to receive the subscription from node 3.
+
+
+</para>
+</sect2>
+
 
 <sect2><title> Automating <command> FAIL OVER </command> </title>
 
