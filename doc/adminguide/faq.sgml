@@ -591,8 +591,8 @@ could also announce an admin to take a look...  </para> </answer>
 
 <para> Both <envar>sl_log_1</envar> and <envar>sl_log_2</envar> are
 continuing to grow, and <envar>sl_log_1</envar> is never getting
-truncated.  What's wrong?
-</para> </question>
+truncated.  What's wrong?  (This could be true for subsequent
+versions, as well.)  </para> </question>
 
 <answer><para> This is symptomatic of the same issue as above with
 dropping replication: if there are still old connections lingering
@@ -664,7 +664,10 @@ structure of the replication <quote>tree</quote>
 changes.</para></listitem>
 
 <listitem><para> Version 1.1 provides better tools to help manage
-this.</para>
+this, and later versions of &slony1; <emphasis>hopefully</emphasis>
+populate the listener table automatically <emphasis>and
+correctly</emphasis> so that you should not encounter this
+problem. </para>
 </listitem>
 
 </itemizedlist></para>
@@ -732,6 +735,16 @@ each one manages.  If the &lslon; runs on the same server as the
 database it manages, any <quote>networking failure</quote> that could
 interrupt local connections would be likely to be serious enough to
 threaten the entire server.  </para></answer>
+
+<answer><para> It is likely that the <quote>several hours</quote> TCP
+timeout is rather longer than it should be in these days where people
+expect their servers to be pretty synchronously connected.
+Configuring the &postgres; to use much shorter timeouts is likely a
+wise idea.  The relevant <filename>postgresql.conf</filename>
+parameters are <envar>tcp_keepalives_idle</envar>,
+<envar>tcp_keepalives_interval</envar>, and
+<envar>tcp_keepalives_count</envar>.  See <command>man 7 tcp</command>
+for more details.  </para></answer>
 </qandaentry>
 
 <qandaentry>
@@ -827,60 +840,6 @@ SET</command> event, switch to a non-SSL &postgres; connection.
 </qandadiv>
 
 <qandadiv id="faqconfiguration"> <title> &slony1; FAQ: Configuration Issues </title>
-<qandaentry>
-<question><para>Slonik fails - cannot load &postgres; library -
-<command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
-
-<para> When I run the sample setup script I get an error message similar
-to:
-
-<command>
-stdin:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
-could not open file '$libdir/xxid': No such file or directory
-</command></para></question>
-
-<answer><para> Evidently, you haven't got the
-<filename>xxid.so</filename> library in the <envar>$libdir</envar>
-directory that the &postgres; instance is
-using.  Note that the &slony1; components
-need to be installed in the &postgres;
-software installation for <emphasis>each and every one</emphasis> of
-the nodes, not just on the origin node.</para>
-
-<para>This may also point to there being some other mismatch between
-the &postgres; binary instance and the &slony1; instance.  If you
-compiled &slony1; yourself, on a machine that may have multiple
-&postgres; builds <quote>lying around,</quote> it's possible that the
-slon or slonik binaries are asking to load something that isn't
-actually in the library directory for the &postgres; database cluster
-that it's hitting.</para>
-
-<para>Long and short: This points to a need to <quote>audit</quote>
-what installations of &postgres; and &slony1; you have in place on the
-machine(s).  Unfortunately, just about any mismatch will cause things
-not to link up quite right. 
-...</para> 
-
-<para> Life is simplest if you only have one set of &postgres;
-binaries on a given server; in that case, there isn't a <quote>wrong
-place</quote> in which &slony1; components might get installed.  If
-you have several software installs, you'll have to verify that the
-right versions of &slony1; components are associated with the right
-&postgres; binaries. </para> </answer></qandaentry>
-
-<qandaentry>
-<question> <para>I tried creating a CLUSTER NAME with a "-" in it.
-That didn't work.</para></question>
-
-<answer><para> &slony1; uses the same rules for unquoted identifiers
-as the &postgres; main parser, so no, you probably shouldn't put a "-"
-in your identifier name.</para>
-
-<para> You may be able to defeat this by putting <quote>quotes</quote> around
-identifier names, but it's still liable to bite you some, so this is
-something that is probably not worth working around.</para>
-</answer>
-</qandaentry>
 
 <qandaentry>
 <question><para>ps finds passwords on command line</para>
@@ -922,6 +881,10 @@ adding it.  See <filename>slony1_base.sql</filename> for an example of
 how to create the index.
 </para>
 </answer>
+
+<answer><para> That's not quite the end of the story; a critical query
+had the potential to scan the entirety of these log tables even in
+&slony1; 2.1.</para></answer>
 </qandaentry>
 
 <qandaentry><question> <para> I need to rename a column that is in the
@@ -963,65 +926,6 @@ the alteration to the subscriber, it can retry the
 <quote>new</quote> column names, work just fine.
 </para> </answer></qandaentry>
 
-<qandaentry id="v72upgrade">
-<question> <para> I have a &postgres; 7.2-based system that I
-<emphasis>really, really</emphasis> want to use &slony1; to help me
-upgrade it to 8.0.  What is involved in getting &slony1; to work for
-that?</para>
-</question>
-
-<answer> <para> Rod Taylor has reported the following...
-</para>
-
-<para> This is approximately what you need to do:</para>
-<itemizedlist>
-<listitem><para>Take the 7.3 templates and copy them to 7.2 -- or otherwise
-        hardcode the version your using to pick up the 7.3 templates </para></listitem>
-<listitem><para>Remove all traces of schemas from the code and sql templates. I
-        basically changed the "." to an "_". </para></listitem>
-<listitem><para> Bunch of work related to the XID datatype and functions. For
-        example, Slony creates CASTs for the xid to xxid and back -- but
-        7.2 cannot create new casts that way so you need to edit system
-        tables by hand. I recall creating an Operator Class and editing
-        several functions as well. </para></listitem>
-<listitem><para>sl_log_1 will have severe performance problems with any kind of
-        data volume. This required a number of index and query changes
-        to optimize for 7.2. 7.3 and above are quite a bit smarter in
-        terms of optimizations they can apply. </para></listitem>
-<listitem><para> Don't bother trying to make sequences work. Do them by hand
-        after the upgrade using pg_dump and grep. </para></listitem>
-</itemizedlist>
-<para> Of course, now that you have done all of the above, it's not compatible
-with standard Slony now. So you either need to implement 7.2 in a less
-hackish way, or you can also hack up slony to work without schemas on
-newer versions of &postgres; so they can talk to each other.
-</para>
-<para> Almost immediately after getting the DB upgraded from 7.2 to 7.4, we
-deinstalled the hacked up Slony (by hand for the most part), and started
-a migration from 7.4 to 7.4 on a different machine using the regular
-Slony. This was primarily to ensure we didn't keep our system catalogues
-which had been manually fiddled with.
-</para>
-
-<para> All that said, we upgraded a few hundred GB from 7.2 to 7.4
-with about 30 minutes actual downtime (versus 48 hours for a dump /
-restore cycle) and no data loss.
-</para>
-</answer>
-
-<answer> <para> That represents a sufficiently ugly set of
-<quote>hackery</quote> that the developers are exceedingly reluctant
-to let it anywhere near to the production code.  If someone were
-interested in <quote>productionizing</quote> this, it would probably
-make sense to do so based on the &slony1; 1.0 branch, with the express
-plan of <emphasis>not</emphasis> trying to keep much in the way of
-forwards compatibility or long term maintainability of replicas.
-</para>
-
-<para> You should only head down this road if you are sufficiently
-comfortable with &postgres; and &slony1; that you are prepared to hack
-pretty heavily with the code.  </para> </answer>
-</qandaentry>
 
 <qandaentry>
 <question> <para> I had a network <quote>glitch</quote> that led to my
@@ -2508,7 +2412,120 @@ what &lslonik; does <quote>by hand</quote>: </para>
 </answer>
 </qandaentry>
 
+<qandaentry>
+<question><para>Slonik fails - cannot load &postgres; library -
+<command>PGRES_FATAL_ERROR load '$libdir/xxid';</command></para>
 
+<para> When I run the sample setup script I get an error message similar
+to:
+
+<command>
+stdin:64: PGRES_FATAL_ERROR load '$libdir/xxid';  - ERROR:  LOAD:
+could not open file '$libdir/xxid': No such file or directory
+</command></para></question>
+
+<answer><para> Evidently, you haven't got the
+<filename>xxid.so</filename> library in the <envar>$libdir</envar>
+directory that the &postgres; instance is
+using.  Note that the &slony1; components
+need to be installed in the &postgres;
+software installation for <emphasis>each and every one</emphasis> of
+the nodes, not just on the origin node.</para>
+
+<para>This may also point to there being some other mismatch between
+the &postgres; binary instance and the &slony1; instance.  If you
+compiled &slony1; yourself, on a machine that may have multiple
+&postgres; builds <quote>lying around,</quote> it's possible that the
+slon or slonik binaries are asking to load something that isn't
+actually in the library directory for the &postgres; database cluster
+that it's hitting.</para>
+
+<para>Long and short: This points to a need to <quote>audit</quote>
+what installations of &postgres; and &slony1; you have in place on the
+machine(s).  Unfortunately, just about any mismatch will cause things
+not to link up quite right. 
+...</para> 
+
+<para> Life is simplest if you only have one set of &postgres;
+binaries on a given server; in that case, there isn't a <quote>wrong
+place</quote> in which &slony1; components might get installed.  If
+you have several software installs, you'll have to verify that the
+right versions of &slony1; components are associated with the right
+&postgres; binaries. </para> </answer></qandaentry>
+
+<qandaentry>
+<question> <para>I tried creating a CLUSTER NAME with a "-" in it.
+That didn't work.</para></question>
+
+<answer><para> &slony1; uses the same rules for unquoted identifiers
+as the &postgres; main parser, so no, you probably shouldn't put a "-"
+in your identifier name.</para>
+
+<para> You may be able to defeat this by putting <quote>quotes</quote> around
+identifier names, but it's still liable to bite you some, so this is
+something that is probably not worth working around.</para>
+</answer>
+</qandaentry>
+
+<qandaentry id="v72upgrade">
+<question> <para> I have a &postgres; 7.2-based system that I
+<emphasis>really, really</emphasis> want to use &slony1; to help me
+upgrade it to 8.0.  What is involved in getting &slony1; to work for
+that?</para>
+</question>
+
+<answer> <para> Rod Taylor has reported the following...
+</para>
+
+<para> This is approximately what you need to do:</para>
+<itemizedlist>
+<listitem><para>Take the 7.3 templates and copy them to 7.2 -- or otherwise
+        hardcode the version your using to pick up the 7.3 templates </para></listitem>
+<listitem><para>Remove all traces of schemas from the code and sql templates. I
+        basically changed the "." to an "_". </para></listitem>
+<listitem><para> Bunch of work related to the XID datatype and functions. For
+        example, Slony creates CASTs for the xid to xxid and back -- but
+        7.2 cannot create new casts that way so you need to edit system
+        tables by hand. I recall creating an Operator Class and editing
+        several functions as well. </para></listitem>
+<listitem><para>sl_log_1 will have severe performance problems with any kind of
+        data volume. This required a number of index and query changes
+        to optimize for 7.2. 7.3 and above are quite a bit smarter in
+        terms of optimizations they can apply. </para></listitem>
+<listitem><para> Don't bother trying to make sequences work. Do them by hand
+        after the upgrade using pg_dump and grep. </para></listitem>
+</itemizedlist>
+<para> Of course, now that you have done all of the above, it's not compatible
+with standard Slony now. So you either need to implement 7.2 in a less
+hackish way, or you can also hack up slony to work without schemas on
+newer versions of &postgres; so they can talk to each other.
+</para>
+<para> Almost immediately after getting the DB upgraded from 7.2 to 7.4, we
+deinstalled the hacked up Slony (by hand for the most part), and started
+a migration from 7.4 to 7.4 on a different machine using the regular
+Slony. This was primarily to ensure we didn't keep our system catalogues
+which had been manually fiddled with.
+</para>
+
+<para> All that said, we upgraded a few hundred GB from 7.2 to 7.4
+with about 30 minutes actual downtime (versus 48 hours for a dump /
+restore cycle) and no data loss.
+</para>
+</answer>
+
+<answer> <para> That represents a sufficiently ugly set of
+<quote>hackery</quote> that the developers are exceedingly reluctant
+to let it anywhere near to the production code.  If someone were
+interested in <quote>productionizing</quote> this, it would probably
+make sense to do so based on the &slony1; 1.0 branch, with the express
+plan of <emphasis>not</emphasis> trying to keep much in the way of
+forwards compatibility or long term maintainability of replicas.
+</para>
+
+<para> You should only head down this road if you are sufficiently
+comfortable with &postgres; and &slony1; that you are prepared to hack
+pretty heavily with the code.  </para> </answer>
+</qandaentry>
 </qandadiv>
 
 </qandaset>
