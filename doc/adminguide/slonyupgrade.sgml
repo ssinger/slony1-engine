@@ -4,7 +4,7 @@
 <indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
 <para> Minor &slony1; versions can be upgraded using the slonik <xref
 linkend="stmtupdatefunctions"> command.  This includes upgrades from
-2.1.x to a newer version 2.1.y version or from 2.0.x to 2.1.y. </para>
+2.2.x to a newer version 2.2.y version or from 2.0.x to 2.1.y. </para>
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
 command <xref linkend="stmtupdatefunctions">.</para>
@@ -107,6 +107,58 @@ linkend="stmtupdatefunctions"> against each node to upgrade to version 2.2  </pa
 </itemizedlist>
 </para>
 </sect2>
+
+
+<sect2>
+<title>Incompatibilities between 2.1 and 2.2</title>
+
+<indexterm><primary>incompatibilities between versions</primary></indexterm>
+<sect3><title>Slony Log Tables</title>
+<para>
+The format of the slony log tables sl_log_1 and sl_log_2 has changed.  The data to be 
+replicated is now stored in an array of of column names and values.  It was previously stored
+as the text that would make up the SQL command.
+</para>
+</sect3>
+
+<sect3><title>FAILOVER changes</title>
+<para>
+The syntax of the <xref linkend="stmtfailover"/> command has changed.  If multiple nodes
+in the cluster have failed, including subscriber-only nodes, then all failed nodes must be passed
+to the failover command.  The rules concerning which nodes can be a failover node have also
+changed.</para>
+</sect3>
+
+<sect3><title>Reshaping subscriptions</title>
+<para>
+Prior to slony 2.2.0 you could use the <xref linkend="stmtsubscribeset"/> command to change
+a subscribers provider to a different provider for a set.  As of &slony1; 2.2.0 the 
+<xref linkend="stmtsubscribeset"/> command can only be used to establish an initial subscription.
+The <xref linkend="stmtresubscribenode" /> command has been introduced to change the provider
+node.
+
+</para>
+</sect3>
+
+<sect3>
+<title>EXECUTE SCRIPT OPTIONS</title>
+<para>
+The <xref linkend="stmtddlscript"/> command no longer accepts SET ID as a valid option.
+</para>
+
+</sect3>
+
+<sect3>
+<title>LOG SHIPPING</title>
+<para>
+The format of the .SQL files generated for log shipping has changed. Prior to &slony1; 2.2.0 
+these files contained SQL INSERT/UPDATE/DELETE statements.  They now contain a COPY statement
+that inserts these changes into a sl_log_archive table.  A trigger will then apply these changes
+on the log shipping target.
+</para>
+</sect3>
+</sect2>
+
 
 <sect2>
 <title>Incompatibilities between 2.0 and 2.1</title>
