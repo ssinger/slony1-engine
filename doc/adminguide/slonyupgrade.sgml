@@ -82,7 +82,7 @@ as the text that would make up the SQL command.
 
 <sect3><title>FAILOVER changes</title>
 <para>
-The syntax of the <xref linkend="stmtfailover"/> command has changed.  If multiple nodes
+The syntax of the <xref linkend="stmtfailover"> command has changed.  If multiple nodes
 in the cluster have failed, including subscriber-only nodes, then all failed nodes must be passed
 to the failover command.  The rules concerning which nodes can be a failover node have also
 changed.</para>
@@ -90,10 +90,10 @@ changed.</para>
 
 <sect3><title>Reshaping subscriptions</title>
 <para>
-Prior to slony 2.2.0 you could use the <xref linkend="stmtsubscribeset"/> command to change
+Prior to slony 2.2.0 you could use the <xref linkend="stmtsubscribeset"> command to change
 a subscribers provider to a different provider for a set.  As of &slony1; 2.2.0 the 
-<xref linkend="stmtsubscribeset"/> command can only be used to establish an initial subscription.
-The <xref linkend="stmtresubscribenode" /> command has been introduced to change the provider
+<xref linkend="stmtsubscribeset"> command can only be used to establish an initial subscription.
+The <xref linkend="stmtresubscribenode" > command has been introduced to change the provider
 node.
 
 </para>
@@ -102,7 +102,7 @@ node.
 <sect3>
 <title>EXECUTE SCRIPT OPTIONS</title>
 <para>
-The <xref linkend="stmtddlscript"/> command no longer accepts SET ID as a valid option.
+The <xref linkend="stmtddlscript"> command no longer accepts SET ID as a valid option.
 </para>
 
 </sect3>
