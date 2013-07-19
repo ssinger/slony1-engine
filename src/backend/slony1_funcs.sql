@@ -1015,7 +1015,7 @@ begin
 
 	v_idx:=1;
 	LOOP
-	  EXIT WHEN v_idx>array_length(p_no_ids,1);
+	  EXIT WHEN v_idx>array_upper(p_no_ids,1) ;
 	  select * into v_node_row from @NAMESPACE@.sl_node
 			where no_id = p_no_ids[v_idx]
 			for update;
@@ -3459,7 +3459,7 @@ begin
 	c_cmdargs = '{}'::text[];
 	if p_nodes is not null then
 		c_found_origin := 'f';
-		-- p_nodes list needs to consist of a list of nodes that exist
+		-- p_nodes list needs to consist o a list of nodes that exist
 		-- and that include the current node ID
 		for c_node in select trim(node) from
 				pg_catalog.regexp_split_to_table(p_nodes, ',') as node loop
