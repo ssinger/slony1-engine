@@ -38,10 +38,12 @@
 
 - Bug #280 :: shared library build should use CFLAGS and LDFLAGS
 
-- altperl tool improvements including: better support for running multiple slons 
-  on the same server,let start_slon invoke slon with a config file,
-  fix node_is_subscribing, $LOGDIR directory behaviours, use PGPASSWORDFILE 
-  when querying state
+- altperl tool improvements including ::
+  - better support for running multiple slons on the same server
+  - let start_slon invoke slon with a config file
+  - fix node_is_subscribing
+  - $LOGDIR directory behaviours
+  - use PGPASSWORDFILE when querying state
 
 - Bug 284 :: Fix documentation - tutorial
 
