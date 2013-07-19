@@ -23,15 +23,42 @@ answers.  </para>
 <para> The answers differ somewhat between the various combinations of
 &postgres; and &slony1; versions; the newer versions generally
 somewhat easier to cope with than are the older versions.  In general,
-you almost certainly need to compile &slony1; from sources; depending
-on versioning of both &slony1; and &postgres;, you
-<emphasis>may</emphasis> need to compile &postgres; from scratch.
+it is quite likely that you will need to compile &slony1; from
+sources; depending on versioning of both &slony1; and &postgres;, you
+<emphasis>may</emphasis> also need to compile &postgres; from scratch.
 (Whether you need to <emphasis> use </emphasis> the &postgres; compile
 is another matter; you probably don't...) </para>
 
+</para> </answer>
+
+<answer><para> In these modern days, many people are using systems
+like <application>Puppet</application> where they expect to be able to
+get versions of &postgres; and &slony1; packaged up using their
+systems' native packaging tools (such as
+<application>RPM</application> and <application>dpkg</application>).</para>
+
+<para> It is possible that you will be able to find suitable
+pre-compiled packages for &postgres; and &slony1; for your system, if
+you are using a popular Linux distribution, and there is a single
+version of &postgres; across your cluster. </para>
+
+<para> If you are using a system distribution that has not attracted
+such packaging, or if you are using &slony1; to upgrade between
+&postgres; versions, and therefore require it compiled for multiple
+versions of &postgres;, it is quite likely you will need to compile
+&slony1; (and perhaps &postgres;) yourself.</para>
+
+<para>There is a "spec" file for use with RPM in the &slony1; code
+repository that may be helpful for building your own RPM packages;
+that will likely require some customization to match your RPM-based
+Linux distribution.</para> </answer>
+
+<answer><para> In the <quote>old days</quote>, the build process was
+more arduous than is the case with version 2.0 and above:
+
 <itemizedlist>
 
-<listitem><para> &slony1; version 1.0.5 and earlier require having a
+<listitem><para> &slony1; version 1.0.5 and earlier required having a
 fully configured copy of &postgres; sources available when you compile
 &slony1;.</para>
 
@@ -40,15 +67,15 @@ this closely match against the configuration in use by the packaged
 version of &postgres; by checking the configuration using the command
 <command> pg_config --configure</command>. </para> </listitem>
 
-<listitem> <para> &slony1; version 1.1 simplifies this considerably;
-it does not require the full copy of &postgres; sources, but can,
+<listitem> <para> &slony1; version 1.1 simplified this considerably;
+it did not require the full copy of &postgres; sources, but could,
 instead, refer to the various locations where &postgres; libraries,
 binaries, configuration, and <command> #include </command> files are
 located.  </para> </listitem>
 
-<listitem><para> &postgres; 8.0 and higher is generally easier to deal
-with in that a <quote>default</quote> installation includes all of the
-<command> #include </command> files.  </para>
+<listitem><para> &postgres; 8.0 and higher have become much easier to
+deal with in that a <quote>default</quote> installation includes all
+of the <command> #include </command> files.  </para>
 
 <para> If you are using an earlier version of &postgres;, you may find
 it necessary to resort to a source installation if the packaged
@@ -74,99 +101,8 @@ hope to avoid compiling &slony1;.</para>
 
 </answer>
 
-<answer><para> </para> </answer>
-
 </qandaentry>
 
-<qandaentry id="missingheaders">
-<question><para> I tried building &slony1; 1.1 and got the following
-error message:
-<screen>
-configure: error: Headers for libpqserver are not found in the includeserverdir.
-   This is the path to postgres.h. Please specify the includeserverdir with
-   --with-pgincludeserverdir=&lt;dir&gt;
-</screen>
-</para></question>
-
-<answer><para> You are almost certainly running version &postgres; 7.4
-or earlier, where server headers are not installed by default if you
-just do a <command>make install</command> of &postgres;.</para>
-
-<para> You need to install server headers when you install &postgres;
-via the command <command>make install-all-headers</command>.
-
-</para> </answer> </qandaentry>
-
-
-<qandaentry id="pg81funs">
-
-<question> <para> I'm trying to upgrade to a newer version of &slony1;
-and am running into a problem with <xref
-linkend="stmtupdatefunctions">.  When I run <xref
-linkend="stmtupdatefunctions">, my
-<application>postmaster</application> falls over with a Signal 11.
-There aren't any seeming errors in the log files, aside from the
-&postgres; logs indicating that, yes indeed, the postmaster fell
-over.</para>
-
-<para> I connected a debugger to the core file, and it indicates that
-it was trying to commit a transaction at the time of the
-failure. </para>
-
-<para> By the way I'm on &postgres; 8.1.[0-3]. </para>
-</question>
-
-<answer> <para> Unfortunately, early releases of &postgres; 8.1 had a
-problem where if you redefined a function (such as, say,
-<function>upgradeSchema(text)</function>), and then, in the same
-transaction, ran that function, the
-<application>postmaster</application> would fall over, and the
-transaction would fail to commit.  </para>
-
-<para> The &lslonik; command <xref linkend="stmtupdatefunctions">
-functions like that; it, in one transaction, tries to:
-
-<itemizedlist>
-<listitem><para> Load the new functions (from <filename>slony1_funcs.sql</filename>), notably including <function>upgradeSchema(text)</function>.  </para> </listitem>
-<listitem><para> Run <function>upgradeSchema(text)</function> to do any necessary upgrades to the database schema. </para> </listitem>
-<listitem><para> Notify &lslon; processes of a change of configuration.</para> </listitem>
-</itemizedlist>
-</para>
-
-<para> Unfortunately, on &postgres; 8.1.0, 8.1.1, 8.1.2, and 8.1.3,
-this conflicts with a bug where using and modifying a plpgsql function
-in the same transaction leads to a crash. </para>
-
-<para> Several workarounds are available. </para>
-
-</answer>
-
-<answer> <para> The preferred answer would be to upgrade &postgres; to
-8.1.4 or some later version.  Changes between minor versions do not
-require rebuilding databases; it should merely require copying a
-suitable 8.1.x build into place, and restarting the
-<application>postmaster</application> with the new version.  </para>
-</answer>
-
-<answer><para> If that is unsuitable, it would be possible to perform
-the upgrade via a series of transactions, performing the equivalent of
-what &lslonik; does <quote>by hand</quote>: </para>
-
-<itemizedlist>
-<listitem><para> Take <filename>slony1_funcs.sql</filename> and do three replacements within it: </para> 
-
-<itemizedlist>
-<listitem><para> Replace <quote>@CLUSTERNAME@</quote> with the name of the cluster </para> </listitem>
-<listitem><para> Replace <quote>@MODULEVERSION@</quote> with the &slony1; version string, such as <quote>1.2.10</quote> </para> </listitem>
-<listitem><para> Replace <quote>@NAMESPACE@</quote> with the <quote>double-quoted</quote> name of the cluster namespace, such as "_MyCluster" </para> </listitem>
-</itemizedlist>
-</listitem>
-<listitem><para> Load that <quote>remapped</quote> set of functions into the database.</para> </listitem>
-<listitem><para> Run the stored function via <command>select <function>upgradeSchema('1.2.7')</function>; </command>, assuming that the previous version of &slony1; in use was version 1.2.7. </para> </listitem>
-<listitem><para> Restarting all &lslon; processes would probably be a wise move with this sort of <quote>surgery.</quote> </para> </listitem>
-</itemizedlist>
-</answer>
-</qandaentry>
 
 <qandaentry>
 <question> <para> Problem building on Fedora/x86-64 </para>
@@ -203,10 +139,10 @@ find a library to link to, not that libpq lacked the function call.
 <filename>postgresql-libs.x86_64</filename> package. </para>
 </answer>
 
-<answer> <para> Note that this same symptom can be the indication of
-similar classes of system configuration problems.  Bad symlinks, bad
-permissions, bad behaviour on the part of your C compiler, all may
-potentially lead to this same error message. </para> 
+<answer> <para> Note that this same symptom can is a common indicatior
+for various similar classes of system configuration problems.  Bad
+symlinks, bad permissions, bad behaviour on the part of your C
+compiler, all may potentially lead to this same error message. </para>
 
 <para> Thus, if you see this error, you need to look in the log file
 that is generated, <filename>config.log</filename>.  Search down to
@@ -1928,7 +1864,8 @@ other than &lslonik; to manage setting up the cluster. </para></answer>
 
 </qandadiv>
 
-<qandadiv id="faqobsolete"> <title> &slony1; FAQ: Hopefully Obsolete Issues </title>
+<qandadiv id="faqobsolete"> <title> &slony1; FAQ: Anachronisms -
+Hopefully Obsolete </title>
 
 <qandaentry>
 <question><para> &lslon; does not restart after
@@ -2481,6 +2418,96 @@ sequence updates. </para>
 </answer> 
 
 </qandaentry>
+
+<qandaentry id="missingheaders">
+<question><para> I tried building &slony1; 1.1 and got the following
+error message:
+<screen>
+configure: error: Headers for libpqserver are not found in the includeserverdir.
+   This is the path to postgres.h. Please specify the includeserverdir with
+   --with-pgincludeserverdir=&lt;dir&gt;
+</screen>
+</para></question>
+
+<answer><para> You are almost certainly running version &postgres; 7.4
+or earlier, where server headers are not installed by default if you
+just do a <command>make install</command> of &postgres;.</para>
+
+<para> You need to install server headers when you install &postgres;
+via the command <command>make install-all-headers</command>.
+
+</para> </answer> </qandaentry>
+
+<qandaentry id="pg81funs">
+
+<question> <para> I'm trying to upgrade to a newer version of &slony1;
+and am running into a problem with <xref
+linkend="stmtupdatefunctions">.  When I run <xref
+linkend="stmtupdatefunctions">, my
+<application>postmaster</application> falls over with a Signal 11.
+There aren't any seeming errors in the log files, aside from the
+&postgres; logs indicating that, yes indeed, the postmaster fell
+over.</para>
+
+<para> I connected a debugger to the core file, and it indicates that
+it was trying to commit a transaction at the time of the
+failure. </para>
+
+<para> By the way I'm on &postgres; 8.1.[0-3]. </para>
+</question>
+
+<answer> <para> Unfortunately, early releases of &postgres; 8.1 had a
+problem where if you redefined a function (such as, say,
+<function>upgradeSchema(text)</function>), and then, in the same
+transaction, ran that function, the
+<application>postmaster</application> would fall over, and the
+transaction would fail to commit.  </para>
+
+<para> The &lslonik; command <xref linkend="stmtupdatefunctions">
+functions like that; it, in one transaction, tries to:
+
+<itemizedlist>
+<listitem><para> Load the new functions (from <filename>slony1_funcs.sql</filename>), notably including <function>upgradeSchema(text)</function>.  </para> </listitem>
+<listitem><para> Run <function>upgradeSchema(text)</function> to do any necessary upgrades to the database schema. </para> </listitem>
+<listitem><para> Notify &lslon; processes of a change of configuration.</para> </listitem>
+</itemizedlist>
+</para>
+
+<para> Unfortunately, on &postgres; 8.1.0, 8.1.1, 8.1.2, and 8.1.3,
+this conflicts with a bug where using and modifying a plpgsql function
+in the same transaction leads to a crash. </para>
+
+<para> Several workarounds are available. </para>
+
+</answer>
+
+<answer> <para> The preferred answer would be to upgrade &postgres; to
+8.1.4 or some later version.  Changes between minor versions do not
+require rebuilding databases; it should merely require copying a
+suitable 8.1.x build into place, and restarting the
+<application>postmaster</application> with the new version.  </para>
+</answer>
+
+<answer><para> If that is unsuitable, it would be possible to perform
+the upgrade via a series of transactions, performing the equivalent of
+what &lslonik; does <quote>by hand</quote>: </para>
+
+<itemizedlist>
+<listitem><para> Take <filename>slony1_funcs.sql</filename> and do three replacements within it: </para> 
+
+<itemizedlist>
+<listitem><para> Replace <quote>@CLUSTERNAME@</quote> with the name of the cluster </para> </listitem>
+<listitem><para> Replace <quote>@MODULEVERSION@</quote> with the &slony1; version string, such as <quote>1.2.10</quote> </para> </listitem>
+<listitem><para> Replace <quote>@NAMESPACE@</quote> with the <quote>double-quoted</quote> name of the cluster namespace, such as "_MyCluster" </para> </listitem>
+</itemizedlist>
+</listitem>
+<listitem><para> Load that <quote>remapped</quote> set of functions into the database.</para> </listitem>
+<listitem><para> Run the stored function via <command>select <function>upgradeSchema('1.2.7')</function>; </command>, assuming that the previous version of &slony1; in use was version 1.2.7. </para> </listitem>
+<listitem><para> Restarting all &lslon; processes would probably be a wise move with this sort of <quote>surgery.</quote> </para> </listitem>
+</itemizedlist>
+</answer>
+</qandaentry>
+
 
 </qandadiv>
 
