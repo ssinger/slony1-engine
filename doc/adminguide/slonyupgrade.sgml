@@ -116,6 +116,15 @@ that inserts these changes into a sl_log_archive table.  A trigger will then app
 on the log shipping target.
 </para>
 </sect3>
+
+<sect3>
+<title>Installable files are now versioned</title>
+<para>
+The files that get installed on database servers in the $libdir and $sharedir now
+have the &slony1; version number as part of the file name. For example
+slony1_funcs.so is now slony1_funcs.2.2.0.so and slony1_funcs.sql is now
+slony1_funcs.2.2.0.sql 
+</para>
 </sect2>
 
 
