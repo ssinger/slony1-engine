@@ -4548,7 +4548,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	if (query_execute(node, dbconn, &query) < 0)
 	{
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	monitor_subscriber_query(&pm);
@@ -4573,7 +4573,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 PQresultErrorMessage(res2));
 		PQclear(res2);
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	if (PQntuples(res2) != 1)
@@ -4584,7 +4584,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 PQresStatus(rc), PQntuples(res2));
 		PQclear(res2);
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	log_status = strtol(PQgetvalue(res2, 0, 0), NULL, 10);
@@ -4592,7 +4592,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	slon_log(SLON_DEBUG2,
 			 "remoteWorkerThread_%d_%d: current remote log_status = %d\n",
 			 node->no_id, provider->no_id, log_status);
-	dstring_terminate(&query);
+	dstring_free(&query);
 
 	/*
 	 * See if we have to run the query through EXPLAIN first
@@ -4704,7 +4704,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 					 "log_cmdargs) FROM STDIN;",
 					 rtcfg_namespace);
 		archive_append_ds(node, &log_copy);
-		dstring_terminate(&log_copy);
+		dstring_free(&log_copy);
 
 
 	}
@@ -4832,6 +4832,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	slon_log(SLON_DEBUG4,
 			 "remoteWorkerThread_%d_%d: sync_helper done\n",
 			 node->no_id, provider->no_id);
+	dstring_free(&query);
 	return errors;
 }
 
