@@ -592,7 +592,9 @@ could also announce an admin to take a look...  </para> </answer>
 <para> Both <envar>sl_log_1</envar> and <envar>sl_log_2</envar> are
 continuing to grow, and <envar>sl_log_1</envar> is never getting
 truncated.  What's wrong?  (This could be true for subsequent
-versions, as well.)  </para> </question>
+versions, as well; it's only version relevant insofar as that this
+wouldn't happen in versions <emphasis>earlier</emphasis> than 1.2.)
+</para> </question>
 
 <answer><para> This is symptomatic of the same issue as above with
 dropping replication: if there are still old connections lingering
@@ -666,7 +668,7 @@ changes.</para></listitem>
 <listitem><para> Version 1.1 provides better tools to help manage
 this, and later versions of &slony1; <emphasis>hopefully</emphasis>
 populate the listener table automatically <emphasis>and
-correctly</emphasis> so that you should not encounter this
+correctly</emphasis> such that you should not encounter this
 problem. </para>
 </listitem>
 
