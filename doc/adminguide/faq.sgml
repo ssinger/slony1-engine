@@ -32,10 +32,15 @@ is another matter; you probably don't...) </para>
 </para> </answer>
 
 <answer><para> In these modern days, many people are using systems
-like <application>Puppet</application> where they expect to be able to
-get versions of &postgres; and &slony1; packaged up using their
-systems' native packaging tools (such as
-<application>RPM</application> and <application>dpkg</application>).</para>
+like <application><ulink
+url="http://www.puppetlabs.com/">Puppet</ulink></application> where
+they expect to be able to get versions of &postgres; and &slony1;
+packaged up using their systems' native packaging tools (such as
+<application>RPM</application>, with <ulink
+url="http://yum.postgresql.org/"> yum.postgresql.org</ulink>,
+<application>dpkg</application> - with <ulink
+url="http://wiki.postgresql.org/wiki/Apt"> PostgreSQL packages for
+Debian and Ubuntu </ulink>).</para>
 
 <para> It is possible that you will be able to find suitable
 pre-compiled packages for &postgres; and &slony1; for your system, if
@@ -48,10 +53,10 @@ such packaging, or if you are using &slony1; to upgrade between
 versions of &postgres;, it is quite likely you will need to compile
 &slony1; (and perhaps &postgres;) yourself.</para>
 
-<para>There is a "spec" file for use with RPM in the &slony1; code
-repository that may be helpful for building your own RPM packages;
-that will likely require some customization to match your RPM-based
-Linux distribution.</para> </answer>
+<para> You will likely find it useful to consult the appropriate
+repository above (YUM, for RPM-based systems, and APT, for Debian
+derivatives) to obtain configuration to help you build packages
+yourself.</para> </answer>
 
 <answer><para> In the <quote>old days</quote>, the build process was
 more arduous than is the case with version 2.0 and above:
@@ -103,7 +108,6 @@ hope to avoid compiling &slony1;.</para>
 
 </qandaentry>
 
-
 <qandaentry>
 <question> <para> Problem building on Fedora/x86-64 </para>
 
@@ -128,19 +132,23 @@ checking if the compile succeeds.  On the <command>gcc</command>
 command line it uses <command>-lpq</command> to search for the
 library. </para>
 
-<para> Unfortunately, that package is missing a symlink, from
-<filename>/usr/lib64/libpq.so</filename> to
+<para> Unfortunately, in this precise case that package is missing a
+symlink, from <filename>/usr/lib64/libpq.so</filename> to
 <filename>libpq.so.5.0</filename>; that is why it fails to link to
-libpq.  The <emphasis>true</emphasis> problem is that the compiler failed to
-find a library to link to, not that libpq lacked the function call.
-</para>
+libpq.  The <emphasis>true</emphasis> problem is that the compiler
+failed to find a library to link to, not that libpq lacked the
+function call. </para>
 
 <para> Eventually, this should be addressed by those that manage the
 <filename>postgresql-libs.x86_64</filename> package. </para>
 </answer>
 
-<answer> <para> Note that this same symptom can is a common indicatior
-for various similar classes of system configuration problems.  Bad
+<answer> <para> While the problem is reported with a particular
+system, the complaint about <quote>version lower than 7.3</quote> has
+been a common one, reported across various sorts of systems. </para>
+
+<para> Note that this same symptom has been a common indicatior for
+various similar classes of system configuration problems.  Bad
 symlinks, bad permissions, bad behaviour on the part of your C
 compiler, all may potentially lead to this same error message. </para>
 
@@ -149,6 +157,7 @@ that is generated, <filename>config.log</filename>.  Search down to
 near the end, and see what the <emphasis>actual</emphasis> complaint
 was.  That will be helpful in tracking down the true root cause of the
 problem.</para>
+
 </answer>
 
 </qandaentry>
@@ -172,7 +181,6 @@ handling of this variable. </para>
 </itemizedlist>
 </answer>
 
-
 </qandaentry>
 
 </qandadiv>
@@ -188,7 +196,7 @@ handling of this variable. </para>
 
 <answer> <para> Up to version 1.2, this is fairly nontrivial,
 requiring careful choice of nodes, and some moderately heavy
-<quote>procedure</quote>.   One methodology is as follows:</para>
+<quote>procedure</quote>.  One methodology has been as follows:</para>
 
 <itemizedlist>
 
@@ -208,7 +216,8 @@ include the &slony1;-specific bits, and split it into two pieces:
 <listitem><para> Firstly, the portion comprising all of the creations
 of tables in the schema. </para> </listitem>
 
-<listitem><para> Secondly, the portion consisting of creations of indices, constraints, and triggers. </para> </listitem>
+<listitem><para> Secondly, the portion consisting of creations of
+indices, constraints, and triggers. </para> </listitem>
 
 </itemizedlist>
 
@@ -233,6 +242,13 @@ a <command>pg_dump --exclude-schema=_Cluster</command> against
 <emphasis>any</emphasis> node.  In 2.0, the schemas are no longer
 <quote>clobbered</quote> on subscribers, so a straight
 <application>pg_dump</application> will do what you want.</para>
+
+<para> There is a small issue that will remain; the log triggers that
+are added to replicated tables will still be included in the dump,
+although the functions that they refer to are in the excluded schema.
+You should be prepared to find that those triggers will fail to load.
+You might use <command>grep -v</command> on the dump to filter out the
+triggers, should that prove to be a problem.  </para>
 </answer>
 
 </qandaentry>
@@ -243,8 +259,9 @@ a <command>pg_dump --exclude-schema=_Cluster</command> against
 
 <answer> <para> A &lslon; process is required for each database that
 participates in replication.  There are a variety of ways of managing
-these processes.  An administrator may find one or another of them to
-be preferable, none are necessarily <quote>wrong</quote>.
+these processes, none strictly <quote>the best.</quote> An
+administrator may find one or another of these to be
+preferable.</quote>.
 </para>
 
 <itemizedlist>
@@ -320,7 +337,9 @@ be held by another node.</para> </answer>
 <qandadiv id="faqimpossibilities"> <title> &slony1; FAQ: Impossible Things People Try </title>
 
 <qandaentry>
-<question><para> Can I use &slony1; to replicate changes back and forth on my database between my two offices? </para> </question>
+
+<question><para> Can I use &slony1; to replicate changes back and
+forth on my database between my two offices? </para> </question>
 
 <answer><para> At one level, it is <emphasis>theoretically
 possible</emphasis> to do something like that, if you design your
@@ -337,7 +356,14 @@ replication.</quote> </para> </answer>
 </qandaentry>
 
 <qandaentry>
-<question><para> I want to replicate all of the databases for a shared-database system I am managing.  There are multiple databases, being used by my customers.  </para> </question>
+
+<question><para> I want to replicate all of the databases for a
+shared-database system I am managing.  There are multiple databases,
+being used by my customers.  </para> </question>
+
+<answer><para> &slony1; cannot be directly used for this, as it
+expects to capture changes from <emphasis>a database</emphasis>, not a
+set of <emphasis>several databases</emphasis>.</para></answer>
 
 <answer><para> For this purpose, something like &postgres; PITR (Point
 In Time Recovery) is likely to be much more suitable.  &slony1;
@@ -355,14 +381,24 @@ not used in a disciplined manner.  </para> </answer>
 
 <answer><para> &slony1; requires that <xref linkend="ddlchanges"> be planned for explicitly and carefully.  &slony1; captures changes using triggers, and &postgres; does not provide a way to use triggers to capture DDL changes.</para>
 
-<note><para> There has been quite a bit of discussion, off and on, about how
-&postgres; might capture DDL changes in a way that would make triggers
-useful; nothing concrete has emerged after several years of
-discussion. </para> </note> </answer>
+<note><para> There has been quite a bit of discussion, off and on,
+about how &postgres; might capture DDL changes in a way that would
+make triggers useful; nothing concrete has yet emerged despite several
+years of discussion. </para> 
+
+<para> The EVENT TRIGGERs added in &postgres; 9.3 are drawing steps
+closer on this, but a usable solution has not yet emerged.  Perhaps in
+9.4...</para>
+
+</note> </answer>
 </qandaentry>
 
 <qandaentry>
-<question><para> I want to split my cluster into disjoint partitions that are not aware of one another.  &slony1; keeps generating <xref linkend="listenpaths"> that link those partitions together. </para> </question>
+
+<question><para> I want to split my cluster into disjoint partitions
+that are not aware of one another.  &slony1; keeps generating <xref
+linkend="listenpaths"> that link those partitions together. </para>
+</question>
 
 <answer><para> The notion that all nodes are aware of one another is
 deeply imbedded in the design of &slony1;.  For instance, its handling
@@ -373,6 +409,7 @@ the nodes are behind, and thus might still depend on older data.
 
 <qandaentry>
 <question><para> I want to change some of my node numbers.  How do I <quote>rename</quote> a node to have a different node number? </para> </question>
+
 <answer><para> You don't.  The node number is used to coordinate inter-node communications, and changing the node ID number <quote>on the fly</quote> would make it essentially impossible to keep node configuration coordinated.   </para> </answer>
 </qandaentry>
 
@@ -419,52 +456,6 @@ right/wrong authentication information there.</para>
 </answer>
 </qandaentry>
 
-<qandaentry id="morethansuper">
-<question> <para> I created a <quote>superuser</quote> account,
-<command>slony</command>, to run replication activities.  As
-suggested, I set it up as a superuser, via the following query: 
-<command>
-update pg_shadow set usesuper = 't' where usename in ('slony',
-'molly', 'dumpy');
-</command>
-(that command also deals with other users I set up to run vacuums and
-backups).</para>
-
-<para> Unfortunately, I ran into a problem the next time I subscribed
-to a new set.</para>
-
-<programlisting>
-DEBUG1 copy_set 28661
-DEBUG1 remoteWorkerThread_1: connected to provider DB
-DEBUG2 remoteWorkerThread_78: forward confirm 1,594436 received by 78
-DEBUG2 remoteWorkerThread_1: copy table public.billing_discount
-ERROR  remoteWorkerThread_1: "select "_mycluster".setAddTable_int(28661, 51, 'public.billing_discount', 'billing_discount_pkey', 'Table public.billing_discount with candidate primary key billing_discount_pkey'); " PGRES_FATAL_ERROR ERROR:  permission denied for relation pg_class
-CONTEXT:  PL/pgSQL function "altertableforreplication" line 23 at select into variables
-PL/pgSQL function "setaddtable_int" line 76 at perform
-WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
-</programlisting>
-
-<para> This continues to fail, over and over, until I restarted the
-<application>slon</application> to connect as
-<command>postgres</command> instead.</para>
-</question>
-
-<answer><para> The problem is fairly self-evident; permission is being
-denied on the system table, <envar>pg_class</envar>.</para></answer>
-
-<answer><para> The <quote>fix</quote> is thus:</para>
-<programlisting>
-update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
-</programlisting>
-</answer>
-
-<answer><para> In version 8.1 and higher, you may also need the following:</para>
-<programlisting>
-update pg_authid set rolcatupdate = 't', rolsuper='t' where rolname = 'slony';
-</programlisting>
-</answer>
-</qandaentry>
-
 <qandaentry>
 <question><para> I'm trying to get a slave subscribed, and get the
 following messages in the logs:
@@ -490,11 +481,11 @@ sampledb=# select * from pg_locks where transaction is not null order by transac
 </screen>
 
 <para>See?  127314921 is indeed older than 127314958, and it's still
-running.</para>
+running.  While the situation may be undesirable, there is no error in
+the behaviour of &slony1;.</para>
 
-<para> A long running G/L report, a runaway
-<application>RT3</application> query, a
-<application>pg_dump</application>, all will open up transactions that
+<para> A long running accounting report, a runaway search query, a
+<application>pg_dump</application>, all can open up transactions that
 may run for substantial periods of time.  Until they complete, or are
 interrupted, you will continue to see the message <quote> data copy
 for set 1 failed - sleep 60 seconds </quote>.</para>
@@ -513,8 +504,8 @@ wait until those old transactions terminate.</para>
 was that I was trying to add <emphasis>TWO</emphasis> subscribers,
 concurrently.</para></question>
 
-<answer><para> That doesn't work out: &slony1; can't work on the
-<command>COPY</command> commands concurrently.  See
+<answer><para> That doesn't work out happily: &slony1; can't work on
+the <command>COPY</command> commands concurrently.  See
 <filename>src/slon/remote_worker.c</filename>, function
 <function>copy_set()</function></para>
 
@@ -584,29 +575,26 @@ could also announce an admin to take a look...  </para> </answer>
 
 </qandaentry>
 
-<qandaentry><question><para> I upgraded my cluster to &slony1; version
-1.2.  I'm now getting the following notice in the logs:</para>
+<qandaentry><question><para> I'm now the following notice in the
+logs:</para>
 
 <screen>NOTICE:  Slony-I: log switch to sl_log_2 still in progress - sl_log_1 not truncated</screen>
 
 <para> Both <envar>sl_log_1</envar> and <envar>sl_log_2</envar> are
 continuing to grow, and <envar>sl_log_1</envar> is never getting
-truncated.  What's wrong?  (This could be true for subsequent
-versions, as well; it's only version relevant insofar as that this
-wouldn't happen in versions <emphasis>earlier</emphasis> than 1.2.)
-</para> </question>
+truncated.  What's wrong? </para> </question>
 
-<answer><para> This is symptomatic of the same issue as above with
+<answer><para> Observe that it is indicated as a
+<emphasis>NOTICE</emphasis>, not as an <emphasis>ERROR</emphasis>, so
+this is an expected sort of behaviour.</para></answer>
+
+<answer><para> This may be symptomatic of the same issue as above with
 dropping replication: if there are still old connections lingering
 that are using old query plans that reference the old stored
 functions, resulting in the inserts to <envar>sl_log_1</envar> </para>
 
 <para> Closing those connections and opening new ones will resolve the
-issue. </para> </answer> 
-
-<answer> <para> In the longer term, there is an item on the &postgres;
-TODO list to implement dependancy checking that would flush cached
-query plans when dependent objects change.  </para> </answer>
+issue. </para> </answer>
 </qandaentry>
 
 <qandaentry>
@@ -630,10 +618,10 @@ linkend="stmtsubscribeset"> for node 2 to get it repopulating.</para>
 <para>Unfortunately, replication suddenly stopped to node 3.</para>
 
 <para>The problem was that there was not a suitable set of
-<quote>listener paths</quote> in <xref linkend="table.sl-listen"> to allow the events from
-node 1 to propagate to node 3.  The events were going through node 2,
-and blocking behind the <xref linkend="stmtsubscribeset"> event that
-node 2 was working on.</para>
+<quote>listener paths</quote> in <xref linkend="table.sl-listen"> to
+allow the events from node 1 to propagate to node 3.  The events were
+going through node 2, and blocking behind the <xref
+linkend="stmtsubscribeset"> event that node 2 was working on.</para>
 
 <para>The following slonik script dropped out the listen paths where
 node 3 had to go through node 2, and added in direct listens between
@@ -752,10 +740,10 @@ for more details.  </para></answer>
 <qandaentry>
 <question><para> When can I shut down &lslon; processes?</para></question>
 
-<answer><para> Generally, it's no big deal to shut down a &lslon;
-process.  Each one is <quote>merely</quote> a &postgres; client,
-managing one node, which spawns threads to manage receiving events
-from other nodes.  </para>
+<answer><para> Generally, when things are running properly, it's no
+big deal to shut down a &lslon; process.  Each one is
+<quote>merely</quote> a &postgres; client, managing one node, which
+spawns threads to manage receiving events from other nodes.  </para>
 
 <para>The <quote>event listening</quote> threads are no big deal; they
 are doing nothing fancier than periodically checking remote nodes to
@@ -771,41 +759,42 @@ shut off the &lslon; during an event, the transaction
 will fail, and be rolled back, so that when the &lslon; restarts, it
 will have to go back and reprocess the event.</para>
 
-<para> The only situation where this will
-cause <emphasis>particular</emphasis> <quote>heartburn</quote> is if
-the event being processed was one which takes a long time to process,
-such as <command>COPY_SET</command> for a large replication
-set. </para>
+<para> The only situation where this will cause
+<emphasis>particular</emphasis> <quote>heartburn</quote> is if the
+event being processed was one which takes a long time to process, the
+worst case being where <command>COPY_SET</command> is doing initial
+processing of a large replication set. </para>
 
 <para> The other thing that <emphasis>might</emphasis> cause trouble
 is if the &lslon; runs fairly distant from nodes that it connects to;
 you could discover that database connections are left <command>idle in
 transaction</command>.  This would normally only occur if the network
 connection is destroyed without either &lslon; or database being made
-aware of it.  In that case, you may discover
-that <quote>zombied</quote> connections are left around for as long as
-two hours if you don't go in by hand and kill off the &postgres;
-backends.</para>
+aware of it.  In that case, you may discover that
+<quote>zombied</quote> connections are left around for as long as two
+hours if you don't go in by hand and kill off the &postgres; backends.
+See the <link linkend="multipleslonconnections">Multiple Slon
+Connections</link> entry for more details.</para>
 
 <para> There is one other case that could cause trouble; when the
-&lslon; managing the origin node is not running,
-no <command>SYNC</command> events run against that node.  If the
-&lslon; stays down for an extended period of time, and something
-like <xref linkend="gensync"> isn't running, you could be left
-with <emphasis>one big <command>SYNC</command></emphasis> to process
-when it comes back up.  But that is only a concern if that &lslon; is
-down for an extended period of time; shutting it down for a few
-seconds shouldn't cause any great problem. </para> </answer>
+&lslon; managing the origin node is not running, no
+<command>SYNC</command> events run against that node.  If the &lslon;
+stays down for an extended period of time, and something like <xref
+linkend="gensync"> isn't running, you could be left with <emphasis>one
+big <command>SYNC</command></emphasis> to process when it comes back
+up.  But that should only be a concern if that &lslon; is down for an
+extended period of time; shutting it down for a few seconds shouldn't
+cause any great problem. </para> </answer>
 </qandaentry>
 
 <qandaentry>
-<question><para> Are there risks to doing so?  How about
+<question><para> Are there risks to shutting down the slon?  How about
 benefits?</para></question>
 
-<answer><para> In short, if you don't have something like an 18
-hour <command>COPY_SET</command> under way, it's normally not at all a
-big deal to take a &lslon; down for a little while, or perhaps even
-cycle <emphasis>all</emphasis> the &lslon; processes. </para> </answer>
+<answer><para> In short, if you don't have something like an 18 hour
+<command>COPY_SET</command> under way, it's normally not at all a big
+deal to take a &lslon; down for a little while, or perhaps even cycle
+<emphasis>all</emphasis> the &lslon; processes. </para> </answer>
 </qandaentry>
 
 <qandaentry>
@@ -827,16 +816,16 @@ Jul 31 23:00:00 tickerforum postgres[27093]: [9594-1] LOG:  SSL error: internal 
 Jul 31 23:00:00 tickerforum postgres[27093]: [9594-2] STATEMENT:  copy "public"."images" ("post_ordinal","ordinal","caption","image","login","file_type","thumb","thumb_width","thumb_height","hidden") to stdout;
 Jul 31 23:00:01 tickerforum postgres[27093]: [9595-1] LOG:  SSL error: internal error
 </screen>
+
 <para> This demonstrates a problem with &postgres; handling of
 SSL connections, which is <quote>out of scope</quote> for &slony1;
 proper (<emphasis>e.g.</emphasis> - there's no <quote>there</quote>
 inside &slony1; for us to try to fix).  </para> 
 
-<para> The resolution to the underlying problem will
-presumably be handled upstream in the &postgres; project; the
-workaround is to, at least for the initial <command>SUBSCRIBE
-SET</command> event, switch to a non-SSL &postgres; connection.
-</para> </answer>
+<para> The resolution to the underlying problem will presumably be
+handled upstream in the &postgres; project; the workaround is to, at
+least for the initial <command>SUBSCRIBE SET</command> event, switch
+to a non-SSL &postgres; connection.  </para> </answer>
 </qandaentry>
 
 </qandadiv>
@@ -886,7 +875,9 @@ how to create the index.
 
 <answer><para> That's not quite the end of the story; a critical query
 had the potential to scan the entirety of these log tables even in
-&slony1; 2.1.</para></answer>
+&slony1; 2.1.  You generally want to be on the latest version of
+&slony1; as there have been efficiency improvements, and in this area,
+pretty substantial improvements.</para></answer>
 </qandaentry>
 
 <qandaentry><question> <para> I need to rename a column that is in the
@@ -954,7 +945,6 @@ linkend="stmtfailover"> should be considered a <emphasis>last
 resort</emphasis> as it implies that you are abandoning the origin
 node as being corrupted.  </para></answer>
 </qandaentry>
-
 
 <qandaentry> <question><para> After notification of a subscription on
 <emphasis>another</emphasis> node, replication falls over on one of
@@ -1072,15 +1062,17 @@ terribly quickly; you need to be sure things are working right
 <qandaentry>
 <question> <para> Is the ordering of tables in a set significant?</para>
 </question>
+
 <answer> <para> Most of the time, it isn't.  You might imagine it of
 some value to order the tables in some particular way in order that
-<quote>parent</quote> entries would make it in before their <quote>children</quote>
-in some foreign key relationship; that <emphasis>isn't</emphasis> the case since
-foreign key constraint triggers are turned off on subscriber nodes.
+<quote>parent</quote> entries would make it in before their
+<quote>children</quote> in some foreign key relationship; that
+<emphasis>isn't</emphasis> the case since foreign key constraint
+triggers are turned off on subscriber nodes.
 </para>
 </answer>
 
-<answer> <para>(Jan Wieck comments:) The order of table ID's is only
+<answer> <para>(Jan Wieck comments) The order of table ID's is only
 significant during a <xref linkend="stmtlockset"> in preparation of
 switchover. If that order is different from the order in which an
 application is acquiring its locks, it can lead to deadlocks that
@@ -1104,10 +1096,10 @@ delete the new rows in the child as well.
 
 <question><para> If you have a <xref linkend="slonik"> script
 something like this, it will hang on you and never complete, because
-you can't have <command>wait for event</command> inside a
-<command>try</command> block. A <command>try</command> block is
-executed as one transaction, and the event that you are waiting for
-can never arrive inside the scope of the transaction.</para>
+you can't have <xref linkend="stmtwaitforevent"> inside a <xref
+linkend="tryblock"> block. A <command>try</command> block is executed
+as one transaction, and the event that you are waiting for can never
+arrive inside the scope of the transaction.</para>
 
 <programlisting>
 try {
@@ -1127,8 +1119,9 @@ try {
 }
 </programlisting></question>
 
-<answer><para> You must not invoke <xref linkend="stmtwaitevent">
-inside a <quote>try</quote> block.</para></answer>
+<answer><para> You <emphasis>must not</emphasis> invoke <xref
+linkend="stmtwaitevent"> inside a <quote>try</quote>
+block.</para></answer>
 
 </qandaentry>
 
@@ -1181,11 +1174,12 @@ for event selection</command> What's wrong, and what do I do? </para>
 <filename>src/slon/remote_listener.c</filename>) timed out when trying
 to determine what events were outstanding for that node.  By default,
 the query will run for five minutes; if there were many days worth of
-outstanding events, this might take too long.
- </para> </answer>
+outstanding events, this might take too long.  </para> </answer>
 
-<answer><para> On  versions of &slony1; before 1.1.7, 1.2.7, and 1.3, one answer would be to increase the timeout in 
-<filename>src/slon/remote_listener.c</filename>, recompile &lslon;, and retry.  </para> </answer>
+<answer><para> On versions of &slony1; before 1.1.7, 1.2.7, and 1.3, a
+solution was to increase the timeout in
+<filename>src/slon/remote_listener.c</filename>, recompile &lslon;,
+and retry. </para> </answer>
 
 <answer><para> Another would be to treat the node as having failed,
 and use the &lslonik; command <xref linkend="stmtdropnode"> to drop the
@@ -1197,8 +1191,9 @@ up.  </para> </answer>
 configuration parameter called <xref
 linkend="slon-config-remote-listen-timeout">; you'd alter the config
 file to increase the timeout, and try again.  Of course, as mentioned
-above, it could be faster to drop the node and recreate it than to let
-it catch up across a week's worth of updates...  </para> </answer>
+above, it could be faster to drop the node and recreate it than it is
+to require it to catch up across a week's worth of updates...  </para>
+</answer>
 
 </qandaentry>
 
@@ -1215,8 +1210,8 @@ generally getting steadily worse. </para>
 
 <answer> <para> There are actually a number of possible causes for
 this sort of thing.  There is a question involving similar pathology
-where the problem is that <link linkend="pglistenerfull"> 
-&pglistener; grows because it is not vacuumed. </link>
+where the problem is that <link linkend="pglistenerfull"> &pglistener;
+grows because it is not vacuumed. </link>
 </para>
 
 <para> Another <quote> proximate cause </quote> for this growth is for
@@ -1369,48 +1364,10 @@ around, you <emphasis>really</emphasis> want to have a
 <application>slon</application> running to service the origin
 node.</para>
 
-<para>&slony1; 1.1 provides a stored procedure that allows
-<command>SYNC</command> counts to be updated on the origin based on a
-<application>cron</application> job even if there is no <xref
-linkend="slon"> daemon running.</para> </answer></qandaentry>
-
-<qandaentry id="PGLISTENERFULL">
-<question><para>Some nodes start consistently falling behind</para>
-
-<para>I have been running &slony1; on a node for a while, and am
-seeing system performance suffering.</para>
-
-<para>I'm seeing long running queries of the form:
-<screen>
-	fetch 100 from LOG;
-</screen></para></question>
-
-<answer><para> This can be characteristic of &pglistener; (which is
-the table containing <command>NOTIFY</command> data) having plenty of
-dead tuples in it.  That makes <command>NOTIFY</command> events take a
-long time, and causes the affected node to gradually fall further and
-further behind.</para>
-
-<para>You quite likely need to do a <command>VACUUM FULL</command> on
-&pglistener;, to vigorously clean it out, and need to vacuum
-&pglistener; really frequently.  Once every five minutes would likely
-be AOK.</para>
-
-<para> Slon daemons already vacuum a bunch of tables, and
-<filename>cleanup_thread.c</filename> contains a list of tables that
-are frequently vacuumed automatically.  In &slony1; 1.0.2,
-&pglistener; is not included.  In 1.0.5 and later, it is regularly
-vacuumed, so this should cease to be a direct issue.  In version 1.2,
-&pglistener; will only be used when a node is only receiving events
-periodically, which means that the issue should mostly go away even in
-the presence of evil long running transactions...</para>
-
-<para>There is, however, still a scenario where this will still
-<quote>bite.</quote> Under MVCC, vacuums cannot delete tuples that
-were made <quote>obsolete</quote> at any time after the start time of
-the eldest transaction that is still open.  Long running transactions
-will cause trouble, and should be avoided, even on subscriber
-nodes.</para> </answer></qandaentry>
+<para>&slony1; 1.1 and later versions provide a stored procedure that
+allows <command>SYNC</command> counts to be updated on the origin
+based on a <application>cron</application> job even if there is no
+<xref linkend="slon"> daemon running.</para> </answer></qandaentry>
 
 <qandaentry> <question> <para> I have submitted a <xref
 linkend="stmtmoveset"> / <xref linkend="stmtddlscript"> request, and
@@ -1425,11 +1382,12 @@ of exclusive locks. </para>
 
 <para> You might check for these sorts of locks using the following
 query: <command> select l.*, c.relname from pg_locks l, pg_class c
-where c.oid = l.relation ; </command> A
-<envar>ShareUpdateExclusiveLock</envar> lock will block the &slony1;
-operations that need their own exclusive locks, which are likely
-queued up, marked as not being granted. </para>
-</answer> </qandaentry>
+where c.oid = l.relation ; </command> </para>
+
+<para> A <envar>ShareUpdateExclusiveLock</envar> lock will block the
+&slony1; operations that need their own exclusive locks, which are
+likely queued up, marked as not being granted. </para> </answer>
+</qandaentry>
 
 <qandaentry>
 
@@ -1527,6 +1485,13 @@ the time it's done.  </para> </listitem>
 <para> This should alleviate problems people have been experiencing
 when they sporadically have series' of very large tuples. </para>
 </answer>
+
+<answer> <para> In version 2.2, this is eliminated in a different way,
+as the log data is transported using COPY rather than via querying
+from a cursor, which may be expected to be a
+<emphasis>massive</emphasis> improvement to the "flow control"
+here. </para></question>
+
 </qandaentry>
 
 <qandaentry id="faqunicode"> <question> <para> I am trying to replicate
@@ -2528,6 +2493,104 @@ forwards compatibility or long term maintainability of replicas.
 comfortable with &postgres; and &slony1; that you are prepared to hack
 pretty heavily with the code.  </para> </answer>
 </qandaentry>
+
+<qandaentry id="morethansuper">
+<question> <para> I created a <quote>superuser</quote> account,
+<command>slony</command>, to run replication activities.  As
+suggested, I set it up as a superuser, via the following query: 
+<command>
+update pg_shadow set usesuper = 't' where usename in ('slony',
+'molly', 'dumpy');
+</command>
+(that command also deals with other users I set up to run vacuums and
+backups).</para>
+
+<para> Unfortunately, I ran into a problem the next time I subscribed
+to a new set.</para>
+
+<programlisting>
+DEBUG1 copy_set 28661
+DEBUG1 remoteWorkerThread_1: connected to provider DB
+DEBUG2 remoteWorkerThread_78: forward confirm 1,594436 received by 78
+DEBUG2 remoteWorkerThread_1: copy table public.billing_discount
+ERROR  remoteWorkerThread_1: "select "_mycluster".setAddTable_int(28661, 51, 'public.billing_discount', 'billing_discount_pkey', 'Table public.billing_discount with candidate primary key billing_discount_pkey'); " PGRES_FATAL_ERROR ERROR:  permission denied for relation pg_class
+CONTEXT:  PL/pgSQL function "altertableforreplication" line 23 at select into variables
+PL/pgSQL function "setaddtable_int" line 76 at perform
+WARN   remoteWorkerThread_1: data copy for set 28661 failed - sleep 60 seconds
+</programlisting>
+
+<para> This continues to fail, over and over, until I restarted the
+<application>slon</application> to connect as
+<command>postgres</command> instead.</para>
+</question>
+
+<answer><para> The problem is fairly self-evident; permission is being
+denied on the system table, <envar>pg_class</envar>.</para></answer>
+
+<answer><para> The <quote>fix</quote> is thus:</para>
+<programlisting>
+update pg_shadow set usesuper = 't', usecatupd='t' where usename = 'slony';
+</programlisting>
+</answer>
+
+<answer><para> In version 8.1 and higher, you may also need the following:</para>
+<programlisting>
+update pg_authid set rolcatupdate = 't', rolsuper='t' where rolname = 'slony';
+</programlisting>
+</answer>
+</qandaentry>
+
+<qandaentry id="PGLISTENERFULL">
+<question><para>Some nodes start consistently falling behind</para>
+
+<para>I have been running &slony1; 1.2 on a node for a while, and am
+seeing system performance suffering.</para>
+
+<para>I'm seeing long running queries of the form:
+<screen>
+	fetch 100 from LOG;
+</screen></para>
+
+<para> By the way, I'm on &postgres; 8.3. </para>
+</question>
+
+<answer><para> This has been characteristic of &pglistener; (which is
+the table containing <command>NOTIFY</command> data) having plenty of
+dead tuples in it.  That makes <command>NOTIFY</command> events take a
+long time, and causes the affected node to gradually fall further and
+further behind.</para>
+
+<para>You quite likely need to do a <command>VACUUM FULL</command> on
+&pglistener;, to vigorously clean it out, and need to vacuum
+&pglistener; really frequently.  Once every five minutes would likely
+be AOK.</para>
+
+<para> Slon daemons already vacuum a bunch of tables, and
+<filename>cleanup_thread.c</filename> contains a list of tables that
+are frequently vacuumed automatically.  In &slony1; 1.0.2,
+&pglistener; is not included.  In 1.0.5 and later, it is regularly
+vacuumed, so this should cease to be a direct issue.  In version 1.2,
+&pglistener; will only be used when a node is only receiving events
+periodically, which means that the issue should mostly go away even in
+the presence of evil long running transactions...</para>
+
+<para>There is, however, still a scenario where this will still
+<quote>bite.</quote> Under MVCC, vacuums cannot delete tuples that
+were made <quote>obsolete</quote> at any time after the start time of
+the eldest transaction that is still open.  Long running transactions
+will cause trouble, and should be avoided, even on subscriber
+nodes.</para> </answer>
+
+<answer><para> &postgres; 9.0 introduced a higher performance version
+of the LISTEN/NOTIFY feature which eliminated the table &pglistener;
+in favour of a memory-based queue.  An upgrade to 9.0 or better would
+likely be useful to improve this. </para></answer>
+
+<answer><para> Note that &slony1; 2.0 eliminated heavy usage of
+LISTEN/NOTIFY, so this particular phenomenon is restricted to versions
+older than that. </para></answer>
+</qandaentry>
+
 </qandadiv>
 
 </qandaset>
