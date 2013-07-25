@@ -4804,7 +4804,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 "remoteWorkerThread_%d_%d: failed SYNC's log selection query was '%s'\n",
 				 node->no_id, provider->no_id,
 				 dstring_data(&(provider->helper_query)));
-
+	dstring_free(&query);
 	dstring_init(&query);
 	(void) slon_mkquery(&query, "rollback transaction; "
 						"set enable_seqscan = default; "
