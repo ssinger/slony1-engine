@@ -40,8 +40,23 @@ Failover.prototype.runTest = function() {
 	 * Subscribe the first node.
 	 */
 	this.subscribeSet(1,1, 1, [ 2, 3 ]);
+
+
+	/**
+	 * try failing over node 1 to node 4 first.
+	 * node 4 is NOT subscribed to the sets of node
+	 * 1 so this had better fail.
+	 */
+	this.slonikSync(1,1);
+	this.failNode(1,4,false);
+	this.slonArray[1 - 1] = this.coordinator.createSlonLauncher('db' + 1);
+	this.slonArray[1 - 1].run();
+	
+	
 	this.subscribeSet(1,1, 3, [ 4, 5 ]);
 	this.slonikSync(1,1);
+
+	
 
 	var load = this.generateLoad();
 	
@@ -55,7 +70,7 @@ Failover.prototype.runTest = function() {
   
 	var lag1 = this.measureLag(1,5);
 	java.lang.Thread.sleep(10*1000);
-	var lag2 = this.measureLag(1,5);	
+	var lag2 = this.measureLag(1,5);
 	this.testResults.assertCheck('lag on node 5 is increasing',lag2 > lag1 ,true);
 		
 	
@@ -97,6 +112,18 @@ Failover.prototype.runTest = function() {
 	this.addCompletePaths();
 	
 	this.moveSet(1,3,1);
+	/**
+	 * make sure we perform a SYNC after the move set
+	 * but before we start failing nodes.  The listen network
+	 * is different after the move set and we want to make sure
+	 * all nodes have the new listen network.
+	 * Node 5 might have a 1,SYNC event more recent
+	 * than node 3 because prior to the MOVE SET
+	 * the listen network allowed for this.
+	 * The FAILOVER logic can't deal with 5 being
+	 * the most-ahead node since it isn't a direct subscriber.
+	 */
+	this.slonikSync(1,1);
 	load = this.generateLoad();
 	
 	
@@ -157,7 +184,7 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db1', 'db4');
 	this.addCompletePaths();
 	this.moveSet(1,3,1)
-
+	this.slonikSync(1,1);
 	/**
 	 * Now shutdown the slon for node 3, see how a failover to node 3 behaves.
 	 */
@@ -207,6 +234,7 @@ Failover.prototype.runTest = function() {
 	
 	this.addCompletePaths();	
 	this.moveSet(1,3,1);
+	this.slonikSync(1,1);
 	load = this.generateLoad();
 	this.coordinator.log('stopping load');
 	java.lang.Thread.sleep(30*1000);
@@ -326,7 +354,6 @@ Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 	slonik.run();
 	this.coordinator.join(slonik);	
 	this.testResults.assertCheck('slonik failover status okay',slonik.getReturnCode()==0,expect_success);
-	
 	
 	this.coordinator.log('subscribe list is now');
 	rs = stat.executeQuery("SELECT * FROM _disorder_replica.sl_set");
