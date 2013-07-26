@@ -29,7 +29,7 @@ sources; depending on versioning of both &slony1; and &postgres;, you
 (Whether you need to <emphasis> use </emphasis> the &postgres; compile
 is another matter; you probably don't...) </para>
 
-</para> </answer>
+</answer>
 
 <answer><para> In these modern days, many people are using systems
 like <application><ulink
@@ -261,7 +261,7 @@ triggers, should that prove to be a problem.  </para>
 participates in replication.  There are a variety of ways of managing
 these processes, none strictly <quote>the best.</quote> An
 administrator may find one or another of these to be
-preferable.</quote>.
+preferable.
 </para>
 
 <itemizedlist>
@@ -1096,7 +1096,7 @@ delete the new rows in the child as well.
 
 <question><para> If you have a <xref linkend="slonik"> script
 something like this, it will hang on you and never complete, because
-you can't have <xref linkend="stmtwaitforevent"> inside a <xref
+you can't have <xref linkend="stmtwaitevent"> inside a <xref
 linkend="tryblock"> block. A <command>try</command> block is executed
 as one transaction, and the event that you are waiting for can never
 arrive inside the scope of the transaction.</para>
@@ -1490,7 +1490,7 @@ when they sporadically have series' of very large tuples. </para>
 as the log data is transported using COPY rather than via querying
 from a cursor, which may be expected to be a
 <emphasis>massive</emphasis> improvement to the "flow control"
-here. </para></question>
+here. </para>
 
 </qandaentry>
 
