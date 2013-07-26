@@ -5394,7 +5394,7 @@ create table @NAMESPACE@.sl_components (
 			log_actionseq       int8,
 			log_tablenspname    text,
 			log_tablerelname    text,
-			log_cmdtype         char,
+			log_cmdtype         "char",
 			log_cmdupdncols     int4,
 			log_cmdargs         text[]
 		) without oids;
@@ -5422,7 +5422,7 @@ create table @NAMESPACE@.sl_components (
 			log_actionseq       int8,
 			log_tablenspname    text,
 			log_tablerelname    text,
-			log_cmdtype         char,
+			log_cmdtype         "char",
 			log_cmdupdncols     int4,
 			log_cmdargs         text[]
 		) without oids;
@@ -5440,22 +5440,22 @@ create table @NAMESPACE@.sl_components (
 		comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
 		comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
 
-        create table @NAMESPACE@.sl_log_script (
-        	log_origin			int4,
-        	log_txid			bigint,
-        	log_actionseq		int8,
-        	log_query			text,
-			log_only_on			text
-        ) WITHOUT OIDS;
-        create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
-        	(log_origin, log_txid, log_actionseq);
-        
-        comment on table @NAMESPACE@.sl_log_script is 'Captures DDL queries to be propagated to subscriber nodes';
-        comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
-        comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
-        comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
-        comment on column @NAMESPACE@.sl_log_script.log_query is 'The data needed to perform the log action on the replica.';
-		comment on column @NAMESPACE@.sl_log_script.log_only_on is 'Optional list of nodes on which scripts are to be executed';
+		create table @NAMESPACE@.sl_log_script (
+			log_origin			int4,
+			log_txid			bigint,
+			log_actionseq		int8,
+			log_cmdtype			"char",
+			log_cmdargs			text[]
+			) WITHOUT OIDS;
+		create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
+		(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_script is 'Captures SQL script queries to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
+		comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. S = Script statement, s = Script complete';
+		comment on column @NAMESPACE@.sl_log_script.log_cmdargs is 'The DDL statement, optionally followed by selected nodes to execute it on.';
 
 		--
 		-- Put the log apply triggers back onto sl_log_1/2
