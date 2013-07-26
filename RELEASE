@@ -9,6 +9,10 @@
 
 - Bug 298 :: Make the log shipping apply trigger apply EXECUTE SCRIPT changes
 
+- Bug 299 :: Fix a bug in MOVE SET where slon might pull data from the old origin using
+             SYNC values for the new origin
+
+- Bug 301 :: Fix memory leaks in the sync_handler
 
 *** 2.2.0 b4
 
