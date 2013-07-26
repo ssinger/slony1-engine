@@ -2041,7 +2041,7 @@ remoteWorker_wakeup(int no_id)
 	msg->msg_type = WMSG_WAKEUP;
 
 	pthread_mutex_lock(&(node->message_lock));
-	DLLIST_ADD_TAIL(node->message_head, node->message_tail, msg);
+	DLLIST_ADD_HEAD(node->message_head, node->message_tail, msg);
 	pthread_cond_signal(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
@@ -3923,7 +3923,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				slon_appendquery(&query, "%s%d",
 								 (pset->prev == NULL) ? "" : ",",
 								 pset->set_id);
-			slon_appendquery(&query, "); ");
+			slon_appendquery(&query, ") and SSY.ssy_origin=%d; ",node->no_id);
 
 			start_monitored_event(&pm);
 			res1 = PQexec(local_dbconn, dstring_data(&query));
@@ -3983,6 +3983,19 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				char	   *ssy_snapshot = PQgetvalue(res1, tupno1, 3);
 				char	   *ssy_action_list = PQgetvalue(res1, tupno1, 4);
 				int64		ssy_seqno;
+
+				if (strcmp(ssy_snapshot,"1:1:")==0 &&
+					ssy_seqno==0)
+				{
+					/**
+					 * we don't yet have a row in setsync with real data
+					 * this means the ACCEPT_SET has not yet come in.
+					 * ignore this set.
+					 */
+					slon_log(SLON_WARN, "remoteWorkerThread_%d: skipping set %d ACCEPT_SET not yet received\n",
+							 node->no_id, sub_set);
+					continue;
+				}
 
 				slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
 				if (min_ssy_seqno < 0 || ssy_seqno < min_ssy_seqno)
