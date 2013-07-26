@@ -4663,6 +4663,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 node->no_id, provider->no_id,
 				 dstring_data(&provider->helper_query),
 				 PQresultErrorMessage(res));
+		PQclear(res);
 		return errors;
 	}
 	monitor_provider_query(&pm);
