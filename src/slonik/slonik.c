@@ -3055,8 +3055,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
-			has_candidate = true;
 			const char * pidcolumn;
+			has_candidate = true;
 			nodeinfo[i].no_id = (int) strtol(PQgetvalue(res1, i, 0), NULL, 10);
 			nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
 													 nodeinfo[i].no_id);
