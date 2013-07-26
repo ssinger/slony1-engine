@@ -14,6 +14,9 @@
 
 - Bug 301 :: Fix memory leaks in the sync_handler
 
+- Bug 306 :: Fix UPDATE FUNCTIONS on a 2.1 -> 2.2 upgrade to properly create sl_log_script
+
+
 *** 2.2.0 b4
 
 - Bug 286 :: Support to compile against PG 9.3
