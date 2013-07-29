@@ -1,5 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+*** 
+
+- Bug 305 :: set session_replication_role to local when applying DDL_SCRIPT on a replica
 
 *** 2.2.0 b5
 
