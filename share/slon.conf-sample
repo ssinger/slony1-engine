@@ -118,3 +118,10 @@
 
 # Should slon run the monitoring thread?
 # monitor_threads=true
+
+# How often and in what interval to attempt acquiring the local node
+# lock. The count is only relevant during the initial startup. On restart
+# slon will retry indefinitely.
+#
+# startup_node_lock_retry_count=2
+# startup_node_lock_retry_interval=5

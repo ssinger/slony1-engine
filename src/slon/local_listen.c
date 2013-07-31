@@ -28,7 +28,9 @@
 
 #include "slon.h"
 
-extern int worker_restarted;
+int	startup_node_lock_retry_count = 5;
+int startup_node_lock_retry_interval = 2;
+
 
 /* ----------
  * slon_localListenThread
@@ -108,24 +110,46 @@ localListenThread_main(/* @unused@ */ void *dummy)
 			slon_log(SLON_FATAL,
 					 "localListenThread: \"%s\" - %s\n",
 					 dstring_data(&query1), PQresultErrorMessage(res));
-			/**
+			/*
 			 * SQL_STATE 23505 == unique_violation
 			 */
 			if(strcmp(PQresultErrorField(res,PG_DIAG_SQLSTATE),"23505") == 0)
 			{
-				slon_log(SLON_FATAL,
-						 "Do you already have a slon running against this node?\n");
-				slon_log(SLON_FATAL,
-						 "Or perhaps a residual idle backend connection from a dead slon?\n");
+				slon_log(SLON_WARN, "Failed to acquire the local node lock.\n");
 				PQclear(res);
 				if(worker_restarted)
 				{
-					sleep(5);
+					/*
+					 * Got a restart request. This means we recently were
+					 * the active slon and we retry to acquire this lock.
+					 */
+					sleep(startup_node_lock_retry_interval);
 					continue;
 				}
 				else
 				{
-					dstring_free(&query1);					
+					/*
+					 * On first startup, there may be a stale connection and
+					 * we should wait long enough for the tcp keepalives to
+					 * terminate it. There could also be a real slon running.
+					 * We retry the configured number of times before
+					 * giving up.
+					 */
+					if (startup_node_lock_retry_count > 0)
+					{
+						sleep(startup_node_lock_retry_interval);
+						startup_node_lock_retry_count--;
+						continue;
+					}
+					
+					slon_log(SLON_FATAL,
+							"Do you already have a slon running "
+							"against this node?\n");
+					slon_log(SLON_FATAL,
+							"Or perhaps a residual idle backend "
+							"connection from a dead slon?\n");
+
+					dstring_free(&query1);
 					pthread_mutex_lock(&slon_wait_listen_lock);
 					slon_listen_started=0;
 					pthread_cond_signal(&slon_wait_listen_cond);

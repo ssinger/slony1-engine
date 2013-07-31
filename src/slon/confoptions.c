@@ -237,8 +237,46 @@ static struct config_int ConfigureNamesInt[] =
 		},
 		&keep_alive_count,
 		0,
-		0, /* min val */
-		1073741824	/*max val*/
+		0,						/* min val */
+		1073741824				/* max val */
+	},
+	{
+		{
+			(const char *) "startup_node_lock_retry_count",
+			gettext_noop("How often to retry to acquire the local node lock "
+						 "on initial startup. Default = 2."),
+			NULL,
+			SLON_C_INT,
+		},
+		&startup_node_lock_retry_count,
+		2,
+		0,						/* min val */
+		1073741824				/* max val */
+	},
+	{
+		{
+			(const char *) "startup_node_lock_retry_interval",
+			gettext_noop("How fast to retry to acquire the local node lock "
+						 "on startup or retry in seconds. Default = 5."),
+			NULL,
+			SLON_C_INT,
+		},
+		&startup_node_lock_retry_interval,
+		5,
+		1,						/* min val */
+		1073741824				/* max val */
+	},
+	{
+		{
+			(const char *) "apply_cache_size",
+			gettext_noop("apply cache size"),
+			gettext_noop("apply cache size in number of prepared queries"),
+			SLON_C_INT
+		},
+		&apply_cache_size,
+		100,
+		10,
+		2000
 	},
 	{{0}}
 };

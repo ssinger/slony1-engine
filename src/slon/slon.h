@@ -612,10 +612,18 @@ extern void	slon_appendquery(SlonDString * ds, char *fmt,...);
 extern char *sql_on_connection;
 
 /* ----------
- * Globals in misc.c
+ * Globals in slon.c
  * ----------
  */
 extern int	slon_log_level;
+extern int	worker_restarted;
+
+/* ----------
+ * Globals in local_listen.c
+ * ----------
+ */
+extern int	startup_node_lock_retry_count;
+extern int	startup_node_lock_retry_interval;
 
 #if !defined(pgpipe) && !defined(WIN32)
 /* -----------------------------------
