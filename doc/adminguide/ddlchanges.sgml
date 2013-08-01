@@ -137,7 +137,6 @@ on every node on which it is executed. </para></listitem>
 
 </sect2>
 
-
 <sect2>
 <title>Applying DDL Changes Directly</title>
 

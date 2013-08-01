@@ -4,6 +4,12 @@
 
 - Bug 305 :: set session_replication_role to local when applying DDL_SCRIPT on a replica
 
+*** TBD
+
+- Bug 304 :: Record sequence values each time SQL is recorded in
+             ~sl_log_script~, and set those values before invoking the
+             SQL on the replica.
+
 *** 2.2.0 b5
 
 - Bug 296 :: Fixes for FAILOVER when non-origin nodes fail at the same time
