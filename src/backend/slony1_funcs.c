@@ -1013,44 +1013,44 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 						  TEXTOID, -1, false, 'i',
 						  &cmdargs, &cmdargsnulls, &cmdargsn);		
 		
-		if( cmdargsn < 3 )
-		{
-			elog(ERROR,"Slony-I: DDL_SCRIPT events require at least 3 elements"\
-				 "in the argument array");
-		}
-
 		nodeargs=NULL;
 		nodeargsn=0;
-		delim_text=DirectFunctionCall1(textin,CStringGetDatum(","));
-		if ( (! cmdargsnulls[1])  )
-		{			
-			char * astr=DatumGetCString(DirectFunctionCall1(textout,
-															cmdargs[1]));
-			
-			if ( strcmp(astr,""))
-			{
-			  array_holder = DirectFunctionCall2(text_to_array,cmdargs[1],
-												 delim_text);
-			  deconstruct_array(DatumGetArrayTypeP(array_holder),
-								TEXTOID, -1, false, 'i',
-								  &nodeargs, &nodeargsnulls, &nodeargsn);
-			}
-		}
 		seqargs=NULL;
 		seqargsn=0;
-		if ( (! cmdargsnulls[2])  ) 
+		if( cmdargsn >= 2 )
 		{
-			char * astr=DatumGetCString(DirectFunctionCall1(textout,
-															cmdargs[2]));	
-			if(  strcmp(astr,"") )
-			{
-				array_holder = DirectFunctionCall2(text_to_array,cmdargs[2],
-												   delim_text);
-				deconstruct_array(DatumGetArrayTypeP(array_holder),
-								  TEXTARRAYOID, -1, false, 'i',
-								  &seqargs, &seqargsnulls, &seqargsn);
+			delim_text=DirectFunctionCall1(textin,CStringGetDatum(","));
+			if ( (! cmdargsnulls[1])  )
+			{			
+				char * astr=DatumGetCString(DirectFunctionCall1(textout,
+																cmdargs[1]));
+				
+				if ( strcmp(astr,""))
+				{
+					array_holder = DirectFunctionCall2(text_to_array,cmdargs[1],
+													   delim_text);
+					deconstruct_array(DatumGetArrayTypeP(array_holder),
+									  TEXTOID, -1, false, 'i',
+									  &nodeargs, &nodeargsnulls, &nodeargsn);
+				}
 			}
 		}
+		if(cmdargsn >= 3)
+		{ 
+			if ( (! cmdargsnulls[2])  ) 
+			{
+				char * astr=DatumGetCString(DirectFunctionCall1(textout,
+																cmdargs[2]));	
+				if(  strcmp(astr,"") )
+				{
+					array_holder = DirectFunctionCall2(text_to_array,cmdargs[2],
+													   delim_text);
+					deconstruct_array(DatumGetArrayTypeP(array_holder),
+									  TEXTARRAYOID, -1, false, 'i',
+									  &seqargs, &seqargsnulls, &seqargsn);
+				}
+			}
+		}		
 		/*
 		 * The first element is the DDL statement itself.
 		 */
