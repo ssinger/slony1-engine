@@ -66,6 +66,20 @@ replica nodes.  It is advisiable to not be concurrently inserting,deleting
 or updating rows to a table while a script changing that table (adding or
 deleting columns) is also running.</para></listitem>
 
+<listitem><para>&slony1; 2.2.x and higher will replicate the SQL
+of an EXECUTE SCRIPT as part of a SYNC.  Scripts that perfrom an "ALTER TABLE"
+to a replicated table will be replicated in the correct order with respect
+to other concurrent activities on that table because of the exclusive lock
+that the alter table received on the origin node.   If your EXECUTE SCRIPT
+does not obtain exclusive locks on all of the tables it uses then
+you need to make sure that any transactions running concurrently with
+the script are not making changes that can effect the results of the script.
+For example, if your script does a nextval('some_replicated_seq') and 
+that sequence is being incremented by another transactions at the same time then
+it is possible that script sees a different value from the sequence when
+it runs on a replica than it did on the origin.</para></listitem>
+
+
 </itemizedlist>
 
 </sect2>

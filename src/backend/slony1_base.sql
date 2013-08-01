@@ -728,4 +728,3 @@ comment on column @NAMESPACE@.sl_components.co_event is 'which event have I star
 -- ----------------------------------------------------------------------
 grant usage on schema @NAMESPACE@ to public;
 
-

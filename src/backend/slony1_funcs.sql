@@ -3366,10 +3366,11 @@ begin
 	execute 'select setval(''' || v_fqname ||
 			''', ' || p_last_value::text || ')';
 
-	insert into @NAMESPACE@.sl_seqlog
+	if p_ev_seqno is not null then
+	   insert into @NAMESPACE@.sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
 			values (p_seq_id, p_seq_origin, p_ev_seqno, p_last_value);
-
+	end if;
 	return p_seq_id;
 end;
 $$ language plpgsql;
@@ -3391,10 +3392,13 @@ declare
 	c_found_origin	boolean;
 	c_node			text;
 	c_cmdargs		text[];
+	c_nodeargs      text;
+	c_delim         text;
 begin
 	c_local_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	c_cmdargs = array_append('{}'::text[], p_statement);
+	c_nodeargs = '';
 	if p_nodes is not null then
 		c_found_origin := 'f';
 		-- p_nodes list needs to consist of a list of nodes that exist
@@ -3411,8 +3415,11 @@ begin
 		   if c_local_node = (c_node::integer) then
 		   	  c_found_origin := 't';
 		   end if;
-
-		   c_cmdargs = array_append(c_cmdargs, c_node);
+		   if length(c_nodeargs)>0 then
+		   	  c_nodeargs = c_nodeargs ||','|| c_node;
+		   else
+				c_nodeargs=c_node;
+			end if;
 	   end loop;
 
 		if not c_found_origin then
@@ -3421,15 +3428,24 @@ begin
 				p_statement, p_nodes, c_local_node;
        end if;
     end if;
+	c_cmdargs = array_append(c_cmdargs,c_nodeargs);
+	c_delim=',';
+	c_cmdargs = array_append(c_cmdargs, 
 
-	execute p_statement;
-
+           (select @NAMESPACE@.string_agg( seq_id::text || c_delim
+		   || c_local_node ||
+		    c_delim || seq_last_value)
+		    FROM (
+		       select seq_id,
+           	   seq_last_value from @NAMESPACE@.sl_seqlastvalue
+           	   where seq_origin = c_local_node) as FOO
+			where NOT @NAMESPACE@.seqtrack(seq_id,seq_last_value) is NULL));
 	insert into @NAMESPACE@.sl_log_script
 			(log_origin, log_txid, log_actionseq, log_cmdtype, log_cmdargs)
 		values 
 			(c_local_node, pg_catalog.txid_current(), 
 			nextval('@NAMESPACE@.sl_action_seq'), 'S', c_cmdargs);
-
+	execute p_statement;
 	return currval('@NAMESPACE@.sl_action_seq');
 end;
 $$ language plpgsql;
@@ -6224,3 +6240,36 @@ begin
 	return v_seq_id;
 end
 $$ language plpgsql;
+
+
+
+--
+-- we create a function + aggregate for string_agg to aggregate strings
+-- some versions of PG (ie prior to 9.0) don't support this
+CREATE OR replace function @NAMESPACE@.agg_text_sum(txt_before TEXT, txt_new TEXT) RETURNS TEXT AS
+$BODY$
+DECLARE
+  c_delim text;
+BEGIN
+    c_delim = ',';
+	IF (txt_before IS NULL or txt_before='') THEN
+	   RETURN txt_new;
+	END IF;
+	RETURN txt_before || c_delim || txt_new;
+END;
+$BODY$
+LANGUAGE plpgsql;
+comment on function @NAMESPACE@.agg_text_sum(text,text) is 
+'An accumulator function used by the slony string_agg function to
+aggregate rows into a string';
+--
+-- create a string_agg function in the slony schema.
+-- PG 8.3 does not have this function so we make our own
+-- when slony stops supporting PG 8.3 we can switch to
+-- the PG 9.0+ provided version of string_agg
+--
+CREATE AGGREGATE @NAMESPACE@.string_agg(text) (
+SFUNC=@NAMESPACE@.agg_text_sum,
+STYPE=text,
+INITCOND=''
+);
