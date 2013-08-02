@@ -53,17 +53,14 @@ static pthread_mutex_t slon_connect_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* ----------
- * slon_connectdb
+ * slon_raw_connectdb
  * ----------
  */
-SlonConn *
-slon_connectdb(char *conninfo, char *symname)
+PGconn *
+slon_raw_connectdb(char *conninfo)
 {
 	PGconn	   *dbconn;
-	SlonConn   *conn;
-	PGresult   *res;
-	SlonDString query;
-	int			connpid = -1;
+
 
 	/*
 	 * Create the native database connection
@@ -140,9 +137,26 @@ slon_connectdb(char *conninfo, char *symname)
 
 	}
 #endif
+	return dbconn;
+}
+
+/* ----------
+ * slon_connectdb
+ * ----------
+ */
+SlonConn *
+slon_connectdb(char *conninfo,char * symname)
+{
+	PGconn	   *dbconn;
+	SlonConn   *conn;
+	PGresult   *res;
+	SlonDString query;
+	int			connpid = -1;
+
+	dbconn = slon_raw_connectdb(conninfo);
 
 	dstring_init(&query);
-
+	
 	if (sql_on_connection != NULL)
 	{
 
