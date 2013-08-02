@@ -1,0 +1,424 @@
+Slony For Logical WAL based Replication Design Document
+
+
+Overview
+=================
+
+This document describes how slony will be modified to use WAL based logical as a source for changes instead of the log trigger.  This document is not
+intended to describe the changes being made to PostgreSQL to support
+logical replication in the 9.4 development cycle.  The reader should first
+familiarize themselves with those changes.
+
+
+Goals
+=================
+The goals of this design are to modify slony such that:
+
+  * DML changes (INSERT,UPDATE,DELETE,TRUNCATE?) are extracted
+   from the WAL stream by the walsender instead of being written to
+   sl_log_1 on the master.  This will reduce the performance impact slony
+   has on the master.
+
+  * The operation of slony including slonik commands and the idea of slons
+    stays essentially the same.  In other words we don't want to radically
+    change user-visible aspects of slony as part of this change.
+
+  * We would like slony to be able to continue to work with older 
+    versions of PostgreSQL.  This means slony will need to still support
+    trigger based logging.  Ideally you could have a single cluster made up
+    of both trigger based slon nodes and WAL sender nodes.
+
+   * Major slony features such as FAILOVER, MOVE SET and EXECUTE SCRIPT      should continue to work
+
+Slony Configuration Tables
+==============================
+
+sl_event
+-----------
+
+The sl_event table will remain as it works today. 
+We will continue to log both SYNC events with a ev_snapshot
+and slony configuration events in this table.  This is needed for trigger
+based nodes and because we are not changing slony's fundemental method of
+operating.  Events such as DROP_NODE, ENABLE_SUBSCRIPTION and FAILOVER_NODE
+will continue to be part of slony.
+
+
+sl_confirm
+--------------
+This table will remain unchanged.  When a subscriber node processes
+up to a SYNC event via WAL logical replication it will then log a row
+in sl_confirm indicating that it has processed that SYNC event.
+
+
+sl_set
+---------------
+This table indicates what replication sets exist and what node the origin is on
+it will remain unchanged.  This table will be marked as a catalog table for
+logical replication purposes
+
+sl_subscribe
+--------------------
+This table indicates the subscription network and will remain unchanged.
+It will be marked as a catalog table for logical replication purposes
+
+sl_node
+--------------------
+This table will remain essentially the same but have an extra column 
+used to indicate if the node is a trigger not or a wal-sender node.
+
+sl_sequence
+----------------
+This table will remain unchanged but will be marked as a catalog table
+for logical replication purposes
+
+sl_seqlog
+-------------------
+This table will remain unchanged
+
+sl_path
+--------------------
+This table will remain unchanged
+
+sl_listen
+----------------------
+This table will remain unchanged
+
+sl_log_1 & sl_log_2 
+------------------
+These tables will have a place and fill two purposes
+  1.  They will still be needed by non-wal shipping (trigger) nodes 
+  2.  In the event of a FAILOVER or RESUBSCRIBE NODE a subscriber
+      might need changes from the origin tthat the new provider has already
+      processed.  The WAL from the new provider that contained the original
+      record on the new provider might already have been processed by the 
+      subscriber.  The subscriber will need to get this missing data from
+      the sl_log table of its new provider.
+
+sl_log_script
+---------------------
+This table will remain essentially the same.  
+Using EVENT TRIGGERS to replicate DDL is out of scope for this change.
+
+Slon 
+=============
+
+cleanupThread
+-------------
+The cleanup thread will remain essentially the same
+
+local_listener
+---------------
+The local listener thread will remain essentially the same
+
+monitor_thread
+-----------------
+The monitor thread will remain essentially the same
+
+sync_thread
+---------------
+The sync thread will remain essentially the same. We will continue to 
+generate SYNC events on origin nodes that run the WAL sender instead of
+triggers
+
+remote_listener & sync_helper
+-----------------------------------
+These two components will be substantially changed but the old versions
+will be left in place for working with trigger based nodes.
+
+In 2.2 the data follow was
+
+1. The remote_listener would pull a bunch of events from sl_event including
+   SYNC events and push them onto a queue via remoteWorker_event()
+2. The remoteWorkerThread would pull events from this queue and for SYNC
+   events it would use sync_helpers() to get data from sl_log_1 and sl_log_2
+   for that SYNC event range.   The data would then be COPY'd to the 
+   sl_log_apply table that would process it with a apply trigger.
+
+This flow will remain for pulling and applying data for trigger nodes.
+For logical WAL based nodes the flow will look as follows
+
+1.  A remoteWALListener will connect to the WAL sender and get slony logical
+    change records that change records for all of
+          * sl_event and sl_confirm
+          * any slony replicated users tables
+          * sl_seqlog
+    The WALListener (or maybe the output plugin) will determine which
+    replication set each WAL record belongs with and what the current
+    origin of that set is.
+2.  For each remote node that this WALListener lists as a provider
+    we will maintain a local database connection for.  We will
+    stream changes from the WAL sender to the sl_log_apply table
+    on the local database.
+            * Does this mean that only one remoteListener can be pulling
+              for an origin ? 
+            * This means that if a node is a provider for two other nodes
+              one of those nodes can delay the remoteWorker of the the other
+
+
+
+3.  If we encounter a non SYNC event we will create a record for that
+    event insert it into remoteWorker_event() for the ev_origin.
+4.  When we encounter a SYNC event, ie a insert into sl_event , ev_type=SYNC
+    in the WAL stream, we will generate a SYNC event and put that in the
+    remoteWorker_event() queue along with the database connection used to
+    push the records into sl_log_apply.  We will then stop processing
+    WAL until the remoteWorker_event() is finished.
+
+
+5.  The remoteWorker thread will pull events from it's queue and process
+    non-SYNC events much like it does today.  For SYNC events instead of
+   using a remoteWorker it will commit the database transaction for its
+   connection that is attached to the event record.
+    
+               
+
+remote_worker
+-----------------
+See the remote_listener discussion above.
+This remote_worker will be very similar to how it works today except sync_event
+will be replaced with a different version for cases where the provider is a
+WAL source which will just commit the transaction.  Coordination of the
+database connections will have to be managed.
+
+Slony Operations
+========================
+
+
+SUBSCRIBE SET
+----------------
+
+The subscribe set will work similar to how it does with a trigger origin.
+When a remoteWorker process a SUBSCRIBE_SET it will connect to the provider
+and start a copy_set() similar to how it works today.
+It will continue to put a row in sl_setsync that stores the 
+last SYNC event(or an approximation of it) and the xmin:xmin:xip list
+from the transaction used for the COPY set.   The remoteWALLListener thread
+will need to filter out transaction id's that are in the WAL that was
+generated after the ENABLE_SUBSCRIPTION event but before the copy_set
+based on this.
+
+
+
+
+RESUBSCRIBE NODE
+-----------------
+As part of a resubscribe node we reconfigure the receiver, immediately and
+restart it.  We would continue to do that with logical WAL based nodes.
+When the node reconfigures it will need to start getting records from the
+new provider for the origin in question.  There are two cases to consider
+   a) records from the set origin that have not yet been processed by the
+     receiver, might have already appeared in the WAL stream from the new     
+     provider.  We will need to get these records from sl_log_1/2 on
+     the new provider.  The best way of identifying these records is to
+     maintian the xmin:xmax:xip list in sl_setsync as we are pullings
+     sets from the old provider which is a WAL sending node.  We can do this
+     because we always commit data to the receiver on a SYNC boundary from
+     the origin.  That origin SYNC has the xmin:xmax:xip list.
+
+   b) Records (SYNC events and the associated changes) from the origin
+      have already been processed by the receiver but have not yet been 
+      processed by the new provider.  In this case the remoteWorkerThread
+      for the origin will see SYNC events that it has already processed
+      it should just ignore these SYNC events and the associated data from
+      the origin.
+	      
+
+
+MOVE SET
+-----------------
+
+During the MOVE_SET flow the MOVE_SET will travel from the old origin
+to all subscribers and a ACCEPT_SET will travel from the new origin
+to all SUBSCRIBERS.
+
+If the MOVE_SET is received and processed by subscriber nodes before
+the ACCEPT_SET then there is nothing different in processing a MOVE_SET
+than the normal SYNC and event processing workflows.
+
+However consider this case
+
+1--->2
+\    /
+ \  v 
+  > 3--->4
+
+Where everything happens in this order
+1. Node 1 issues a MOVE_SET 1->2
+2. Node 2 receives the move set issues an ACCEPT_SET
+3. Node 3 receives the ACCEPT_SET from 2, it can't process it
+   until it sees the MOVE_SET
+4. Node 3 receives the MOVE_SET from 1
+5. Node 4 receives the MOVE_SET
+6. Node 4 receives the ACCEPT SET
+
+This should also work fine because the remote worker won't process the
+ACCEPT_SET on node 3 until it sees the move set.  This means the ACCEPT_SET
+will not show up before the MOVE_SET in node 3's WAL stream so node 4
+doesn't need to worry about getting deadlocking the WALListner where it can't
+get more WAL from node 3 until the ACCEPT_SET is processed.
+
+
+
+
+
+
+
+
+FAILOVER
+------------
+
+
+DROP PATH
+---------------
+
+Dropping a path involves shutting down a remoteWALListener thread
+and also tearing down the logical replication slot.
+
+
+
+STORE PATH
+---------------
+When we store a path to a logical WAL node client slon needs to create
+a remoteWALListener thread for that node.  Before this can happen the
+the slon needs to perform a logical replication INIT.  This will establish
+a slot with the server node.  The slot id should be based on the client node id
+
+DROP NODE
+---------------
+DROP NODE => DROP PATH for any paths that this node is a client on.  The
+logical replication slots need to be removed.   Because we can't depend on
+the slon's for the client node still being around the slon for the server node
+will be responsible for tearing down the logical replication slot before 
+confirm the DROP NODE event.
+
+
+Next Steps - Implementation Plan
+---------------------------------------
+
+* How does remoteWorkerThread need to be refactored so sync_event() and
+sync_helper() can be replaced with the WAL versions.  What other changes
+are needed to remoteWorker?
+
+* Implement remoteWALListener
+
+* Implement the WAL version of sync_event()
+
+* Implement the catchup logic of RESUBSCRIBE NODE
+
+* Implement the INIT and shutdown logic of STORE/DROP PATH
+
+* Implement the shutdown logic for DROP NODE
+
+* Implement catchup code for MOVE SET
+
+*  
+
+
+===========================================================================
+These are the issues that need to be solved for logical replication
+
+
+* Build a output plugin to process a WAL stream
+** How will the output plugin get the list of tables 
+   to pay attention to.  Historically this comes from the
+   receiver but time-travelling sl_table MIGHT make more sense?
+      
+        * If we time-travel sl_table:
+            create table, subscribe set - merge set:
+                    * We would see the sl_table at the point of subscribe
+                      without the new tables.
+            Subscribe set - set drop table  , drop table
+                - if we drop a table with a subscription in progress
+                  we will have a problem. I *THINK* we have this issue today
+             
+
+
+** Sequences - will these work the same as before?
+    ** Yes as part of a syncEvent we should still record any sequence changes
+       in sl_seqlog , this will generate WAL which we can then replay
+       on the replica we can have a trigger that updates sl_seqlog AND
+       updates the sequences locally.
+
+** Modify remoteHelper and remoteListener to work with
+   a WAL stream when running against a logical replica.
+   Code structure design work first?
+
+     ** One option is a a replacement called remoteWALClient that
+        is used instead of a listener and associated worker.
+        This would apply the WAL to sl_log_apply direcltly. How would
+        this work with legacy nodes????
+
+     ** Another option is to have a remoteWALListener that pulls rows/records
+        it would then interpert these records
+            * If it is a I/U/D/T on a user table then
+              add this record to the 'list' 
+             * If it is a sl_event SYNC event then take the 'list'
+               then create a record that gets passed to the remoteWorker
+             * If it is a slony type event then pass the record to the
+               remoteWorker
+             * We would need a way to manage the 'list' so it doesn't get too big
+               memory won't work.  A  SPILL file might or a UNLOGGED table on the local
+               node.  This would still generate a x2 write load on the slave. 
+
+
+** Figure out how the initial subscription will work
+   ie how we will replace copy_ set
+
+               * We start out processing a WAL stream and we ignore
+                 / pass on everything because we are not subscribed to any tables.
+                 We then hit a ENABLE_SUBSCRIPTION.   At this point we open a new connection
+                 to the provider and perform a copy_set() basically like we do today.
+                 We store the snapshot id() of the provider that cooresponds with
+                 the data we just pulled.
+
+                 Later when we process SYNC events we need to filter out any data for this
+                 set that was included in the snapshot we pulled.  How do we want to do this?
+                 The best way might be with txid_snapshots like we do today.
+                 
+                 
+** Figure out how we want to handle cascaded replicas
+
+            1---->2----->3
+
+      Node 2 would have WAL like:
+       I node_1_table ......
+       I node_2_table .....
+      COMMIT
+       D node_2_table
+
+      where some of the original transactions from node 1 have
+      node 2 added in to them (ie by triggers on node 2) and
+      some node 2 transactions are new independent.
+
+      Approach 1:  The remoteWALListener of node 3 on 2 can 
+                   route the rows to either a remoteWokerThread_1 or
+                   a remoteWorkerThread_2 as required.
+            If we do this, is it possible for remoteWorkerThread_2 to process a SYNC
+            before remoteWorkerThread_1 ?  Can this happen today?
+
+       Approach 2:
+                Each remoteWALListener will provide the next event if ready (SYNC+data)
+                to a single workerThread that will apply it it will apply the WAL
+                for the entire node_2 transaction including the node 1 data at once. 
+
+        Approach 3:
+                 Each remoteWALListener applies the transactions it pulls directly to
+                 the local node in effect eliminating remote workers.  The problem with this
+                 is how do we make sure we keep the provider list is current?
+                 
+                
+** Figure out how confirms should work and how this relates
+   to telling the wal_sender that we have processed WAL segments
+   These might be independent concepts
+             * When we are done processing an event we should 
+                 a) Write this in sl_confirm as we do today,
+                 b) Tell the remoteListener that the data came from 
+                    that it can ACL up to point X.
+
+
+** Figure out how slon gets to know about set
+   reconfiguration events. Basically how do we process non-SYNC events
+          * By parsing the output of the plugin we can detect these and
+            have remoteWorkerThread behave much like it does today.
+
