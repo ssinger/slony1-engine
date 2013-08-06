@@ -41,8 +41,8 @@ OBJS		= \
     conf-file.o		\
     confoptions.o		\
     misc.o                  \
-    ../parsestatements/scanner.o
-
+    ../parsestatements/scanner.o \
+	remote_wal_listener.o 
 ifeq ($(PORTNAME), win32)
 OBJS += port/pipe.o port/win32service.o $(WIN32RES)
 override LDFLAGS += -lwsock32

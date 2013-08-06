@@ -616,7 +616,7 @@ SlonMain(void)
 	 * Read configuration table sl_path - the interesting pieces
 	 */
 	slon_mkquery(&query,
-				 "select pa_server, pa_conninfo, pa_connretry "
+				 "select pa_server, pa_conninfo, pa_connretry,pa_walsender "
 				 "from %s.sl_path where pa_client = %d"
 				 " and pa_conninfo<>'<event pending>'",
 				 rtcfg_namespace, rtcfg_nodeid);
@@ -631,11 +631,19 @@ SlonMain(void)
 	}
 	for (i = 0, n = PQntuples(res); i < n; i++)
 	{
+	  
 		int			pa_server = (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
 		char	   *pa_conninfo = PQgetvalue(res, i, 1);
 		int			pa_connretry = (int) strtol(PQgetvalue(res, i, 2), NULL, 10);
+		char        *pa_walsender_c = PQgetvalue(res,i,3);
+		bool        pa_walsender=0;
+		
+		if(pa_walsender_c != NULL && *pa_walsender_c=='t')
+		  pa_walsender = 1;
+		else
+		  pa_walsender = 0;
 
-		rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+		rtcfg_storePath(pa_server, pa_conninfo, pa_connretry,pa_walsender);
 	}
 	PQclear(res);
 

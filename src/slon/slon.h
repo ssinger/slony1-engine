@@ -118,6 +118,7 @@ struct SlonNode_s
 
 	char	   *pa_conninfo;	/* path to the node */
 	int			pa_connretry;	/* connection retry interval */
+    bool        pa_walsender;   /* should this path use logical wal records */
 
 	int64		last_event;		/* last event we have received */
 	char	   *last_snapshot;	/* snapshot of last sync event */
@@ -465,7 +466,7 @@ extern void rtcfg_setNodeLastSnapshot(int no_id, char *snapshot);
 extern char *rtcfg_getNodeLastSnapshot(int no_id);
 
 extern void rtcfg_storePath(int pa_server, char *pa_conninfo,
-				int pa_connretry);
+							int pa_connretry,bool pa_walsender);
 extern void rtcfg_dropPath(int pa_server);
 
 extern void rtcfg_reloadListen(PGconn *db);
@@ -583,6 +584,16 @@ extern void remoteWorker_confirm(int no_id,
 					 char *con_seqno_c, char *con_timestamp_c);
 
 
+
+/**
+ * ------
+ * Functions used in remote_wal_listener.c
+ * ------
+ */
+void *
+remoteWALListenThread_main(void *cdata);
+
+
 /* ----------
  * Functions in scheduler.c
  * ----------
@@ -604,6 +615,7 @@ extern SlonConn *slon_connectdb(char *conninfo, char *symname);
 extern void slon_disconnectdb(SlonConn * conn);
 extern SlonConn *slon_make_dummyconn(char *symname);
 extern void slon_free_dummyconn(SlonConn * conn);
+extern PGconn * slon_raw_connectdb(char * conninfo);
 
 extern int	db_getLocalNodeId(PGconn *conn);
 extern int	db_checkSchemaVersion(PGconn *conn);

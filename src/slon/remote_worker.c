@@ -845,9 +845,12 @@ remoteWorkerThread_main(void *cdata)
 				int			pa_client = (int) strtol(event->ev_data2, NULL, 10);
 				char	   *pa_conninfo = event->ev_data3;
 				int			pa_connretry = (int) strtol(event->ev_data4, NULL, 10);
-
+				
+				/**
+				 * FIXME SJS: Add WAL_SENDER AS A STORE_PATH ARG
+				 */
 				if (pa_client == rtcfg_nodeid)
-					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry,0);
 
 				slon_appendquery(&query1,
 								 "lock table %s.sl_config_lock;"

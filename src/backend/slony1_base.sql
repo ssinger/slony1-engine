@@ -163,7 +163,7 @@ create table @NAMESPACE@.sl_path (
 	pa_client			int4,
 	pa_conninfo			text NOT NULL,
 	pa_connretry		int4,
-
+	pa_walsender        boolean,
 	CONSTRAINT "sl_path-pkey"
 		PRIMARY KEY (pa_server, pa_client),
 	CONSTRAINT "pa_server-no_id-ref"

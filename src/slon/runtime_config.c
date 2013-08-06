@@ -378,7 +378,8 @@ rtcfg_findNode(int no_id)
  * ----------
  */
 void
-rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
+rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry,
+				bool pa_walsender)
 {
 	SlonNode   *node;
 
@@ -409,6 +410,8 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 		free(node->pa_conninfo);
 	node->pa_conninfo = strdup(pa_conninfo);
 	node->pa_connretry = pa_connretry;
+	node->pa_walsender = pa_walsender;
+
 
 	rtcfg_unlock();
 	rtcfg_seq_bump();
@@ -1038,15 +1041,34 @@ rtcfg_startStopNodeThread(SlonNode * node)
 		{
 			case SLON_TSTAT_NONE:
 				node->listen_status = SLON_TSTAT_RUNNING;
-				if (pthread_create(&(node->listen_thread), NULL,
-								 remoteListenThread_main, (void *) node) < 0)
+				if (node->pa_walsender)
 				{
-					slon_log(SLON_FATAL,
-							 "startStopNodeThread: cannot create "
-							 "remoteListenThread - %s\n",
-							 strerror(errno));
-					rtcfg_unlock();
-					slon_retry();
+					if(pthread_create(&(node->listen_thread),NULL,
+									  remoteWALListenThread_main,(void*)node)
+					   < 0) 
+					{
+						slon_log(SLON_FATAL,
+								 "startStopNodeThread: cannot create "
+								 "remoteWALListenThread - %s\n",
+								 strerror(errno));
+						rtcfg_unlock();
+						slon_retry();	
+					}
+
+				}
+				else 
+				{
+					if (pthread_create(&(node->listen_thread), NULL,
+									   remoteListenThread_main, (void *) node)
+						< 0)
+					{
+						slon_log(SLON_FATAL,
+								 "startStopNodeThread: cannot create "
+								 "remoteListenThread - %s\n",
+								 strerror(errno));
+						rtcfg_unlock();
+						slon_retry();
+					}
 				}
 				break;
 

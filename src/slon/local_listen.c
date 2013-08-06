@@ -345,9 +345,12 @@ localListenThread_main( /* @unused@ */ void *dummy)
 				pa_client = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 				pa_conninfo = PQgetvalue(res, tupno, 8);
 				pa_connretry = (int) strtol(PQgetvalue(res, tupno, 9), NULL, 10);
+				/**
+				 * FIXME SJS: Add WAL_SENDER argument to STORE_PATH
+				 */
 
 				if (pa_client == rtcfg_nodeid)
-					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
+				  rtcfg_storePath(pa_server, pa_conninfo, pa_connretry,0);
 
 				rtcfg_reloadListen(dbconn);
 			}
