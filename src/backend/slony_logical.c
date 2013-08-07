@@ -15,6 +15,7 @@
 #include "catalog/pg_class.h"
 #include "catalog/pg_type.h"
 #include "catalog/index.h"
+#include "catalog/namespace.h"
 
 #include "replication/output_plugin.h"
 #include "replication/snapbuild.h"
@@ -27,11 +28,14 @@
 #include "utils/typcache.h"
 #include "utils/array.h"
 #include "utils/builtins.h"
+#include "utils/fmgroids.h"
 #include "fmgr.h"
 #include "access/hash.h"
 #include "replication/logical.h"
+#include "replication/snapbuild.h"
 #include "nodes/makefuncs.h"
 #include "commands/defrem.h"
+#include "utils/snapmgr.h"
 
 #if 0 
 PG_MODULE_MAGIC;
@@ -53,7 +57,13 @@ extern bool pg_decode_clean(LogicalDecodingContext * ctx);
 
 char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx);
 
+static int 
+lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx,
+				int * origin_id, int * table_id);
+
+
 unsigned int local_id=0;
+char * cluster_name=NULL;
 
 HTAB * replicated_tables=NULL;
 
@@ -79,8 +89,8 @@ replicated_table_cmp(const void *kp1, const void *kp2, Size ksize)
 	return strcmp(key1, key2);
 }
 
-bool is_replicated(const char * namespace,const char * table);
-
+static bool is_replicated(const char * namespace,const char * table);
+static int lookup_origin(const char * namespace, const char * table);
 
 void
 _PG_init(void)
@@ -93,9 +103,6 @@ _PG_init(void)
 void
 pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 {	
-	char * table;
-	bool found;
-	HASHCTL hctl;
 	ListCell * option;
 	
 
@@ -111,47 +118,26 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	MemoryContext old = MemoryContextSwitchTo(context);
 											
 
-	/**
-	 * query the local database to find
-	 * 1. the local_id
-	 */
 	elog(NOTICE,"inside of pg_decode_init");
-	hctl.keysize = sizeof(char*);
-	hctl.entrysize = sizeof(replicated_table);
-	hctl.hash = replicated_table_hash;
-	hctl.match = replicated_table_cmp;
 
 
-	/**
-	 * build a hash table with information on all replicated tables.
-	 */
-	replicated_tables=hash_create("replicated_tables",10,&hctl,
-								  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
 	if (ctx->output_plugin_options != NULL) 
 	{
-
-
 	
 		option=ctx->output_plugin_options->head;
 	
 		while(option != NULL && option->next != NULL)
 		{
 
-			DefElem * def_schema = (DefElem * ) option->data.ptr_value;
-			DefElem * def_table = (DefElem *) option->next->data.ptr_value;
+			DefElem * def_option = (DefElem * ) option->data.ptr_value;
+			DefElem * def_value = (DefElem *) option->next->data.ptr_value;
 			
-			const char * schema= defGetString(def_schema);
-			const char * table_name = defGetString(def_table);
-			
-			table = palloc(strlen(schema) + strlen(table_name)+2);
-			sprintf(table,"%s.%s",schema,table_name);
-			replicated_table * entry=hash_search(replicated_tables,
-												 &table,HASH_ENTER,&found);
-			entry->key=table;
-			entry->namespace=pstrdup(schema);
-			entry->table_name=pstrdup(table_name);
-			entry->set=1;
-			option=option->next->next;
+			if( strcmp(defGetString(def_option),"cluster") == 0)
+			{
+				const char * value = defGetString(def_value);
+				cluster_name = palloc(strlen(value)+1);
+				strncpy(cluster_name,value,strlen(value));
+			}
 		}
 	}
 
@@ -168,9 +154,6 @@ pg_decode_begin_txn(LogicalDecodingContext * ctx, ReorderBufferTXN* txn)
 	 * on SYNC boundaries.
 	 */
 	elog(NOTICE,"inside of begin");
-	ctx->prepare_write(ctx,txn->lsn,txn->xid);
-	appendStringInfo(ctx->out, "BEGIN %d", txn->xid);
-	ctx->write(ctx,txn->lsn,txn->xid);
 	return true;
 }
 
@@ -184,9 +167,6 @@ pg_decode_commit_txn( LogicalDecodingContext * ctx,
 	 * on SYNC boundaries.
 	 */
 	elog(NOTICE,"inside of commit");
-	ctx->prepare_write(ctx,txn->lsn,txn->xid);
-	appendStringInfo(ctx->out, "COMMIT %d", txn->xid);
-	ctx->write(ctx,txn->lsn,txn->xid);
 	return true;
 }
 
@@ -225,24 +205,26 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	FmgrInfo flinfo;
 	char action='?';
 	int update_cols=0;
-	int table_id=0;
 	const char * table_name;
 	const char * namespace;
+	int origin_id=0;
+	int table_id=0;
 
 	old = MemoryContextSwitchTo(context);
 	ctx->prepare_write(ctx,txn->lsn,txn->xid);
 	elog(NOTICE,"inside og pg_decode_change");
 
 	
+
 	namespace=get_namespace_name(class_form->relnamespace);
 	table_name=NameStr(class_form->relname);
-
-	if( ! is_replicated(namespace,table_name) ) 
+	lookupSlonyInfo(relation->rd_id,ctx, &origin_id,&table_id);
+	if( origin_id == 0 ) 
 	{
 		MemoryContextSwitchTo(old);
 		return false;
 	}
-
+	elog(NOTICE,"table has origin %d",origin_id );
 	if(change->action == REORDER_BUFFER_CHANGE_INSERT)
 	{		
 		/**
@@ -311,7 +293,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		for(i = 0; i < relation->rd_att->natts; i++)
 		{
 			const char * column;			
-			const char * value_old;
 			const char * value_new;
 
 			if(tupdesc->attrs[i]->attisdropped)
@@ -433,10 +414,11 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
 	ReleaseSysCache(array_type_tuple);
-	appendStringInfo(ctx->out,"%d,%d,%d,NULL,%s,%s,%c,%d,%s"
-					 ,local_id
+	appendStringInfo(ctx->out,"%d,%lld,%d,%lld,%s,%s,%c,%d,%s"
+					 ,origin_id
 					 ,txn->xid
 					 ,table_id
+					 ,0 /*actionseq*/
 					 ,namespace
 					 ,table_name
 					 ,action
@@ -467,7 +449,6 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 {
 	Oid typid,typeoutput;
 	bool		typisvarlena;
-	Form_pg_type ftype;
 	bool isnull;
 	HeapTuple typeTuple;
 	Datum origval,val;
@@ -479,7 +460,6 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 	
 	if(!HeapTupleIsValid(typeTuple)) 
 		elog(ERROR, "cache lookup failed for type %u", typid);
-	ftype = (Form_pg_type) GETSTRUCT(typeTuple);
 	
 	getTypeOutputInfo(typid,
 					  &typeoutput, &typisvarlena);
@@ -493,7 +473,7 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 		val = origval;
 	if (isnull)
 		return NULL;
-	outputstr = OidOutputFunctionCall(typeoutput, val);
+	outputstr = OidOutputFunctionCall(typeoutput, val);	
 	return outputstr;
 }
 
@@ -514,4 +494,149 @@ bool is_replicated(const char * namespace,const char * table)
 	
 	return found;
 	
+}
+
+static int 
+lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
+	int * table_id)
+{
+  Oid sltable_oid;
+  Oid slony_namespace;
+  Relation sltable_rel;
+  HeapScanDesc scandesc;
+  HeapTuple tuple;
+  TupleDesc tupdesc;
+  int cnt = 0;
+  int retval=-1;
+  AttrNumber reloid_attnum;
+  AttrNumber set_attnum;
+  AttrNumber tableid_attnum;
+
+  /**
+   * search for the table in sl_table based on the tables
+   * oid.
+   *
+   * We don't use the tables name because the previous SQL command
+   * might have been a ALTER TABLE RENAME TO ...
+   * 
+   * 
+   */
+  *origin_id=-1;
+  *table_id=-1;
+
+  slony_namespace = get_namespace_oid("_test",false);
+
+  /**
+   * open 
+   *
+   */
+  sltable_oid = get_relname_relid("sl_table",slony_namespace);
+  
+  sltable_rel = relation_open(sltable_oid,AccessShareLock);
+  tupdesc=RelationGetDescr(sltable_rel);  
+  scandesc=heap_beginscan(sltable_rel, GetCatalogSnapshot(sltable_oid),0,NULL);
+  reloid_attnum = get_attnum(sltable_oid,"tab_reloid");
+
+  if(reloid_attnum == InvalidAttrNumber)
+	  elog(ERROR,"sl_table does not have a tab_reloid column");
+  set_attnum = get_attnum(sltable_oid,"tab_set");
+
+  if(set_attnum == InvalidAttrNumber)
+	  elog(ERROR,"sl_table does not have a tab_set column");
+  tableid_attnum = get_attnum(sltable_oid, "tab_id");
+
+  if(tableid_attnum == InvalidAttrNumber)
+	  elog(ERROR,"sl_table does not have a tab_id column");
+  
+  /**
+   * TODO: Make this more efficient, use a cache? or indexes?
+   */
+  while( (tuple = heap_getnext(scandesc,ForwardScanDirection) ))
+  {
+	  
+	  Datum storedValue;
+	  bool isnull;
+	  ScanKeyData setKey[1];
+	  Relation slset_rel;
+	  Oid slset_oid;
+	  HeapTuple slset_tuple;
+	  TupleDesc slset_tupdesc;
+	  AttrNumber origin_attnum;
+	  AttrNumber slset_setid_attnum;
+	  TupleDesc slset_desc;
+	  HeapScanDesc slset_scandesc;
+
+	  slset_oid = get_relname_relid("sl_set",slony_namespace);
+
+	  if ( tupdesc->attrs[reloid_attnum-1]->atttypid != OIDOID )
+		  elog(ERROR,"sl_table.tab_reloid should have type %d but found %d %d"
+			   , OIDOID, tupdesc->attrs[reloid_attnum-1]->atttypid,
+			   reloid_attnum);
+	  origin_attnum = get_attnum(slset_oid,"set_origin");
+	  
+	  slset_setid_attnum = get_attnum(slset_oid,"set_id");
+
+	  if(origin_attnum == InvalidAttrNumber)
+		  elog(ERROR,"sl_set does not have a set_origin column");
+	  
+	  storedValue = fastgetattr(tuple,reloid_attnum,tupdesc,&isnull);
+	  if( DatumGetObjectId(storedValue) == tableOid )
+	  {
+		  /**
+		   * a match.
+		   *
+		   */
+		  retval = DatumGetInt32(fastgetattr(tuple,tableid_attnum,
+											 tupdesc,&isnull));
+
+		  if ( isnull )
+			  elog(ERROR,"tab_id is null for table with oid %d",
+				   tableOid);	
+		  *table_id = retval;
+		  
+		  /*
+		   * find the sl_set column.
+		   */
+		  retval = DatumGetInt32(fastgetattr(tuple,set_attnum,
+											tupdesc,&isnull));
+		  if ( isnull )
+			  elog(ERROR,"tab_set is null for table with oid %d",
+				  tableOid);
+
+		  /**
+		   * Now find the current origin for that table
+		   * in sl_set
+		   */
+		  ScanKeyInit(&setKey[0],slset_setid_attnum,
+					  BTEqualStrategyNumber , /* StrategyNumber */
+					  F_INT4EQ, /* RegProcedure */
+					  Int32GetDatum(retval));
+		  slset_oid = get_relname_relid("sl_set",slony_namespace);
+		  slset_rel = relation_open(slset_oid,AccessShareLock);
+		  slset_tupdesc = RelationGetDescr(slset_rel);
+		  slset_scandesc = heap_beginscan(slset_rel,
+										  GetCatalogSnapshot(slset_oid),
+										  1,setKey);
+		  
+		  slset_tuple = heap_getnext(slset_scandesc,ForwardScanDirection);
+		  if (! slset_tuple )
+			  elog(ERROR,"can't find set %d in sl_set",retval);
+		  /**
+		   * extract the set origin from sl_set.
+		   */
+		  storedValue = fastgetattr(slset_tuple,origin_attnum,slset_tupdesc,
+									&isnull);
+		  if ( isnull)
+			  elog(ERROR,"set origin is null for set %d", retval);
+		  *origin_id = DatumGetInt32(storedValue);
+		  heap_endscan(slset_scandesc);
+		  relation_close(slset_rel,AccessShareLock);
+		  break;
+	  }
+	  cnt++;
+  }
+  heap_endscan(scandesc);
+
+  relation_close(sltable_rel,AccessShareLock);
+  return retval;
 }
