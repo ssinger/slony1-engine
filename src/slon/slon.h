@@ -73,6 +73,31 @@ typedef enum
 }	SlonThreadStatus;
 
 
+/**
+ * a enumeration for the status of a worker threads database connection
+ * to the local database. 
+ *
+ */
+typedef enum
+{
+  /**
+   * The connection is not being used, and is not in a transaction
+   */
+  SLON_WCON_IDLE,
+
+  /**
+   * a COPY into sl_log_x has been started.  
+   *   subsequent usage of the connection should add more rows
+   *   to the copy stream or terminate the COPY.
+   */
+  SLON_WCON_INCOPY,
+  /**
+   * The connection is idle in transaction, there might be previous copies
+   * into sl_log_x as part of the current transaction.
+   */
+  SLON_WCON_INTXN
+} SlonWorkerConnectionStatus;
+
 extern bool logpid;
 
 /* ----------
@@ -134,6 +159,11 @@ struct SlonNode_s
 	pthread_cond_t message_cond;	/* condition variable for queue */
 	SlonWorkMsg *message_head;
 	SlonWorkMsg *message_tail;
+
+	SlonWorkerConnectionStatus worker_con_status;  /* The status of the worker*/
+	pthread_mutex_t worker_con_lock;  /* mutex for th worker_dbcon */
+	PGconn  * worker_dbconn;
+
 
 	char	   *archive_name;
 	char	   *archive_temp;
@@ -584,7 +614,8 @@ extern void remoteWorker_confirm(int no_id,
 					 char *con_seqno_c, char *con_timestamp_c);
 
 
-
+int get_active_log_table(SlonNode * node,
+					 PGconn* local_dbconn);
 /**
  * ------
  * Functions used in remote_wal_listener.c
