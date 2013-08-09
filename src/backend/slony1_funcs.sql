@@ -5487,7 +5487,13 @@ create table @NAMESPACE@.sl_components (
 		alter table @NAMESPACE@.sl_log_2
 			enable replica trigger apply_trigger;
 	end if;
-
+	if not exists (select 1 from information_schema.routines where routine_schema = '_@CLUSTERNAME@' and routine_name = 'string_agg') then
+	       CREATE AGGREGATE @NAMESPACE@.string_agg(text) (
+	   	      SFUNC=@NAMESPACE@.agg_text_sum,
+		      STYPE=text,
+		      INITCOND=''
+		      );
+	end if;		    
 	return p_old;
 end;
 $$ language plpgsql;
@@ -6262,14 +6268,3 @@ LANGUAGE plpgsql;
 comment on function @NAMESPACE@.agg_text_sum(text,text) is 
 'An accumulator function used by the slony string_agg function to
 aggregate rows into a string';
---
--- create a string_agg function in the slony schema.
--- PG 8.3 does not have this function so we make our own
--- when slony stops supporting PG 8.3 we can switch to
--- the PG 9.0+ provided version of string_agg
---
-CREATE AGGREGATE @NAMESPACE@.string_agg(text) (
-SFUNC=@NAMESPACE@.agg_text_sum,
-STYPE=text,
-INITCOND=''
-);

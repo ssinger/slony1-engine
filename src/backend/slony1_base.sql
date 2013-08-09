@@ -723,6 +723,39 @@ comment on column @NAMESPACE@.sl_components.co_eventtype is 'what kind of event 
 comment on column @NAMESPACE@.sl_components.co_event is 'which event have I started processing?';
 
 
+
+--
+-- we create a function + aggregate for string_agg to aggregate strings
+-- some versions of PG (ie prior to 9.0) don't support this
+CREATE OR replace function @NAMESPACE@.agg_text_sum(txt_before TEXT, txt_new TEXT) RETURNS TEXT AS
+$BODY$
+DECLARE
+  c_delim text;
+BEGIN
+    c_delim = ',';
+	IF (txt_before IS NULL or txt_before='') THEN
+	   RETURN txt_new;
+	END IF;
+	RETURN txt_before || c_delim || txt_new;
+END;
+$BODY$
+LANGUAGE plpgsql;
+comment on function @NAMESPACE@.agg_text_sum(text,text) is 
+'An accumulator function used by the slony string_agg function to
+aggregate rows into a string';
+--
+-- create a string_agg function in the slony schema.
+-- PG 8.3 does not have this function so we make our own
+-- when slony stops supporting PG 8.3 we can switch to
+-- the PG 9.0+ provided version of string_agg
+--
+CREATE AGGREGATE @NAMESPACE@.string_agg(text) (
+SFUNC=@NAMESPACE@.agg_text_sum,
+STYPE=text,
+INITCOND=''
+);
+
+
 -- ----------------------------------------------------------------------
 -- Last but not least grant USAGE to the replication schema objects.
 -- ----------------------------------------------------------------------
