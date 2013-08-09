@@ -219,8 +219,58 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	namespace=get_namespace_name(class_form->relnamespace);
 	table_name=NameStr(class_form->relname);
 	lookupSlonyInfo(relation->rd_id,ctx, &origin_id,&table_id);
-	if( origin_id == 0 ) 
+	if( origin_id <= 0 ) 
 	{
+		Oid slony_namespace;
+		Oid slevent_oid;
+		Oid slconfirm_oid;
+		AttrNumber origin_attnum = InvalidAttrNumber;
+		
+		/**
+		 * The table is not replicated but
+		 * we send along changes to sl_event
+		 * and sl_confirm.
+		 */
+
+		slony_namespace = get_namespace_oid("_test",false);
+
+		/**
+		 * open 
+		 *
+		 */
+		slevent_oid = get_relname_relid("sl_event",slony_namespace);
+		slconfirm_oid = get_relname_relid("sl_confirm",slony_namespace);
+		if(slevent_oid == relation->rd_id &&
+		   change->action == REORDER_BUFFER_CHANGE_INSERT)
+		{
+
+			/**
+			 * extract ev_origin from the tuple.
+			 */
+			origin_attnum = get_attnum(relation->rd_id,"ev_origin");
+			
+		}
+		else if (slconfirm_oid == relation->rd_id &&
+				 change->action == REORDER_BUFFER_CHANGE_INSERT)
+		{
+			/**
+			 * extract con_origin from the tuple
+			 */
+			origin_attnum = get_attnum(relation->rd_id,"con_received");			
+		}
+		if(origin_attnum != InvalidAttrNumber)
+		{
+			bool isnull;
+			Datum storedValue = fastgetattr(&change->newtuple->tuple,
+											origin_attnum,tupdesc,&isnull);
+			if( ! isnull )
+				origin_id  = DatumGetInt32(storedValue);
+		}
+	}
+
+	if( origin_id <= 0 )
+	{
+
 		MemoryContextSwitchTo(old);
 		return false;
 	}
