@@ -2041,7 +2041,7 @@ remoteWorker_wakeup(int no_id)
 	msg->msg_type = WMSG_WAKEUP;
 
 	pthread_mutex_lock(&(node->message_lock));
-	DLLIST_ADD_TAIL(node->message_head, node->message_tail, msg);
+	DLLIST_ADD_HEAD(node->message_head, node->message_tail, msg);
 	pthread_cond_signal(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
@@ -3923,7 +3923,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				slon_appendquery(&query, "%s%d",
 								 (pset->prev == NULL) ? "" : ",",
 								 pset->set_id);
-			slon_appendquery(&query, "); ");
+			slon_appendquery(&query, ") and SSY.ssy_origin=%d; ",node->no_id);
 
 			start_monitored_event(&pm);
 			res1 = PQexec(local_dbconn, dstring_data(&query));
@@ -3983,6 +3983,19 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				char	   *ssy_snapshot = PQgetvalue(res1, tupno1, 3);
 				char	   *ssy_action_list = PQgetvalue(res1, tupno1, 4);
 				int64		ssy_seqno;
+
+				if (strcmp(ssy_snapshot,"1:1:")==0 &&
+					ssy_seqno==0)
+				{
+					/**
+					 * we don't yet have a row in setsync with real data
+					 * this means the ACCEPT_SET has not yet come in.
+					 * ignore this set.
+					 */
+					slon_log(SLON_WARN, "remoteWorkerThread_%d: skipping set %d ACCEPT_SET not yet received\n",
+							 node->no_id, sub_set);
+					continue;
+				}
 
 				slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
 				if (min_ssy_seqno < 0 || ssy_seqno < min_ssy_seqno)
@@ -4535,7 +4548,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	if (query_execute(node, dbconn, &query) < 0)
 	{
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	monitor_subscriber_query(&pm);
@@ -4560,7 +4573,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 PQresultErrorMessage(res2));
 		PQclear(res2);
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	if (PQntuples(res2) != 1)
@@ -4571,7 +4584,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 PQresStatus(rc), PQntuples(res2));
 		PQclear(res2);
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	log_status = strtol(PQgetvalue(res2, 0, 0), NULL, 10);
@@ -4579,7 +4592,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	slon_log(SLON_DEBUG2,
 			 "remoteWorkerThread_%d_%d: current remote log_status = %d\n",
 			 node->no_id, provider->no_id, log_status);
-	dstring_terminate(&query);
+	dstring_free(&query);
 
 	/*
 	 * See if we have to run the query through EXPLAIN first
@@ -4650,6 +4663,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 node->no_id, provider->no_id,
 				 dstring_data(&provider->helper_query),
 				 PQresultErrorMessage(res));
+		PQclear(res);
 		return errors;
 	}
 	monitor_provider_query(&pm);
@@ -4691,7 +4705,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 					 "log_cmdargs) FROM STDIN;",
 					 rtcfg_namespace);
 		archive_append_ds(node, &log_copy);
-		dstring_terminate(&log_copy);
+		dstring_free(&log_copy);
 
 
 	}
@@ -4791,7 +4805,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 "remoteWorkerThread_%d_%d: failed SYNC's log selection query was '%s'\n",
 				 node->no_id, provider->no_id,
 				 dstring_data(&(provider->helper_query)));
-
+	dstring_free(&query);
 	dstring_init(&query);
 	(void) slon_mkquery(&query, "rollback transaction; "
 						"set enable_seqscan = default; "
@@ -4819,6 +4833,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	slon_log(SLON_DEBUG4,
 			 "remoteWorkerThread_%d_%d: sync_helper done\n",
 			 node->no_id, provider->no_id);
+	dstring_free(&query);
 	return errors;
 }
 

@@ -2846,7 +2846,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 	/**
 	 * validate that the list of failed nodes is complete.
 	 * This means that for any providers in sl_subscribe 
-	 * that have failed there muts be a path between
+	 * that have failed  must have  a path between
 	 * the receiver node and the specified backup node.
 	 *
 	 * If this isn't the case then the user must also include
@@ -2897,6 +2897,39 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		}
 		PQclear(res1);
+		
+		/**
+		 * make sure that the backup_node is a forwarding subscriber of ALL
+		 * sets the the failed node is an origin for.
+		 */
+		slon_mkquery(&query,"select set.set_id FROM \"_%s\".sl_set set " \
+					 " left outer join \"_%s\".sl_subscribe sub on (" \
+					 "    set.set_id=sub.sub_set and sub.sub_receiver=%d " \
+					 "    and sub.sub_forward=true) " \
+					 " where sub.sub_set is null and set.set_origin=%d "
+					 , stmt->hdr.script->clustername
+					 , stmt->hdr.script->clustername
+					 , node_entry->backup_node
+					 , node_entry->no_id);
+		
+		res1 = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
+		if (res1 == NULL)
+		{
+			rc = -1;
+			goto cleanup;
+		}
+		if(PQntuples(res1)!=0) 
+		{
+			printf("%s:%d node %d is not a forwarding subscriber of set %s " \
+				   "from node %d \n",
+				   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
+				   node_entry->backup_node,PQgetvalue(res1,0,0),
+				   node_entry->no_id);
+			missing_paths=true;
+		}
+		PQclear(res1);
+
+
 	}
 	if ( missing_paths )
 	{
@@ -2926,6 +2959,9 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 			rc = -1;
 			goto cleanup;
 		}
+
+	
+
 		if (db_begin_xact((SlonikStmt *) stmt, adminfo1, false) < 0)
 		{
 			printf("%s:%d can not connect to node %d\n",
@@ -2937,6 +2973,10 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		fail_node_ids[cur_origin_idx] = node_entry->no_id;
 
+
+	
+
+	
 		/*
 		 * On the backup node select a list of all failover candidate nodes
 		 * except for the failed nodes.
@@ -3015,8 +3055,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 
 		for (i = 0; i < node_entry->num_nodes; i++)
 		{
-			has_candidate = true;
 			const char * pidcolumn;
+			has_candidate = true;
 			nodeinfo[i].no_id = (int) strtol(PQgetvalue(res1, i, 0), NULL, 10);
 			nodeinfo[i].adminfo = get_active_adminfo((SlonikStmt *) stmt,
 													 nodeinfo[i].no_id);

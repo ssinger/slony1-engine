@@ -277,7 +277,7 @@
 	 <indexterm> <primary><varname>tcp_keepalive_count</varname></primary></indexterm>
 	  <listitem>
 		<para>
-		 The number of keep alive requets to the server that need to be lost
+		 The number of keep alive requests to the server that need to be lost
 		 before the connection is declared dead. tcp_keep_alive must be turned
 		 on for this parameter to take effect.  The default value is 0
 		 which means use the operating systems default.  Setting this parameter

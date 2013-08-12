@@ -4,7 +4,7 @@
 <indexterm><primary>Upgrading between minor slony versions</primary></indexterm>
 <para> Minor &slony1; versions can be upgraded using the slonik <xref
 linkend="stmtupdatefunctions"> command.  This includes upgrades from
-2.1.x to a newer version 2.1.y version or from 2.0.x to 2.1.y. </para>
+2.2.x to a newer version 2.2.y version or from 2.0.x to 2.1.y. </para>
 <para> When upgrading &slony1;, the installation on all nodes in a
 cluster must be upgraded at once, using the &lslonik;
 command <xref linkend="stmtupdatefunctions">.</para>
@@ -33,53 +33,12 @@ mismatch between component versions, the &lslon; will refuse to start
 up, which provides protection against corruption. </para>
 
 <para> You need to be sure that the C library containing SPI trigger
-functions has been copied into place in the &postgres; build.  There
-are multiple possible approaches to this:</para>
-
-<para> The trickiest part of this is ensuring that the C library
-containing SPI functions is copied into place in the &postgres; build;
-the easiest and safest way to handle this is to have two separate
-&postgres; builds, one for each &slony1; version, where the postmaster
-is shut down and then restarted against the <quote>new</quote> build;
-that approach requires a brief database outage on each node.</para>
-
-<para> While that approach has been found to be easier and safer,
-nothing prevents one from carefully copying &slony1; components for
-the new version into place to overwrite the old version as
-the <quote>install</quote> step.  That might <emphasis>not</emphasis>
-work on <trademark>Windows</trademark> if it locks library files that
-are in use. It is also important to make sure that any connections 
-to the database are restarted after the new binary is installed. </para>
-
-<variablelist>
-
-<varlistentry><term>Run <command>make install</command> to install new
-&slony1; components on top of the old</term>
-
-<listitem><para>If you build &slony1; on the same system on which it
-is to be deployed, and build from sources, overwriting the old with
-the new is as easy as <command>make install</command>.  There is no
-need to restart a database backend; just to stop &lslon; processes,
-run the <command>UPDATE FUNCTIONS</command> script, and start new
-&lslon; processes.</para>
-
-<para> Unfortunately, this approach requires having a build
-environment on the same host as the deployment.  That may not be
-consistent with efforts to use common &postgres; and &slony1; binaries
-across a set of nodes. </para>
-</listitem></varlistentry>
-
-<varlistentry><term>Create a new &postgres; and &slony1; build</term>
-
-<listitem><para>With this approach, the old &postgres; build with old
-&slony1; components persists after switching to a new &postgres; build
-with new &slony1; components. In order to switch to the new &slony1;
-build, you need to restart the
-&postgres; <command>postmaster</command>, therefore interrupting
-applications, in order to get it to be aware of the location of the
-new components. </para></listitem></varlistentry>
-
-</variablelist>
+functions and the slony SQL files that get installed into the share 
+directory are installed on your database server.  The slony version
+number will be part of these files so they can be installed on your
+database server before the upgrade and co-exist with the old version
+of &slony1;
+</para>
 
 <sect2><title>Upgrade from 2.1 to 2.2</title> 
 
@@ -107,6 +66,69 @@ linkend="stmtupdatefunctions"> against each node to upgrade to version 2.2  </pa
 </itemizedlist>
 </para>
 </sect2>
+
+
+<sect2>
+<title>Incompatibilities between 2.1 and 2.2</title>
+
+<indexterm><primary>incompatibilities between versions</primary></indexterm>
+<sect3><title>Slony Log Tables</title>
+<para>
+The format of the slony log tables sl_log_1 and sl_log_2 has changed.  The data to be 
+replicated is now stored in an array of of column names and values.  It was previously stored
+as the text that would make up the SQL command.
+</para>
+</sect3>
+
+<sect3><title>FAILOVER changes</title>
+<para>
+The syntax of the <xref linkend="stmtfailover"> command has changed.  If multiple nodes
+in the cluster have failed, including subscriber-only nodes, then all failed nodes must be passed
+to the failover command.  The rules concerning which nodes can be a failover node have also
+changed.</para>
+</sect3>
+
+<sect3><title>Reshaping subscriptions</title>
+<para>
+Prior to slony 2.2.0 you could use the <xref linkend="stmtsubscribeset"> command to change
+a subscribers provider to a different provider for a set.  As of &slony1; 2.2.0 the 
+<xref linkend="stmtsubscribeset"> command can only be used to establish an initial subscription.
+The <xref linkend="stmtresubscribenode" > command has been introduced to change the provider
+node.
+
+</para>
+</sect3>
+
+<sect3>
+<title>EXECUTE SCRIPT OPTIONS</title>
+<para>
+The <xref linkend="stmtddlscript"> command no longer accepts SET ID as a valid option.
+</para>
+
+</sect3>
+
+<sect3>
+<title>LOG SHIPPING</title>
+<para>
+The format of the .SQL files generated for log shipping has changed. Prior to &slony1; 2.2.0 
+these files contained SQL INSERT/UPDATE/DELETE statements.  They now contain a COPY statement
+that inserts these changes into a sl_log_archive table.  A trigger will then apply these changes
+on the log shipping target.
+</para>
+</sect3>
+
+<sect3>
+<title>Installable files are now versioned</title>
+<para>
+The files that get installed on database servers in the $libdir and $sharedir now
+have the &slony1; version number as part of the file name. For example
+slony1_funcs.so is now slony1_funcs.2.2.0.so and slony1_funcs.sql is now
+slony1_funcs.2.2.0.sql 
+</para>
+
+
+</sect2>
+
 
 <sect2>
 <title>Incompatibilities between 2.0 and 2.1</title>

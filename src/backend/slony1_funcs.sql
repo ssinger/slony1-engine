@@ -493,7 +493,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b4'  ;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b5'  ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -1015,7 +1015,7 @@ begin
 
 	v_idx:=1;
 	LOOP
-	  EXIT WHEN v_idx>array_length(p_no_ids,1);
+	  EXIT WHEN v_idx>array_upper(p_no_ids,1) ;
 	  select * into v_node_row from @NAMESPACE@.sl_node
 			where no_id = p_no_ids[v_idx]
 			for update;
@@ -3459,7 +3459,7 @@ begin
 	c_cmdargs = '{}'::text[];
 	if p_nodes is not null then
 		c_found_origin := 'f';
-		-- p_nodes list needs to consist of a list of nodes that exist
+		-- p_nodes list needs to consist o a list of nodes that exist
 		-- and that include the current node ID
 		for c_node in select trim(node) from
 				pg_catalog.regexp_split_to_table(p_nodes, ',') as node loop
@@ -5394,7 +5394,7 @@ create table @NAMESPACE@.sl_components (
 			log_actionseq       int8,
 			log_tablenspname    text,
 			log_tablerelname    text,
-			log_cmdtype         char,
+			log_cmdtype         "char",
 			log_cmdupdncols     int4,
 			log_cmdargs         text[]
 		) without oids;
@@ -5422,7 +5422,7 @@ create table @NAMESPACE@.sl_components (
 			log_actionseq       int8,
 			log_tablenspname    text,
 			log_tablerelname    text,
-			log_cmdtype         char,
+			log_cmdtype         "char",
 			log_cmdupdncols     int4,
 			log_cmdargs         text[]
 		) without oids;
@@ -5440,22 +5440,22 @@ create table @NAMESPACE@.sl_components (
 		comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
 		comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
 
-        create table @NAMESPACE@.sl_log_script (
-        	log_origin			int4,
-        	log_txid			bigint,
-        	log_actionseq		int8,
-        	log_query			text,
-			log_only_on			text
-        ) WITHOUT OIDS;
-        create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
-        	(log_origin, log_txid, log_actionseq);
-        
-        comment on table @NAMESPACE@.sl_log_script is 'Captures DDL queries to be propagated to subscriber nodes';
-        comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
-        comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
-        comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
-        comment on column @NAMESPACE@.sl_log_script.log_query is 'The data needed to perform the log action on the replica.';
-		comment on column @NAMESPACE@.sl_log_script.log_only_on is 'Optional list of nodes on which scripts are to be executed';
+		create table @NAMESPACE@.sl_log_script (
+			log_origin			int4,
+			log_txid			bigint,
+			log_actionseq		int8,
+			log_cmdtype			"char",
+			log_cmdargs			text[]
+			) WITHOUT OIDS;
+		create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
+		(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_script is 'Captures SQL script queries to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
+		comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. S = Script statement, s = Script complete';
+		comment on column @NAMESPACE@.sl_log_script.log_cmdargs is 'The DDL statement, optionally followed by selected nodes to execute it on.';
 
 		--
 		-- Put the log apply triggers back onto sl_log_1/2

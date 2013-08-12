@@ -1,5 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+*** 
+
+- Bug 305 :: set session_replication_role to local when applying DDL_SCRIPT on a replica
 
 *** TBD
 
@@ -14,6 +17,13 @@
 - Bug 297 :: Make test_slony_state-dbi.pl work with PG 9.2
 
 - Bug 298 :: Make the log shipping apply trigger apply EXECUTE SCRIPT changes
+
+- Bug 299 :: Fix a bug in MOVE SET where slon might pull data from the old origin using
+             SYNC values for the new origin
+
+- Bug 301 :: Fix memory leaks in the sync_handler
+
+- Bug 306 :: Fix UPDATE FUNCTIONS on a 2.1 -> 2.2 upgrade to properly create sl_log_script
 
 
 *** 2.2.0 b4
@@ -44,10 +54,12 @@
 
 - Bug #280 :: shared library build should use CFLAGS and LDFLAGS
 
-- altperl tool improvements including: better support for running multiple slons 
-  on the same server,let start_slon invoke slon with a config file,
-  fix node_is_subscribing, $LOGDIR directory behaviours, use PGPASSWORDFILE 
-  when querying state
+- altperl tool improvements including ::
+  - better support for running multiple slons on the same server
+  - let start_slon invoke slon with a config file
+  - fix node_is_subscribing
+  - $LOGDIR directory behaviours
+  - use PGPASSWORDFILE when querying state
 
 - Bug 284 :: Fix documentation - tutorial
 

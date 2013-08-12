@@ -89,8 +89,8 @@
      following slonik code:</para>
      <programlisting>
      try {
-         execute script (set id = 1, filename = '/tmp/script1.sql', event node=1);
-         execute script (set id = 1, filename = '/tmp/script2.sql', event node=1);
+         execute script ( filename = '/tmp/script1.sql', event node=1);
+         execute script ( filename = '/tmp/script2.sql', event node=1);
      }
      </programlisting>
 

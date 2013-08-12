@@ -989,9 +989,11 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 		char	   *ddl_script;
 		bool		localNodeFound = true;
 		Datum		script_insert_args[5];
+		char        query[1024];
 
 		apply_num_script++;
 
+	
 		/*
 		 * Turn the log_cmdargs into a plain array of Text Datums.
 		 */
@@ -1036,10 +1038,25 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 		 */
 		if (localNodeFound)
 		{
+			sprintf(query,"set session_replication_role to local;");
+			if(SPI_exec(query,0) < 0)
+			{
+				elog(ERROR, "SPI_exec() failed for statement '%s'",
+					 query);
+			}
+
+
 			if (SPI_exec(ddl_script, 0) < 0)
 			{
 				elog(ERROR, "SPI_exec() failed for DDL statement '%s'",
 					 ddl_script);
+			}
+
+			sprintf(query,"set session_replication_role to replica;");
+			if(SPI_exec(query,0) < 0)
+			{
+					elog(ERROR, "SPI_exec() failed for statement '%s'",
+					 query);
 			}
 
 			/*
@@ -1130,6 +1147,7 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 				elog(ERROR, "SPI_exec() failed for statement '%s'",
 					 query);
 			}
+		
 
 			/*
 			 * Set the currentXid to invalid to flush the apply query cache.
