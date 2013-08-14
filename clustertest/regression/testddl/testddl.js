@@ -29,6 +29,9 @@ function init_tables() {
 	+"set add table (id=4, set id=1, origin=1, fully qualified name = 'public.table4');\n"
 	+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.table5');\n"
 	+"set add table (id=6, set id=1, origin=1, fully qualified name = 'public.billing_discount');\n"
+	+ "set add sequence(id=1,set id=1, origin=1, fully qualified name= 'public.table1_id_seq');\n"
+	+ "set add sequence(id=2,set id=1, origin=1, fully qualified name= 'public.table5_id_seq');\n"
+	
 	
 	return script;
 }
@@ -121,6 +124,33 @@ function individual_ddl(coordinator, nodenum) {
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
 }
 
+function trigger_function(coordinator) {
+	/**
+	 * We stop the slons because we want to make sure that a SYNC does not
+	 * happen in between the EXECUTE_SCRIPT and the next SYNC.
+	 */
+	terminate_slon(coordinator);
+	var sql = '';
+	for(var idx=0; idx < 1000; idx++) {
+		sql = sql + "insert into table5(data) values ('seqtest');\n"
+	}
+	var psql = coordinator.createPsqlCommand('db1',sql);
+	psql.run();
+	coordinator.join(psql);
+	premable = get_slonik_preamble();
+	slonikScript = "EXECUTE SCRIPT(  SQL='alter table table1 drop column seqed;create trigger table5_trigger "
+		+ " before INSERT on public.table5 for each row execute procedure "
+		+ " insert_table1();'"
+		+ ' ,EVENT NODE=1 );';
+	run_slonik('add trigger ddl',coordinator,preamble,slonikScript);
+	slonikScript = "EXECUTE SCRIPT(  SQL='insert into table5(data) values (9);'"
+		+ ' ,EVENT NODE=1);';
+	run_slonik('add trigger ddl',coordinator,preamble,slonikScript);
+
+	launch_slon(coordinator);	
+	
+}
+
 
 function inline_ddl(coordinator) {
 	premable = get_slonik_preamble();
@@ -166,6 +196,11 @@ function do_test(coordinator) {
 
 	inline_ddl(coordinator);
 	wait_for_sync(coordinator);
+
+
+	trigger_function(coordinator);
+	wait_for_sync(coordinator);
+
 }
 
 function get_compare_queries() {
