@@ -1208,8 +1208,10 @@ declare
 	v_row				record;
 	v_row2				record;
 	v_failed					boolean;
+    v_restart_required          boolean;
 begin
 	
+	v_restart_required:=false;
 	--
 	-- any nodes other than the backup receiving
 	-- ANY subscription from a failed node
@@ -1219,7 +1221,9 @@ begin
 		   where sub_provider=p_failed_node
 		   and sub_receiver<>p_backup_node
 		   and sub_receiver <> ALL (p_failed_nodes);
-
+	if found then
+	   v_restart_required:=true;
+	end if;
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
@@ -1231,22 +1235,32 @@ begin
 
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
 	   		  pa_server=p_failed_node;
-	
+
+	if found then
+	   v_restart_required:=true;
+	end if;
+
 	v_failed := exists (select 1 from @NAMESPACE@.sl_node 
 		   where no_failed=true and no_id=p_failed_node);
 
-        if not v_failed then
+    if not v_failed then
 	   	
 		update @NAMESPACE@.sl_node set no_failed=true where no_id = ANY (p_failed_nodes)
-		and no_failed=false;
+			   and no_failed=false;
+		if found then
+	   	   v_restart_required:=true;
+		end if;
 	end if;	
-	-- Rewrite sl_listen table
-	perform @NAMESPACE@.RebuildListenEntries();	   
 
-	-- ----
-	-- Make sure the node daemon will restart
-	-- ----
-	notify "_@CLUSTERNAME@_Restart";
+	if v_restart_required then
+	  -- Rewrite sl_listen table
+	  perform @NAMESPACE@.RebuildListenEntries();	   
+	
+	  -- ----
+	  -- Make sure the node daemon will restart
+ 	  -- ----
+	  notify "_@CLUSTERNAME@_Restart";
+    end if;
 
 
 	-- ----
