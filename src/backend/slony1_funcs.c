@@ -1046,7 +1046,7 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 					array_holder = DirectFunctionCall2(text_to_array,cmdargs[2],
 													   delim_text);
 					deconstruct_array(DatumGetArrayTypeP(array_holder),
-									  TEXTARRAYOID, -1, false, 'i',
+									  TEXTOID, -1, false, 'i',
 									  &seqargs, &seqargsnulls, &seqargsn);
 				}
 			}
