@@ -13,7 +13,8 @@
 
   - Bug 322 :: Allow CLONE PREPARE processing to deal with an earlier STORE PATH
 
-  -
+  - No Bug  :: remove warning unsupported warning for PG 9.3
+
 * Slony-I 2.2 Release Notes
 
 ** Significant Changes
