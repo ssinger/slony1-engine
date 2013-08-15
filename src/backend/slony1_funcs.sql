@@ -443,7 +443,7 @@ create or replace function @NAMESPACE@.slonyVersionPatchlevel()
 returns int4
 as $$
 begin
-	return 3;
+	return 4;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionPatchlevel () is 
@@ -5540,7 +5540,8 @@ $$
 		end if;
 		return NULL;
     end
-$$ language plpgsql;
+$$ language plpgsql
+    security definer;
 
 comment on function @NAMESPACE@.log_truncate ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';

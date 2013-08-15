@@ -11,7 +11,7 @@
 # ----------
 m4_define([SLONREL_VERSION], esyscmd([echo "$Name:  $" | \
   sed -e 's/\:\ REL_//' -e 's/\$//g' -e 's/_/./g' -e 's/\./\_/3' \
-    -e 's/\ //g' -e s/\:/`echo 2.1.3`/ | tr -d '\n']))
+    -e 's/\ //g' -e s/\:/`echo 2.1.4`/ | tr -d '\n']))
 
 m4_pattern_allow([^SLON_AC_])
 
@@ -252,6 +252,7 @@ AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
 
 AC_SUBST(HAVE_PGPORT,$HAVE_PGPORT)
+AC_SUBST(HAVE_PGCOMMON,$HAVE_PGCOMMON)
 if test "${SLON_BINDIR}" = ""; then
  if test ${prefix} = "NONE"; then
    SLON_BINDIR="${PG_BINDIR}"

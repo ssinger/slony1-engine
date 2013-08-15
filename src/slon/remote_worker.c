@@ -2177,7 +2177,7 @@ remoteWorker_wakeup(int no_id)
 	msg->msg_type = WMSG_WAKEUP;
 
 	pthread_mutex_lock(&(node->message_lock));
-	DLLIST_ADD_TAIL(node->message_head, node->message_tail, msg);
+	DLLIST_ADD_HEAD(node->message_head, node->message_tail, msg);
 	pthread_cond_signal(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }

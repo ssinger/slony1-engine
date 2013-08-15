@@ -1,5 +1,12 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+** 2.1.4 
+
+- Bug #299 :: Fix race condition in MOVE SET where a third node could pull data from the old origin using
+              SYNC/snapshot values from the new origin
+- No bug   :: Make log_truncate() SECURITY DEFINER.
+- No bug   :: WIN32 makefile fixes
+- No bug   :: List PostgreSQL 9.3 as a supported version
 
 ** 2.1.3 
 

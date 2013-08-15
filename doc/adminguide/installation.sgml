@@ -247,6 +247,7 @@ set PTHREADS_INC=c:\pthreads-win32\include
 set PTHREADS_LIB=c:\pthreads-win32\lib
 set GETTEXT_LIB=c:\gettext\lib
 set GETTEXT_INC=c:\gettext\include
+set PGVER=9.2
 </programlisting>
 <para>
 Note that the backslash characters must be escaped for PGSHARE as in the
