@@ -6,6 +6,7 @@
               SYNC/snapshot values from the new origin
 - No bug   :: Make log_truncate() SECURITY DEFINER.
 - No bug   :: WIN32 makefile fixes
+- No bug   :: List PostgreSQL 9.3 as a supported version
 
 ** 2.1.3 
 
