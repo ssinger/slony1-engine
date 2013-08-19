@@ -85,7 +85,7 @@ then
 fi
 
 cd ..
-tar -cjf slony1-$REL_VERSION-docs.tar.bz2 slony1-$REL_VERSION/doc/adminguide/*html slony1-$REL_VERSION/doc/adminguide/*man* slony1-$REL_VERSION/doc/adminguide/*png slony1-$REL_VERSION/doc/adminguide/*css slony1-$REL_VERSION/doc/adminguide/slony.pdf
+tar -cjf slony1-$REL_VERSION-docs.tar.bz2 slony1-$REL_VERSION/doc/adminguide/*html slony1-$REL_VERSION/doc/adminguide/man[0-9] slony1-$REL_VERSION/doc/adminguide/*png slony1-$REL_VERSION/doc/adminguide/*css slony1-$REL_VERSION/doc/adminguide/slony.pdf
 cd slony1-$REL_VERSION
 make distclean
 cd ..
