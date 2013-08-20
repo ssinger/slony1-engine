@@ -1084,13 +1084,15 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 
 			char query[1024];
 			Oid argtypes[3];
+			void * plan=NULL;
+
 			argtypes[0] = INT4OID;
 			argtypes[1] = INT4OID;
 			argtypes[2] = INT8OID;
 
 			snprintf(query,1023,"select %s.sequenceSetValue($1,"	\
 					 "$2,NULL,$3); ",tg->tg_trigger->tgargs[0]);			
-			void * plan = SPI_prepare(query,3,argtypes);
+			plan = SPI_prepare(query,3,argtypes);
 			if ( plan == NULL )
 			{
 
