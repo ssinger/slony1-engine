@@ -5549,9 +5549,16 @@ static void lock_workercon(SlonNode * node)
 	if ( node->worker_con_status == SLON_WCON_INCOPY)
 	{
 		/**
-		 * TODO: Stop the COPY so we can do other things
+		 * Stop the COPY so we can do other things
 		 * on this connection
 		 */
+		if ( ! PQputCopyEnd(node->worker_dbconn,NULL) ) 
+		{
+			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:");
+			slon_retry();			 
+
+		}
+		node->worker_con_status = SLON_WCON_INTXN;
 	}
 	
 }
@@ -5568,6 +5575,7 @@ int get_active_log_table(SlonNode * node,
 	/*
 	 * Get the current sl_log_status
 	 */
+	dstring_init(&query);
 	(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
 						rtcfg_namespace);
 	start_monitored_event(&pm);
