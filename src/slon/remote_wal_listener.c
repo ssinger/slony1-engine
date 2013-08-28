@@ -11,6 +11,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 #endif
+#define POSTGRES_EPOCH_JDATE 2451545
+#define UNIX_EPOCH_JDATE		2440588 /* == date2j(1970, 1, 1) */
+#define SECS_PER_DAY	86400
+#define USECS_PER_DAY	INT64CONST(86400000000)
+#define USECS_PER_SEC	INT64CONST(1000000)
 
 #include<pg_config_manual.h>
 
@@ -29,8 +34,23 @@ static int extract_row_metadata(SlonNode * node,char * schema_name,
 								char * table_name,
 	                            char * xid_str,
 								int * origin_id,
+								char * operation,
+								char ** cmdargs,
 	                            char * row);
 
+
+
+static void push_copy_row(SlonNode * listening_node, int origin_id, char * row);
+
+static void 
+parseEvent(SlonNode * node, char * cmdargs);
+
+static void sendint64(int64 i, char *buf);
+static int64 recvint64(char *buf);
+
+static bool sendFeedback(SlonNode * node,
+						 SlonWALState * state,
+						 uint64 blockpos, int64 now, bool replyRequested);
 /**
  * connect to the walsender and INIT a logical WAL slot
  *
@@ -91,7 +111,7 @@ static void init_wal_slot(SlonWALState * state, SlonNode * node)
 /**
  * Establish the connection to the wal sender and START replication
  */
-void start_wal(SlonNode * node, SlonWALState * state,const char * row)
+void start_wal(SlonNode * node, SlonWALState * state)
 {
 	char query[1024];
 	PGresult * res;
@@ -106,10 +126,17 @@ void start_wal(SlonNode * node, SlonWALState * state,const char * row)
 		 * connection failed, retry ?
 		 */
 	}
-	snprintf(query,sizeof(query),"START_LOGICAL_REPLICATION \"%d\" %X/%X ",
-			 node->no_id, (uint32) ((state->startpos) >>32), 
-			 (uint32)state->startpos);
-	
+	snprintf(query,sizeof(query),"START_LOGICAL_REPLICATION \"%d\" %X/%X (\"cluster\" 'test') ",
+			 node->no_id, 
+#if 0 
+(uint32) ((state->startpos) >>32), 
+			 (uint32)state->startpos,
+rtcfg_namespace);
+#else
+	0,0);
+#endif
+
+	slon_log(SLON_INFO,"remoteWALListenerThread_%d: %s",node->no_id,query);
 	res = PQexec(state->dbconn,query);
 	if (PQresultStatus(res) != PGRES_COPY_BOTH)
 	{
@@ -119,8 +146,8 @@ void start_wal(SlonNode * node, SlonWALState * state,const char * row)
 		PQclear(res);
 		slon_retry();
 	}
-	PQclear(res);
 
+	slon_log(SLON_DEBUG2,"sent start logical replication");
 	while(!time_to_abort)
 	{
 		char * copybuf;
@@ -128,41 +155,86 @@ void start_wal(SlonNode * node, SlonWALState * state,const char * row)
 		 * can we send feedback?
 		 */
 		
-		
 		/**
 		 *  Read a row
 		 */
-		copy_res=PQgetCopyData(state->dbconn, &copybuf,1);
-		
+		copy_res=PQgetCopyData(state->dbconn, &copybuf,0);		
 		/**
 		 * 
 		 */
 		if (copy_res > 0 )
 		{
-			/**
-			 * process the row
-			 */
-			
-			
+			if(copybuf[0] == 'k')
+			{
+				/**
+				 * keepalive message
+				 */
+				int64 now;
+				struct timeval tp;
+				gettimeofday(&tp,NULL);
+				now  = (int64) (tp.tv_sec -
+					((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
+								* USECS_PER_SEC) + tp.tv_usec;
+
+				sendFeedback(node,state,state->startpos , now,false);
+			}
+			else if (copybuf[0]=='w')
+			{
+				size_t hdr_len;
+				int64 temp;
+				int64 now;
+				struct timeval tp;
+
+				hdr_len = 1;			/* msgtype 'w' */
+				hdr_len += 8;			/* dataStart */
+				hdr_len += 8;			/* walEnd */
+				hdr_len += 8;			/* sendTime */
+				
+				temp = recvint64(&copybuf[1]);
+
+				slon_log(SLON_INFO,"remoteWALListenerThread_%d: %s\n",
+						 node->no_id,
+						 copybuf+hdr_len);
+
+				/**
+				 * process the row
+				 */
+				
+				PQfreemem(copybuf);
+				
+				slon_log(SLON_INFO,
+						 "remoteWALListenerThread_%d: new ptr is %lld",temp);
+
+				
+	
+				gettimeofday(&tp,NULL);
+				now  = (int64) (tp.tv_sec -
+					((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
+								* USECS_PER_SEC) + tp.tv_usec;
+				sendFeedback(node,state,temp , 0,false);
+				state->startpos=temp;
+			}			
+		
 		}
 		else if (copy_res == 0)
 		{
-			/**
-			 *
-			 * nothing available
-			 */
+
 		}
 		else if (copy_res == -1 )
 		{
 			/**
 			 * copy finished.  What does this mean?
 			 */
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: received -1 from COPY?",node->no_id);
 		}
 		else 
 		{
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: an unknown error"\
+					 " was received while reading data",node->no_id);
 			/**
 			 * error ?
 			 */
+			slon_retry();
 		}
 	}
 
@@ -193,13 +265,17 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 	 */
 	int origin_id;
 	
+	char operation;
+	
+	char * cmdargs;
+
 	/**
 	 * working variables;
 	 */
 	int rc;
-
-	rc = extract_row_metadata(node,schema_name,table_name,xid_str,&origin_id
-							  ,row);
+   
+	rc = extract_row_metadata(node,schema_name,table_name,xid_str,&origin_id,
+							  &operation,&cmdargs,row);
 	if( rc < 0 )
 	{
 		return rc;
@@ -249,8 +325,7 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 		 *   3. I could make the COPY stream be different from the 
 		 *      walsender/plugin.
 		 */
-		
-		
+		parseEvent(node,cmdargs);
 	}
 	else if (strcmp(schema_name, rtcfg_namespace)==0 &&
 			 strcmp(table_name,  "sl_confirm")==0)
@@ -280,11 +355,167 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 	
 }
 
+static void 
+parseEvent(SlonNode * node, char * cmdargs)
+{
+	char * saveptr;
+	char * column;
+	char * value;
+	size_t value_len;
+	int64 ev_seqno=0;
+	char *ev_timestamp=NULL;
+	char *ev_snapshot=NULL;
+	char *ev_mintxid=NULL;
+	char *ev_maxtxid=NULL;
+	char *ev_type=NULL;
+	char *ev_data1=NULL; 
+	char *ev_data2=NULL;
+	char *ev_data3=NULL;
+	char *ev_data4=NULL;
+	char *ev_data5=NULL;
+	char *ev_data6=NULL;
+	char *ev_data7=NULL; 
+	char *ev_data8=NULL;
+	int ev_origin=0;
+
+	for( (column=strtok_r(cmdargs+1,",",&saveptr)); 
+		 (column = strtok_r(NULL,",",&saveptr)) != NULL; )
+	{
+		
+		value = strtok_r(NULL,",",&saveptr);
+		if(value == NULL)
+		{
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: " \
+					 "unexpected end of row encountered: %s",
+					 node->no_id,cmdargs);
+			slon_retry();
+		}
+		value_len = strlen(value);
+		if(value[value_len]=='}')
+		{
+			value[value_len]=NULL;
+		}
+		if(strcmp(column,"ev_origin")==0)
+		{
+			ev_origin = strtol(value,NULL,10);
+		}
+		else if (strcmp(column,"ev_seqno")==0)
+		{
+			ev_seqno=strtoll(value,NULL,10);
+		}
+		else if (strcmp(column,"ev_timestamp")==0)
+		{
+			ev_timestamp = malloc(strlen(value));
+			strncpy(ev_timestamp,value,strlen(value));
+		}
+		else if (strcmp(column,"ev_snapshot")==0)
+		{
+			char * saveptr2;
+			char * value2 = strtok_r(value,":",&saveptr2);
+			ev_mintxid = malloc(strlen(value2));
+			strncpy(ev_mintxid,value2,strlen(value2));
+			value2 = strtok_r(NULL,":",&saveptr2);
+			ev_maxtxid = malloc(strlen(value2));
+			strncpy(ev_maxtxid,value2,strlen(value2));
+			ev_snapshot = malloc(strlen(value));
+			strncpy(ev_snapshot,value,strlen(value));
+		}
+		else if (strcmp(column,"ev_type")==0)
+		{
+			ev_type = malloc(strlen(value));
+			strncpy(ev_type,value,strlen(value));
+		}
+		else if (strcmp(column,"ev_data1")==0)
+		{
+			ev_data1 = malloc(strlen(value));
+			strncpy(ev_data1,value,strlen(value));
+		}
+		else if (strcmp(column,"ev_data2")==0)
+		{
+			ev_data2 = malloc(strlen(value));
+			strncpy(ev_data2,value,strlen(value));
+		}
+		else if (strcmp(column,"ev_data3")==0)
+		{
+			ev_data3 = malloc(strlen(value));
+			strncpy(ev_data3,value,strlen(value));
+		}
+		else if (strcmp(column,"ev_data4")==0)
+		{
+			ev_data4 = malloc(strlen(value));
+			strncpy(ev_data4,value,strlen(value));
+		}
+		else if(strcmp(column,"ev_data5")==0)
+		{
+			ev_data5 = malloc(strlen(value));
+			strncpy(ev_data5,value,strlen(value));
+			
+		}
+		else if (strcmp(column,"ev_data6")==0)
+		{
+			ev_data6 = malloc(strlen(value));
+			strncpy(ev_data6, value,strlen(value));
+		}
+		else if (strcmp(column,"ev_data7")==0)
+		{
+			ev_data7 = malloc(strlen(value));
+			strncpy(ev_data7,value,strlen(value));
+			
+		}
+		else if (strcmp(column,"ev_data8")==0)
+		{
+			ev_data8 = malloc(strlen(value));
+			strncpy(ev_data8, value, strlen(value));
+		}
+
+		
+		
+	}
+
+
+	remoteWorker_event(node->no_id,ev_origin,ev_seqno,
+					   ev_timestamp,ev_snapshot,ev_mintxid,ev_maxtxid,
+					   ev_type,ev_data1,ev_data2,ev_data3,ev_data4
+					   ,ev_data5,ev_data6,ev_data7,ev_data8);
+					   
+	if(ev_timestamp != NULL)
+		free(ev_timestamp);
+	if(ev_snapshot != NULL)
+		free(ev_snapshot);
+	if(ev_mintxid != NULL)
+		free(ev_mintxid);
+	if(ev_maxtxid != NULL)
+		free(ev_maxtxid);
+	if(ev_type != NULL)
+		free(ev_type);
+	if(ev_data1 != NULL)
+		free(ev_data1);
+	if(ev_data2 != NULL)
+		free(ev_data2);
+	if(ev_data3 != NULL)
+		free(ev_data3);
+	if(ev_data4 != NULL)
+		free(ev_data4);
+	if(ev_data5 != NULL)
+		free(ev_data5);
+	if(ev_data6 != NULL)
+		free(ev_data6);
+	if(ev_data7 != NULL)
+		free(ev_data7);
+	if(ev_data8 != NULL)
+		free(ev_data8);
+
+
+
+}
+
 static int extract_row_metadata(SlonNode * node,
 								char * schema_name,
 								char * table_name,
 	                            char * xid_str,
 								int * origin_id,								
+								char * operation,
+								char ** cmdargs,
 	                            char * row)
 {
 	/**
@@ -340,7 +571,20 @@ static int extract_row_metadata(SlonNode * node,
 		slon_retry();
 	}
 	strncpy(table_name,field,10);
+	field = strtok_r(NULL,",",&saveptr);
+	*operation = field[0];
+   
+	/**
+	 * skip cmdupdncols
+	 */
+	field = strtok_r(NULL,",",&saveptr);
 	
+	field = strtok_r(NULL,",",&saveptr);
+	*cmdargs = malloc(strlen(field));
+	strncpy(*cmdargs,field,strlen(field));
+	
+
+
 	return 0;
 	
 
@@ -445,5 +689,82 @@ remoteWALListenThread_main(void *cdata)
 			 "remoteWALListenThread_%d: thread starts\n",
 			 node->no_id);
 	init_wal_slot(&state,node);
+	start_wal(node,&state);
 	return 0;
+}
+
+
+static bool
+sendFeedback(SlonNode * node,
+			 SlonWALState * state,
+			  uint64 blockpos, int64 now, bool replyRequested)
+{
+	char		replybuf[1 + 8 + 8 + 8 + 8 + 1];
+	int			len = 0;
+
+	if (blockpos == state->startpos)
+		return true;
+
+	replybuf[len] = 'r';
+	len += 1;
+	sendint64(blockpos, &replybuf[len]);		/* write */
+	len += 8;
+	sendint64(blockpos, &replybuf[len]);		/* flush */
+	len += 8;
+	sendint64(0, &replybuf[len]);		/* apply */
+	len += 8;
+	sendint64(now, &replybuf[len]);		/* sendTime */
+	len += 8;
+	replybuf[len] = replyRequested ? 1 : 0;		/* replyRequested */
+	len += 1;
+
+	state->startpos = blockpos;
+	slon_log(SLON_INFO,"sending feedback");
+	if (PQputCopyData(state->dbconn, replybuf, len) <= 0 || PQflush(state->dbconn))
+	{
+		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error sending feedback",node->no_id);
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ * Converts an int64 to network byte order.
+ */
+static void
+sendint64(int64 i, char *buf)
+{
+	uint32		n32;
+
+	/* High order half first, since we're doing MSB-first */
+	n32 = (uint32) (i >> 32);
+	n32 = htonl(n32);
+	memcpy(&buf[0], &n32, 4);
+
+	/* Now the low order half */
+	n32 = (uint32) i;
+	n32 = htonl(n32);
+	memcpy(&buf[4], &n32, 4);
+}
+/*
+ * Converts an int64 from network byte order to native format.
+ */
+static int64
+recvint64(char *buf)
+{
+	int64		result;
+	uint32		h32;
+	uint32		l32;
+
+	memcpy(&h32, buf, 4);
+	memcpy(&l32, buf + 4, 4);
+	h32 = ntohl(h32);
+	l32 = ntohl(l32);
+
+	result = h32;
+	result <<= 32;
+	result |= l32;
+
+	return result;
 }
