@@ -182,6 +182,7 @@ struct ProviderInfo_s
 
 	ProviderInfo *prev;
 	ProviderInfo *next;
+	bool         pa_walsender;
 };
 
 
@@ -1680,6 +1681,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 						if (rtcfg_node->pa_conninfo != NULL)
 							provider->pa_conninfo =
 								strdup(rtcfg_node->pa_conninfo);
+						provider->pa_walsender = rtcfg_node->pa_walsender;
 					}
 				}
 
@@ -1823,6 +1825,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 				if (rtcfg_node->pa_conninfo != NULL)
 					provider->pa_conninfo =
 						strdup(rtcfg_node->pa_conninfo);
+				provider->pa_walsender = rtcfg_node->pa_walsender;
 			}
 		}
 	}
@@ -3709,6 +3712,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+		if(provider->pa_walsender)
+			continue;
 		if (provider->conn != NULL)
 		{
 			if (PQstatus(provider->conn->dbconn) != CONNECTION_OK)
@@ -3732,7 +3737,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			}
 			sprintf(conn_symname, "subscriber_%d_provider_%d",
 					node->no_id, provider->no_id);
-
 
 			provider->conn = slon_connectdb(provider->pa_conninfo,
 											conn_symname);
@@ -3773,12 +3777,20 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
+
+	
+
 	/*
 	 * Check that all these providers have processed at least up to the SYNC
 	 * event we're handling here.
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+		if(provider->pa_walsender)
+			/**
+			 * sync_event does need to do anything for a WAL sender provider.
+			 */
+			continue;
 		/*
 		 * We only need to explicitly check this if the data provider is
 		 * neither the set origin, nor the node we received this event from.
@@ -3835,6 +3847,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			need_union;
 		int			sl_log_no;
 
+		if(provider->pa_walsender)
+			continue;
+	
 		slon_log(SLON_DEBUG2,
 			  "remoteWorkerThread_%d: creating log select for provider %d\n",
 				 node->no_id, provider->no_id);
@@ -4284,6 +4299,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+
+		if(provider->pa_walsender)
+			continue;
 		/**
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
@@ -4317,6 +4335,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			ntuples1;
 		int			tupno1;
 		char		min_ssy_seqno_buf[64];
+
+		if(provider->pa_walsender)
+			continue;
 
 		/*
 		 * Skip this if the provider is only here for DDL.
@@ -4416,6 +4437,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+		
+		if(provider->pa_walsender)
+			continue;
+
 		for (pset = provider->set_head; pset; pset = pset->next)
 		{
 			slon_appendquery(&query, "%s%d", (i == 0) ? "" : ",",
