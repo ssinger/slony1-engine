@@ -196,11 +196,13 @@ rtcfg_namespace);
 						 node->no_id,
 						 copybuf+hdr_len);
 
+				
+				process_WAL(node,state,copybuf+hdr_len);
 				/**
 				 * process the row
 				 */
-				
 				PQfreemem(copybuf);
+
 				
 				slon_log(SLON_INFO,
 						 "remoteWALListenerThread_%d: new ptr is %lld",temp);
@@ -258,6 +260,7 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 	 */
 	 char schema_name[NAMEDATALEN];
 	 char table_name[NAMEDATALEN];
+	 char schema_name_quoted[NAMEDATALEN+2];
 	 char xid_str[64];
 	SlonListen * listener;
 	/**
@@ -308,8 +311,10 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 	 *                      check the subscription status of this.
 	 *                   4. Pass all rows to the apply trigger and let it filter
 	 */
-	
-	if(strcmp(schema_name, rtcfg_namespace)==0 &&
+	sprintf(schema_name_quoted,"\"%s\"",schema_name);
+	if( (strcmp(schema_name, rtcfg_namespace)==0 ||
+		 strcmp(schema_name_quoted,rtcfg_namespace)==0)
+	   &&
 	   strcmp(table_name,  "sl_event")==0)
 	{
 		/**
@@ -325,6 +330,7 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 		 *   3. I could make the COPY stream be different from the 
 		 *      walsender/plugin.
 		 */
+		slon_log(SLON_INFO,"cmdargs is %s",cmdargs);
 		parseEvent(node,cmdargs);
 	}
 	else if (strcmp(schema_name, rtcfg_namespace)==0 &&
@@ -377,23 +383,31 @@ parseEvent(SlonNode * node, char * cmdargs)
 	char *ev_data7=NULL; 
 	char *ev_data8=NULL;
 	int ev_origin=0;
+	
 
-	for( (column=strtok_r(cmdargs+1,",",&saveptr)); 
-		 (column = strtok_r(NULL,",",&saveptr)) != NULL; )
+	column=strtok_r(cmdargs,",",&saveptr);
+	do
+		 
 	{
-		
+
 		value = strtok_r(NULL,",",&saveptr);
 		if(value == NULL)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: " \
-					 "unexpected end of row encountered: %s",
-					 node->no_id,cmdargs);
+					 "unexpected end of row encountered: last column %s : %s",
+					 node->no_id,column , cmdargs);
 			slon_retry();
-		}
+		}	
 		value_len = strlen(value);
-		if(value[value_len]=='}')
+		if(value[value_len-1]=='}')
 		{
-			value[value_len]=NULL;
+			value[value_len-1]='\0';
+		}
+		
+		slon_log(SLON_DEBUG2,"\n%s %s\n",column,value);
+		if(strcmp(value,"NULL") == 0)
+		{
+			value = NULL;
 		}
 		if(strcmp(column,"ev_origin")==0)
 		{
@@ -402,77 +416,121 @@ parseEvent(SlonNode * node, char * cmdargs)
 		else if (strcmp(column,"ev_seqno")==0)
 		{
 			ev_seqno=strtoll(value,NULL,10);
+			if(ev_seqno == 0) 
+				slon_log(SLON_ERROR,"error parsing sequence number");
 		}
 		else if (strcmp(column,"ev_timestamp")==0)
 		{
 			ev_timestamp = malloc(strlen(value));
-			strncpy(ev_timestamp,value,strlen(value));
+			strcpy(ev_timestamp,value);
 		}
 		else if (strcmp(column,"ev_snapshot")==0)
 		{
 			char * saveptr2;
-			char * value2 = strtok_r(value,":",&saveptr2);
+			char * value2;
+
+			ev_snapshot = malloc(strlen(value));
+			strcpy(ev_snapshot,value);
+			value2 = strtok_r(value,":",&saveptr2);
 			ev_mintxid = malloc(strlen(value2));
-			strncpy(ev_mintxid,value2,strlen(value2));
+			strcpy(ev_mintxid,value2);
 			value2 = strtok_r(NULL,":",&saveptr2);
 			ev_maxtxid = malloc(strlen(value2));
-			strncpy(ev_maxtxid,value2,strlen(value2));
-			ev_snapshot = malloc(strlen(value));
-			strncpy(ev_snapshot,value,strlen(value));
+			strcpy(ev_maxtxid,value2);
+		
 		}
 		else if (strcmp(column,"ev_type")==0)
 		{
 			ev_type = malloc(strlen(value));
-			strncpy(ev_type,value,strlen(value));
+			strcpy(ev_type,value);
 		}
 		else if (strcmp(column,"ev_data1")==0)
 		{
-			ev_data1 = malloc(strlen(value));
-			strncpy(ev_data1,value,strlen(value));
+			if(value != NULL) 
+			{
+				ev_data1 = malloc(strlen(value));
+				strcpy(ev_data1,value);
+			}
+			else
+				ev_data1=NULL;
 		}
 		else if (strcmp(column,"ev_data2")==0)
 		{
-			ev_data2 = malloc(strlen(value));
-			strncpy(ev_data2,value,strlen(value));
+			if(value != NULL) 
+			{
+				ev_data2 = malloc(strlen(value));
+				strcpy(ev_data2,value);
+			}
+			else
+				ev_data2=NULL;
 		}
 		else if (strcmp(column,"ev_data3")==0)
 		{
-			ev_data3 = malloc(strlen(value));
-			strncpy(ev_data3,value,strlen(value));
+			if(value != NULL)
+			{
+				ev_data3 = malloc(strlen(value));
+				strcpy(ev_data3,value);
+			}
+			else
+				ev_data3=NULL;
 		}
 		else if (strcmp(column,"ev_data4")==0)
 		{
-			ev_data4 = malloc(strlen(value));
-			strncpy(ev_data4,value,strlen(value));
+			if(value != NULL)
+			{
+				ev_data4 = malloc(strlen(value));
+				strcpy(ev_data4,value);
+			}
+			else
+				ev_data4=NULL;
 		}
 		else if(strcmp(column,"ev_data5")==0)
 		{
-			ev_data5 = malloc(strlen(value));
-			strncpy(ev_data5,value,strlen(value));
+			if(value != NULL)
+			{
+				ev_data5 = malloc(strlen(value));
+				strcpy(ev_data5,value);
+			}
+			else
+				ev_data5=NULL;
 			
 		}
 		else if (strcmp(column,"ev_data6")==0)
 		{
-			ev_data6 = malloc(strlen(value));
-			strncpy(ev_data6, value,strlen(value));
+			if(value != NULL)
+			{
+				ev_data6 = malloc(strlen(value));
+				strcpy(ev_data6, value);
+			}
+			else
+				ev_data6 = NULL;
 		}
 		else if (strcmp(column,"ev_data7")==0)
 		{
-			ev_data7 = malloc(strlen(value));
-			strncpy(ev_data7,value,strlen(value));
+			if(value != NULL)
+			{
+				ev_data7 = malloc(strlen(value));
+				strcpy(ev_data7,value);
+			}
+			else
+				ev_data7=NULL;
 			
 		}
 		else if (strcmp(column,"ev_data8")==0)
 		{
-			ev_data8 = malloc(strlen(value));
-			strncpy(ev_data8, value, strlen(value));
+			if(value != NULL)
+			{
+				ev_data8 = malloc(strlen(value));
+				strcpy(ev_data8, value);
+			}
+			ev_data8 = NULL;
 		}
 
 		
 		
-	}
-
-
+	}while ( (column = strtok_r(NULL,",",&saveptr)) != NULL);
+	
+	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: adding event %lld %d to queue snapshot %s \n", node->no_id,ev_seqno,ev_origin,ev_snapshot);
 	remoteWorker_event(node->no_id,ev_origin,ev_seqno,
 					   ev_timestamp,ev_snapshot,ev_mintxid,ev_maxtxid,
 					   ev_type,ev_data1,ev_data2,ev_data3,ev_data4
@@ -579,9 +637,13 @@ static int extract_row_metadata(SlonNode * node,
 	 */
 	field = strtok_r(NULL,",",&saveptr);
 	
-	field = strtok_r(NULL,",",&saveptr);
-	*cmdargs = malloc(strlen(field));
-	strncpy(*cmdargs,field,strlen(field));
+//	field = strtok_r(NULL,",",&saveptr);
+	/***
+	 * manually using saveptr is probably a bad idea
+	 * fix me.
+	 */
+	*cmdargs = malloc(strlen(saveptr));
+	strncpy(*cmdargs,saveptr+1,strlen(saveptr+1));
 	
 
 
@@ -661,6 +723,9 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 		
 
 	}				   
+	pthread_mutex_unlock(&(workerNode->worker_con_lock));
+	rtcfg_unlock();	
+	
 	
 }
 
