@@ -118,9 +118,6 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	MemoryContext old = MemoryContextSwitchTo(context);
 											
 
-	elog(NOTICE,"inside of pg_decode_init");
-
-
 	if (ctx->output_plugin_options != NULL) 
 	{
 	
@@ -153,7 +150,6 @@ pg_decode_begin_txn(LogicalDecodingContext * ctx, ReorderBufferTXN* txn)
 	 * we can ignore the begin and commit. slony operates
 	 * on SYNC boundaries.
 	 */
-	elog(NOTICE,"inside of begin");
 	return true;
 }
 
@@ -166,7 +162,6 @@ pg_decode_commit_txn( LogicalDecodingContext * ctx,
 	 * we can ignore the begin and commit. slony operates
 	 * on SYNC boundaries.
 	 */
-	elog(NOTICE,"inside of commit");
 	return true;
 }
 
@@ -212,12 +207,11 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 
 	old = MemoryContextSwitchTo(context);
 	ctx->prepare_write(ctx,txn->lsn,txn->xid);
-	elog(NOTICE,"inside og pg_decode_change");
 
 	
 
-	namespace=get_namespace_name(class_form->relnamespace);
-	table_name=NameStr(class_form->relname);
+	namespace=quote_identifier(get_namespace_name(class_form->relnamespace));
+	table_name=quote_identifier(NameStr(class_form->relname));
 	lookupSlonyInfo(relation->rd_id,ctx, &origin_id,&table_id);
 	if( origin_id <= 0 ) 
 	{
@@ -274,7 +268,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		MemoryContextSwitchTo(old);
 		return false;
 	}
-	elog(NOTICE,"table has origin %d",origin_id );
 	if(change->action == REORDER_BUFFER_CHANGE_INSERT)
 	{		
 		/**
@@ -481,7 +474,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	
 	MemoryContextSwitchTo(old);
 	ctx->write(ctx,txn->lsn,txn->xid);
-	elog(NOTICE,"leaving og pg_decode_change:");
 	return true;
 }
 
