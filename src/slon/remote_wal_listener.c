@@ -579,74 +579,56 @@ static int extract_row_metadata(SlonNode * node,
 	/**
 	 * working/local usage variables.
 	 */
-	char * saveptr;
+	char * curptr;
+	char * prev_start;
+	bool start=true;
+	char ** field_array[] = {
+		&schema_name,
+		&table_name,
+		&xid_str,
+		&operation,
+		NULL
 
-	char * field = strtok_r ( row, "," , &saveptr);
-	if(field == NULL)
+	};
+	char ** cur_field = field_array[0];
+
+	prev_start=row;
+	for(curptr = row; *curptr != '\0' && *cur_field != NULL; curptr++)
 	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: parse error in row:%s"
-				 , node->no_id, row);
-		slon_retry();
+		if(*curptr == ',')
+		{
+			if(start)
+			{
+				/**
+				 * origin_id is the first column.
+				 */
+				char * tmp_buf = malloc(curptr - prev_start );
+				strncpy(tmp_buf,prev_start, curptr-prev_start-1);
+				*origin_id = strtol(tmp_buf,NULL, 10 );				
+				free(tmp_buf);
+			}
+			else
+			{
+				/**
+				 * a column from the array.
+				 */ 
+				strncpy(*cur_field,prev_start,curptr - prev_start -1);
+				cur_field++;				
+			}
+			prev_start = curptr+1;
+			
+		}
+
 	}
-	*origin_id = strtol(field,NULL, 10 );
-	field = strtok_r(NULL,",",&saveptr);
-	if(field == NULL)
-	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: parse error in row:%s"
-				 , node->no_id, row);
-		slon_retry();
-	}
-	strncpy(xid_str,field,64);
-	field = strtok_r(NULL,",",&saveptr);
-	if(field == NULL)
-	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: parse error in row:%s"
-				 , node->no_id, row);
-		slon_retry();
-	}
-	/* ignore table id ? */
-	field = strtok_r(NULL,",",&saveptr);
-	if(field == NULL)
-	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: parse error in row:%s"
-				 , node->no_id, row);
-		slon_retry();
-	}
-	/* ignore actionseq */
-	field = strtok_r(NULL,",",&saveptr);
-	if(field == NULL)
-	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: parse error in row:%s"
-				 , node->no_id, row);
-		slon_retry();
-	}
-	strncpy(schema_name,field,NAMEDATALEN);
-	field = strtok_r(NULL,",",&saveptr);
-	if(field == NULL)
-	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: parse error in row:%s"
-				 , node->no_id, row);
-		slon_retry();
-	}
-	strncpy(table_name,field,10);
-	field = strtok_r(NULL,",",&saveptr);
-	*operation = field[0];
-   
-	/**
-	 * skip cmdupdncols
-	 */
-	field = strtok_r(NULL,",",&saveptr);
+		/**
+		 * Copy the final cmdargs group if available.
+		 */
+		if(*curptr != '\0')
+		{
+			*cmdargs = malloc(strlen(curptr));
+			strcpy(*cmdargs,curptr);
+		}
 	
-//	field = strtok_r(NULL,",",&saveptr);
-	/***
-	 * manually using saveptr is probably a bad idea
-	 * fix me.
-	 */
-	*cmdargs = malloc(strlen(saveptr));
-	strncpy(*cmdargs,saveptr+1,strlen(saveptr+1));
-	
-
-
 	return 0;
 	
 
