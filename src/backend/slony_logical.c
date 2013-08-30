@@ -104,7 +104,7 @@ void
 pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 {	
 	ListCell * option;
-	
+	elog(NOTICE,"is_init is %d",is_init==1);
 
 	ctx->output_plugin_private = AllocSetContextCreate(TopMemoryContext,
 									 "slony logical  context",
@@ -123,19 +123,28 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 	
 		option=ctx->output_plugin_options->head;
 	
-		while(option != NULL && option->next != NULL)
+		while(option != NULL )
 		{
 
 			DefElem * def_option = (DefElem * ) option->data.ptr_value;
-			DefElem * def_value = (DefElem *) option->next->data.ptr_value;
+
 			
-			if( strcmp(defGetString(def_option),"cluster") == 0)
+			elog(NOTICE,"option found is %s",defGetString(def_option));
+			if( strcmp(def_option->defname,"cluster") == 0)
 			{
-				const char * value = defGetString(def_value);
+				const char * value = defGetString(def_option);
 				cluster_name = palloc(strlen(value)+1);
 				strncpy(cluster_name,value,strlen(value));
 			}
+			option=option->next;
 		}
+	}
+
+	if( is_init==false && cluster_name==NULL )
+	{				
+		
+		elog(ERROR,"cluster name must be specified");
+
 	}
 
 	MemoryContextSwitchTo(old);
@@ -219,14 +228,16 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		Oid slevent_oid;
 		Oid slconfirm_oid;
 		AttrNumber origin_attnum = InvalidAttrNumber;
-		
+		char * schema_name;
+
 		/**
 		 * The table is not replicated but
 		 * we send along changes to sl_event
 		 * and sl_confirm.
 		 */
-
-		slony_namespace = get_namespace_oid("_test",false);
+		schema_name = palloc(strlen(cluster_name)+4);
+		sprintf(schema_name,"_%s",cluster_name);
+		slony_namespace = get_namespace_oid(schema_name,false);
 
 		/**
 		 * open 
@@ -553,6 +564,7 @@ lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
   AttrNumber reloid_attnum;
   AttrNumber set_attnum;
   AttrNumber tableid_attnum;
+  char * schema_name;
 
   /**
    * search for the table in sl_table based on the tables
@@ -566,7 +578,9 @@ lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
   *origin_id=-1;
   *table_id=-1;
 
-  slony_namespace = get_namespace_oid("_test",false);
+  schema_name = palloc(strlen(cluster_name)+4);
+  sprintf(schema_name,"_%s",cluster_name);
+  slony_namespace = get_namespace_oid(schema_name,false);
 
   /**
    * open 
