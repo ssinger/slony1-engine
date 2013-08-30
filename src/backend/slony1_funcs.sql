@@ -493,7 +493,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b5'  ;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.rc1'  ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -1208,8 +1208,10 @@ declare
 	v_row				record;
 	v_row2				record;
 	v_failed					boolean;
+    v_restart_required          boolean;
 begin
 	
+	v_restart_required:=false;
 	--
 	-- any nodes other than the backup receiving
 	-- ANY subscription from a failed node
@@ -1219,7 +1221,9 @@ begin
 		   where sub_provider=p_failed_node
 		   and sub_receiver<>p_backup_node
 		   and sub_receiver <> ALL (p_failed_nodes);
-
+	if found then
+	   v_restart_required:=true;
+	end if;
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
@@ -1231,22 +1235,32 @@ begin
 
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
 	   		  pa_server=p_failed_node;
-	
+
+	if found then
+	   v_restart_required:=true;
+	end if;
+
 	v_failed := exists (select 1 from @NAMESPACE@.sl_node 
 		   where no_failed=true and no_id=p_failed_node);
 
-        if not v_failed then
+    if not v_failed then
 	   	
 		update @NAMESPACE@.sl_node set no_failed=true where no_id = ANY (p_failed_nodes)
-		and no_failed=false;
+			   and no_failed=false;
+		if found then
+	   	   v_restart_required:=true;
+		end if;
 	end if;	
-	-- Rewrite sl_listen table
-	perform @NAMESPACE@.RebuildListenEntries();	   
 
-	-- ----
-	-- Make sure the node daemon will restart
-	-- ----
-	notify "_@CLUSTERNAME@_Restart";
+	if v_restart_required then
+	  -- Rewrite sl_listen table
+	  perform @NAMESPACE@.RebuildListenEntries();	   
+	
+	  -- ----
+	  -- Make sure the node daemon will restart
+ 	  -- ----
+	  notify "_@CLUSTERNAME@_Restart";
+    end if;
 
 
 	-- ----
@@ -3366,10 +3380,11 @@ begin
 	execute 'select setval(''' || v_fqname ||
 			''', ' || p_last_value::text || ')';
 
-	insert into @NAMESPACE@.sl_seqlog
+	if p_ev_seqno is not null then
+	   insert into @NAMESPACE@.sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
 			values (p_seq_id, p_seq_origin, p_ev_seqno, p_last_value);
-
+	end if;
 	return p_seq_id;
 end;
 $$ language plpgsql;
@@ -3391,10 +3406,13 @@ declare
 	c_found_origin	boolean;
 	c_node			text;
 	c_cmdargs		text[];
+	c_nodeargs      text;
+	c_delim         text;
 begin
 	c_local_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	c_cmdargs = array_append('{}'::text[], p_statement);
+	c_nodeargs = '';
 	if p_nodes is not null then
 		c_found_origin := 'f';
 		-- p_nodes list needs to consist of a list of nodes that exist
@@ -3411,8 +3429,11 @@ begin
 		   if c_local_node = (c_node::integer) then
 		   	  c_found_origin := 't';
 		   end if;
-
-		   c_cmdargs = array_append(c_cmdargs, c_node);
+		   if length(c_nodeargs)>0 then
+		   	  c_nodeargs = c_nodeargs ||','|| c_node;
+		   else
+				c_nodeargs=c_node;
+			end if;
 	   end loop;
 
 		if not c_found_origin then
@@ -3421,15 +3442,24 @@ begin
 				p_statement, p_nodes, c_local_node;
        end if;
     end if;
+	c_cmdargs = array_append(c_cmdargs,c_nodeargs);
+	c_delim=',';
+	c_cmdargs = array_append(c_cmdargs, 
 
-	execute p_statement;
-
+           (select @NAMESPACE@.string_agg( seq_id::text || c_delim
+		   || c_local_node ||
+		    c_delim || seq_last_value)
+		    FROM (
+		       select seq_id,
+           	   seq_last_value from @NAMESPACE@.sl_seqlastvalue
+           	   where seq_origin = c_local_node) as FOO
+			where NOT @NAMESPACE@.seqtrack(seq_id,seq_last_value) is NULL));
 	insert into @NAMESPACE@.sl_log_script
 			(log_origin, log_txid, log_actionseq, log_cmdtype, log_cmdargs)
 		values 
 			(c_local_node, pg_catalog.txid_current(), 
 			nextval('@NAMESPACE@.sl_action_seq'), 'S', c_cmdargs);
-
+	execute p_statement;
 	return currval('@NAMESPACE@.sl_action_seq');
 end;
 $$ language plpgsql;
@@ -5471,7 +5501,66 @@ create table @NAMESPACE@.sl_components (
 		alter table @NAMESPACE@.sl_log_2
 			enable replica trigger apply_trigger;
 	end if;
+	if not exists (select 1 from information_schema.routines where routine_schema = '_@CLUSTERNAME@' and routine_name = 'string_agg') then
+	       CREATE AGGREGATE @NAMESPACE@.string_agg(text) (
+	   	      SFUNC=@NAMESPACE@.agg_text_sum,
+		      STYPE=text,
+		      INITCOND=''
+		      );
+	end if;
+	if not exists (select 1 from information_schema.views where table_schema='_@CLUSTERNAME@_' and table_name='sl_failover_targets') then
+	   create view @NAMESPACE@.sl_failover_targets as
+	   	  select  set_id,
+		  set_origin as set_origin,
+		  sub1.sub_receiver as backup_id
 
+		  FROM
+		  @NAMESPACE@.sl_subscribe sub1
+		  ,@NAMESPACE@.sl_set set1
+		  where
+ 		  sub1.sub_set=set_id
+		  and sub1.sub_forward=true
+		  --exclude candidates where the set_origin
+		  --has a path a node but the failover
+		  --candidate has no path to that node
+		  and sub1.sub_receiver not in
+	    	  (select p1.pa_client from
+	    	  @NAMESPACE@.sl_path p1 
+	    	  left outer join @NAMESPACE@.sl_path p2 on
+	    	  (p2.pa_client=p1.pa_client 
+	    	  and p2.pa_server=sub1.sub_receiver)
+	    	  where p2.pa_client is null
+	    	  and p1.pa_server=set_origin
+	    	  and p1.pa_client<>sub1.sub_receiver
+	    	  )
+		  and sub1.sub_provider=set_origin
+		  --exclude any subscribers that are not
+		  --direct subscribers of all sets on the
+		  --origin
+		  and sub1.sub_receiver not in
+		  (select direct_recv.sub_receiver
+		  from
+			
+			(--all direct receivers of the first set
+			select subs2.sub_receiver
+			from @NAMESPACE@.sl_subscribe subs2
+			where subs2.sub_provider=set1.set_origin
+		      	and subs2.sub_set=set1.set_id) as
+		      	direct_recv
+			inner join
+			(--all other sets from the origin
+			select set_id from @NAMESPACE@.sl_set set2
+			where set2.set_origin=set1.set_origin
+			and set2.set_id<>sub1.sub_set)
+			as othersets on(true)
+			left outer join @NAMESPACE@.sl_subscribe subs3
+			on(subs3.sub_set=othersets.set_id
+		   	and subs3.sub_forward=true
+		   	and subs3.sub_provider=set1.set_origin
+		   	and direct_recv.sub_receiver=subs3.sub_receiver)
+	    		where subs3.sub_receiver is null
+	    	);
+	end if;
 	return p_old;
 end;
 $$ language plpgsql;
@@ -6224,3 +6313,25 @@ begin
 	return v_seq_id;
 end
 $$ language plpgsql;
+
+
+
+--
+-- we create a function + aggregate for string_agg to aggregate strings
+-- some versions of PG (ie prior to 9.0) don't support this
+CREATE OR replace function @NAMESPACE@.agg_text_sum(txt_before TEXT, txt_new TEXT) RETURNS TEXT AS
+$BODY$
+DECLARE
+  c_delim text;
+BEGIN
+    c_delim = ',';
+	IF (txt_before IS NULL or txt_before='') THEN
+	   RETURN txt_new;
+	END IF;
+	RETURN txt_before || c_delim || txt_new;
+END;
+$BODY$
+LANGUAGE plpgsql;
+comment on function @NAMESPACE@.agg_text_sum(text,text) is 
+'An accumulator function used by the slony string_agg function to
+aggregate rows into a string';

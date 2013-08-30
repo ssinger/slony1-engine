@@ -66,6 +66,73 @@ replica nodes.  It is advisiable to not be concurrently inserting,deleting
 or updating rows to a table while a script changing that table (adding or
 deleting columns) is also running.</para></listitem>
 
+<listitem><para>&slony1; 2.2.x and higher replicate the SQL requests
+of an EXECUTE SCRIPT alongside other logged replication activity as
+part of an ordinary SYNC.  Scripts that perform an <command>ALTER
+TABLE</command> to a replicated table are replicated in the correct
+order with respect to other concurrent activities on that table, and
+this is guaranteed because of the exclusive lock that the
+<command>ALTER TABLE</command> acquired on the origin node.  If your
+EXECUTE SCRIPT does not obtain exclusive locks on all of the tables it
+uses, then you need to make sure that any transactions running
+concurrently with the script are not making changes that can adversely
+affect the computations in the script.</para>
+
+<warning><para> For example, if your script performs
+<function>nextval('some_replicated_seq')</function>, and that sequence
+is concurrently being incremented by another transaction, then it is
+possible that when the queries are replayed on a replica, the sequence
+may have different values on the replica than it had on the
+origin.</para></warning>
+
+<warning><para> In addition, it is crucial that DML requests
+propagated by EXECUTE SCRIPT be deterministic in their behaviour,
+otherwise the requests may (legitimately) be processed differently on
+different nodes, thereby corrupting data. </para>
+
+<para> For instance, the following queries are all not deterministic,
+as they do not clearly indicate which of the tuples in the table will
+be affected:
+
+<itemizedlist>
+<listitem><para> Insufficiently specified
+<command>
+insert into table2 (id, data)
+  select id, data from table1 limit 10;
+</command></para>
+
+<para>This query may legitimately take <emphasis>any</emphasis> 10
+tuples from <envar>table1</envar>, no reason for it to behave the same
+across nodes.</para></listitem>
+<listitem><para> Ridiculously different behaviour
+<command>
+insert into table2 (id, data)
+  select id, data from table1 order by random () limit 10;
+</command></para>
+
+<para>This query makes it more obvious that it could draw
+<emphasis>any</emphasis> 10 tuples from <envar>table1</envar>, in any
+order. </para></listitem>
+
+<listitem><para> Node-local results
+<command>
+insert into table3 (id, data, transaction_date, value)
+  select id, data, now(), random() from table1 order by id limit 10;
+</command></para>
+
+<para>This query will compute <function>now()</function> based on the
+time the query runs on each node, and values of
+<function>random()</function> varying each time, so that while the
+<command>order by id</command> clause would have eliminated the
+ambiguity in the earlier cases, we can be quite certain that this
+query will put substantially different data into <envar>table3</envar>
+on every node on which it is executed. </para></listitem>
+
+</itemizedlist>
+</warning>
+
+</listitem>
+
 </itemizedlist>
 
 </sect2>

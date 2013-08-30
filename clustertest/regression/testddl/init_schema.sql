@@ -60,3 +60,13 @@ zone_id integer
 ALTER TABLE ONLY billing_discount
     ADD CONSTRAINT billing_discount_pkey PRIMARY KEY (billing_discount_id);
 
+CREATE OR REPLACE FUNCTION insert_table1() returns trigger
+as $$
+declare
+
+begin
+ insert into table1(data) values (NEW.data);
+  return NEW;
+end;
+$$
+language plpgsql;

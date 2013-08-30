@@ -1,14 +1,16 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
-*** 
+*** 2.2.0 rc 1
 
 - Bug 305 :: set session_replication_role to local when applying DDL_SCRIPT on a replica
-
-*** TBD
 
 - Bug 304 :: Record sequence values each time SQL is recorded in
              ~sl_log_script~, and set those values before invoking the
              SQL on the replica.
+- Bug 309 :: create sl_failover_targets when upgrading 2.1.x to 2.2.0
+
+- Bug 310 :: Fixing issue where the FAILOVER command can put slon in a restart loop
+
 
 *** 2.2.0 b5
 
