@@ -5508,7 +5508,7 @@ create table @NAMESPACE@.sl_components (
 		      INITCOND=''
 		      );
 	end if;
-	if not exists (select 1 from information_schema.views where table_schema='_@CLUSTERNAME@_' and table_name='sl_failover_targets') then
+	if not exists (select 1 from information_schema.views where table_schema='_@CLUSTERNAME@' and table_name='sl_failover_targets') then
 	   create view @NAMESPACE@.sl_failover_targets as
 	   	  select  set_id,
 		  set_origin as set_origin,
