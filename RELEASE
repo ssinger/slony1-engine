@@ -177,17 +177,9 @@
              to not force the event provider to be part of the
              providers unless we don't find any provider at all
              otherwise.
-- Bug 282 :: replication failure where column domain/type is in a
-             schema outside of ~search_path~.  Fix by handling the
-             cast inside of the apply trigger the same way, PL/pgSQL
-             is doing type casting internally.
 - Bug 286 :: Support to compile against PG 9.3
-- Bug 296 :: Fixes for FAILOVER when non-origin nodes fail at the same time
 - Bug 297 :: Make test_slony_state-dbi.pl work with PG 9.2
 - Bug 299 :: Fix a bug in MOVE SET where slon might pull data from the old origin using
              SYNC values for the new origin
-- Bug 305 :: set session_replication_role to local when applying DDL_SCRIPT on a replica
-- Bug 310 :: Fixing issue where the FAILOVER command can put slon in a restart loop
-
 
 
