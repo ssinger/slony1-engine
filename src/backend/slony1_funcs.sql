@@ -3355,11 +3355,13 @@ set.';
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8) returns int4
+create or replace function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8,p_ignore_missing bool) returns int4
 as $$
 declare
 	v_fqname			text;
+	v_found                         integer;
 begin
+
 	-- ----
 	-- Get the sequences fully qualified name
 	-- ----
@@ -3371,6 +3373,9 @@ begin
 			and SQ.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 	if not found then
+	        if p_ignore_missing then
+                       return null;
+                end if;
 		raise exception 'Slony-I: sequenceSetValue(): sequence % not found', p_seq_id;
 	end if;
 
@@ -3388,8 +3393,8 @@ begin
 	return p_seq_id;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8) is
-'sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
+comment on function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8,p_ignore_missing bool) is
+'sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value,ignore_missing)
 Set sequence seq_id to have new value last_value.
 ';
 
