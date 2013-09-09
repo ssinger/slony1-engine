@@ -6,7 +6,7 @@ To run &slony1;  you will need
 
 <itemizedlist>
 <listitem><para>&postgres; 8.3 or above (this version of &slony1; is 
-known to work with 8.3.x, 8.4.x , 9.0.x, 9.1.x and 9.2.x). Earlier versions of &postgres;
+known to work with 8.3.x, 8.4.x , 9.0.x, 9.1.x, 9.2.x and 9.3.x). Earlier versions of &postgres;
 require &slony1; 1.2.x </para></listitem>
 <listitem><para>The &slony1; binary files either compiled 
 from source or from a binary package</para></listitem>
