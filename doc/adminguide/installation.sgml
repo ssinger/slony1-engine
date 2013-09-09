@@ -11,7 +11,7 @@ configuration section below.  Prebuilt binaries are available
 from the StackBuilder application included in the <ulink url="http://www.enterprisedb.com/downloads/postgres-postgresql-downloads"> EnterpriseDB
 PostgreSQL installer</ulink>
 
-<para> There are also RPM binaries available at that site for recent
+<para> There are also RPM binaries available in the <ulink url="http://yum.postgresql.org"> PostgreSQL YUM repository</ulink> site for recent
 versions of &slony1; for recent versions of &postgres;.
 </para>
 </note>
@@ -145,14 +145,7 @@ PGMAIN=/opt/dbs/pgsql746-aix-2005-04-01 \
 
 <para>The <application>configure</application> script will run a
 number of tests to guess values for various dependent variables and
-try to detect some quirks of your system.  &slony1; is known to need a
-modified version of <application>libpq</application> on specific
-platforms such as Solaris2.X on SPARC.  A patch for libpq version
-7.4.2 can be found at <ulink id="threadpatch" url=
-"http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz">
-http://developer.postgresql.org/~wieck/slony1/download/threadsafe-libpq-742.diff.gz
-</ulink> Similar patches may need to be constructed for other
-versions. </para>
+try to detect some quirks of your system. </para>
 
 </sect2>
 

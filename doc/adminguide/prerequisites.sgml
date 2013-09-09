@@ -111,12 +111,7 @@ numerous formats including HTML, RTF, and PDF using tools in the
 </ulink> along with <ulink url="http://openjade.sourceforge.net/">
 OpenJade.</ulink> </para></listitem>
 
-<listitem><para> On &windows; you will also need the same <ulink url=
-"http://www.postgresql.org/docs/faqs.FAQ_MINGW.html">MinGW/Msys
-Toolset</ulink> used to build &postgres; 8.3 and above.  In addition
-you will need to install <ulink url=
-"http://sourceware.org/pthreads-win32/">pthreads-win32
-2.x</ulink>. </para></listitem>
+<listitem><para> On &windows; you will also need the same Visual Studio(Visual C) compiler from Microsoft. See <xref linkend="buildingwin32"> for more information  </para></listitem>
 
 </itemizedlist> </para>
 
