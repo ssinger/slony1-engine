@@ -4377,7 +4377,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			char	   *seq_relname = PQgetvalue(res1, tupno1, 3);
 
 			(void) slon_mkquery(&query,
-							 "select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
+							 "select %s.sequenceSetValue(%s,%d,'%s','%s',false); ",
 								rtcfg_namespace,
 						   seql_seqid, node->no_id, seqbuf, seql_last_value);
 			start_monitored_event(&pm);
