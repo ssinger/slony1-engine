@@ -118,7 +118,6 @@ void start_wal(SlonNode * node, SlonWALState * state)
 	bool time_to_abort=false;
 	int copy_res;
 
-
 	state->dbconn = slon_raw_connectdb(node->pa_conninfo);
 	if ( state->dbconn == 0) 
 	{
@@ -268,7 +267,7 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 	 */
 	int origin_id;
 	
-	char operation;
+	char operation[2];
 	
 	char * cmdargs;
 
@@ -330,7 +329,6 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 		 *   3. I could make the COPY stream be different from the 
 		 *      walsender/plugin.
 		 */
-		slon_log(SLON_INFO,"cmdargs is %s",cmdargs);
 		parseEvent(node,cmdargs);
 	}
 	else if (strcmp(schema_name, rtcfg_namespace)==0 &&
@@ -341,24 +339,26 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 		 * TODO ? Or can we just pass this to the apply trigger.
 		 */
 	}
-	
-	/**
-	 * have we already processed this row? 
-	 * We need a way to track this?
-	 * One option might be to apply everything and then
-	 * ROLLBACK instead of COMMIT on the next sl_event
-	 * if it has already been applied.
-	 */
-
-	/**
-	 * COPY the row to the connection for the origin.
-	 * 1. Get the remoteWorker COPY connection
-	 *    and push this row onto it
-	 * 2. Release the connection back to the remoteWorker
-	 */
-	push_copy_row(node,origin_id,row);
+	else
+	{
+		/**
+		 * have we already processed this row? 
+		 * We need a way to track this?
+		 * One option might be to apply everything and then
+		 * ROLLBACK instead of COMMIT on the next sl_event
+		 * if it has already been applied.
+		 */
+		
+		/**
+		 * COPY the row to the connection for the origin.
+		 * 1. Get the remoteWorker COPY connection
+		 *    and push this row onto it
+		 * 2. Release the connection back to the remoteWorker
+		 */
+		push_copy_row(node,origin_id,row);
+	}
 	return 0;
-	
+		
 }
 
 static void 
@@ -385,7 +385,7 @@ parseEvent(SlonNode * node, char * cmdargs)
 	int ev_origin=0;
 	
 
-	column=strtok_r(cmdargs,",",&saveptr);
+	column=strtok_r(cmdargs+1,",",&saveptr);
 	do
 		 
 	{
@@ -394,7 +394,7 @@ parseEvent(SlonNode * node, char * cmdargs)
 		if(value == NULL)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: " \
-					 "unexpected end of row encountered: last column %s : %s",
+					 "unexpected end of row encountered: last column %s : %s\n",
 					 node->no_id,column , cmdargs);
 			slon_retry();
 		}	
@@ -404,7 +404,6 @@ parseEvent(SlonNode * node, char * cmdargs)
 			value[value_len-1]='\0';
 		}
 		
-		slon_log(SLON_DEBUG2,"\n%s %s\n",column,value);
 		if(strcmp(value,"NULL") == 0)
 		{
 			value = NULL;
@@ -417,7 +416,7 @@ parseEvent(SlonNode * node, char * cmdargs)
 		{
 			ev_seqno=strtoll(value,NULL,10);
 			if(ev_seqno == 0) 
-				slon_log(SLON_ERROR,"error parsing sequence number");
+				slon_log(SLON_ERROR,"error parsing sequence number\n");
 		}
 		else if (strcmp(column,"ev_timestamp")==0)
 		{
@@ -582,20 +581,26 @@ static int extract_row_metadata(SlonNode * node,
 	char * curptr;
 	char * prev_start;
 	bool start=true;
-	char ** field_array[] = {
-		&schema_name,
-		&table_name,
-		&xid_str,
-		&operation,
+	char table_id[64];
+	char action_seq[64];
+	char cmdncols[64];
+	char * field_array[] = {
+		xid_str,
+		table_id,
+		action_seq,
+		schema_name,
+		table_name,
+		operation,
+		cmdncols,
 		NULL
 
 	};
-	char ** cur_field = field_array[0];
+	size_t field_idx=0;
 
 	prev_start=row;
-	for(curptr = row; *curptr != '\0' && *cur_field != NULL; curptr++)
+	for(curptr = row; *curptr != '\0' && field_array[field_idx] != NULL; curptr++)
 	{
-		if(*curptr == ',')
+		if(*curptr == '\t')
 		{
 			if(start)
 			{
@@ -603,17 +608,19 @@ static int extract_row_metadata(SlonNode * node,
 				 * origin_id is the first column.
 				 */
 				char * tmp_buf = malloc(curptr - prev_start );
-				strncpy(tmp_buf,prev_start, curptr-prev_start-1);
+				strncpy(tmp_buf,prev_start, curptr-prev_start);
 				*origin_id = strtol(tmp_buf,NULL, 10 );				
 				free(tmp_buf);
+				start=false;
 			}
 			else
 			{
 				/**
 				 * a column from the array.
 				 */ 
-				strncpy(*cur_field,prev_start,curptr - prev_start -1);
-				cur_field++;				
+				strncpy(field_array[field_idx],prev_start,curptr - prev_start);
+				field_array[field_idx][curptr-prev_start]='\0';
+				field_idx++;		
 			}
 			prev_start = curptr+1;
 			
@@ -642,14 +649,13 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 	SlonDString copy_in;
 	PGresult   *res1;
 	int rc;
-
 	rtcfg_lock();
 	workerNode = rtcfg_findNode(origin_id);
 	if (workerNode == NULL)
 	{
 		rtcfg_unlock();
 		slon_log(SLON_WARN,
-				 "remoteWALListenerThread_%d: unknown origin %d",
+				 "remoteWALListenerThread_%d: unknown origin %d\n",
 				 listening_node->no_id, origin_id);
 
 		return;
@@ -658,7 +664,7 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 	{
 		rtcfg_unlock();
 		slon_log(SLON_WARN,
-				 "remoteWALListenerThread_%d: worker  %d is not active ",
+				 "remoteWALListenerThread_%d: worker  %d is not active\n",
 				 listening_node->no_id, origin_id);
 		return;
 	}
@@ -680,7 +686,7 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 		if(PQresultStatus(res1) != PGRES_COPY_IN)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d_%d: error " \
-					 "executing COPY IN:%s",listening_node->no_id,
+					 "executing COPY IN:%s\n",listening_node->no_id,
 					 origin_id, PQresultErrorMessage(res1));
 			dstring_free(&copy_in);
 			PQclear(res1);
@@ -688,15 +694,16 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 		}
 		PQclear(res1);
 		dstring_free(&copy_in);
+		workerNode->worker_con_status = SLON_WCON_INCOPY;
 	case SLON_WCON_INCOPY:
-		rc = PQputCopyData(workerNode->worker_dbconn, row, 0);
-		if (rc < 0)
+		rc = PQputCopyData(workerNode->worker_dbconn, row, strlen(row));
+		if (rc != 1)
 		{
 			/**
 			 * deal with the error
 			 */
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d_%d: error writing"\
-					 " to sl_log:%s",listening_node->no_id, origin_id,
+					 " to sl_log:%s\n",listening_node->no_id, origin_id,
 					 PQerrorMessage(workerNode->worker_dbconn));
 			
 			slon_retry();
@@ -766,7 +773,6 @@ sendFeedback(SlonNode * node,
 	len += 1;
 
 	state->startpos = blockpos;
-	slon_log(SLON_INFO,"sending feedback");
 	if (PQputCopyData(state->dbconn, replybuf, len) <= 0 || PQflush(state->dbconn))
 	{
 		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error sending feedback",node->no_id);

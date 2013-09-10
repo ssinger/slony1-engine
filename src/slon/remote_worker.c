@@ -661,6 +661,7 @@ remoteWorkerThread_main(void *cdata)
 					pthread_mutex_unlock(&(node->worker_con_lock));
 					slon_retry();
 				}
+				node->worker_con_status=SLON_WCON_IDLE;
 				pthread_mutex_unlock(&(node->worker_con_lock));
 				if ((rc = sched_msleep(node, seconds * 1000)) != SCHED_STATUS_OK)
 					break;
@@ -707,6 +708,7 @@ remoteWorkerThread_main(void *cdata)
 				pthread_mutex_unlock(&(node->worker_con_lock));
 				slon_retry();
 			}
+			node->worker_con_status=SLON_WCON_IDLE;
 			pthread_mutex_unlock(&(node->worker_con_lock));
 			/*
 			 * Remember the sync snapshot in the in memory node structure
@@ -5579,7 +5581,7 @@ static void lock_workercon(SlonNode * node)
 		 */
 		if ( ! PQputCopyEnd(node->worker_dbconn,NULL) ) 
 		{
-			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:");
+			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:\n");
 			slon_retry();			 
 
 		}
