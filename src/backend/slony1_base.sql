@@ -23,6 +23,7 @@ create table @NAMESPACE@.sl_node (
 	no_active			bool,
 	no_comment			text,
 	no_failed			bool,
+	no_last_xid			text,
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
 ) WITHOUT OIDS;
@@ -324,7 +325,7 @@ create table @NAMESPACE@.sl_seqlog (
 	seql_seqid			int4,
 	seql_origin			int4,
 	seql_ev_seqno		int8,
-	seql_last_value		int8
+	seql_last_value		int8,
 ) WITHOUT OIDS;
 comment on table @NAMESPACE@.sl_seqlog is 'Log of Sequence updates';
 

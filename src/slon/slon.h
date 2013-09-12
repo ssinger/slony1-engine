@@ -379,6 +379,9 @@ typedef enum
 	SCHED_STATUS_ERROR
 }	ScheduleStatus;
 
+typedef uint64 XlogRecPtr;
+
+
 /* ----------
  * Scheduler wait conditions
  * ----------
@@ -607,7 +610,7 @@ extern void remoteWorker_event(int event_provider,
 				   char *ev_data1, char *ev_data2,
 				   char *ev_data3, char *ev_data4,
 				   char *ev_data5, char *ev_data6,
-				   char *ev_data7, char *ev_data8);
+				   char *ev_data7, char *ev_data8,bool from_wal_provider,int64 wal_ptr);
 extern void remoteWorker_wakeup(int no_id);
 extern void remoteWorker_confirm(int no_id,
 					 char *con_origin_c, char *con_received_c,
@@ -675,6 +678,13 @@ extern int	slon_log_level;
 #define snprintf pg_snprintf
 #endif
 #endif   /* SLON_H_INCLUDED */
+
+
+/**
+ * functions in remote_wal_listener.h
+ */
+
+void remote_wal_processed(XlogRecPtr confirmed, int no_id);
 
 
 /*

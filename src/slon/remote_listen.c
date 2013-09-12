@@ -794,7 +794,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		   (PQgetisnull(res, tupno, 11)) ? NULL : PQgetvalue(res, tupno, 11),
 		   (PQgetisnull(res, tupno, 12)) ? NULL : PQgetvalue(res, tupno, 12),
 		   (PQgetisnull(res, tupno, 13)) ? NULL : PQgetvalue(res, tupno, 13),
-		  (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14));
+						   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14),false,0);
 	}
 
 	if (ntuples > 0)

@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <string.h>
+#include <arpa/inet.h>
 #ifndef WIN32
 #include <sys/time.h>
 #include <unistd.h>
@@ -24,9 +25,29 @@
 
 typedef struct  {
 	PGconn * dbconn;
-	uint64 startpos;
+	XlogRecPtr last_committed_pos;
+	pthread_mutex_t position_lock;
 
 } SlonWALState;
+
+
+struct SlonWALState_list_t;
+
+struct SlonWALState_list_t {
+	int no_id;
+	SlonWALState * state;
+	struct SlonWALState_list_t * next;
+
+};
+
+
+typedef struct SlonWALState_list_t SlonWALState_list;
+
+static SlonWALState_list * state_list=NULL;
+static pthread_mutex_t state_list_lock = PTHREAD_MUTEX_INITIALIZER;
+
+
+
 
 static void init_wal_slot(SlonWALState * state,SlonNode * node);
 
@@ -43,14 +64,19 @@ static int extract_row_metadata(SlonNode * node,char * schema_name,
 static void push_copy_row(SlonNode * listening_node, int origin_id, char * row);
 
 static void 
-parseEvent(SlonNode * node, char * cmdargs);
+parseEvent(SlonNode * node, char * cmdargs,XlogRecPtr walptr);
 
 static void sendint64(int64 i, char *buf);
 static int64 recvint64(char *buf);
 
 static bool sendFeedback(SlonNode * node,
 						 SlonWALState * state,
-						 uint64 blockpos, int64 now, bool replyRequested);
+						 XlogRecPtr confirmedPos, int64 now, bool replyRequested);
+
+static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRecPtr walptr);
+
+
+
 /**
  * connect to the walsender and INIT a logical WAL slot
  *
@@ -94,16 +120,19 @@ static void init_wal_slot(SlonWALState * state, SlonNode * node)
 				   "\"%s\"\n",
 				 node->no_id, PQgetvalue(res, 0, 1));
 	}
-	state->startpos = ((uint64) hi) << 32 | lo;
+	pthread_mutex_lock(&state->position_lock);
+	state->last_committed_pos = ((uint64) hi) << 32 | lo;
 
 	/**
-	 * startpos needs to be stored in the local database.
+	 * last_committed_pos needs to be stored in the local database.
 	 * We will need to pass this to START REPLICATION.
 	 * 
 	 */
-	
+	slon_log(SLON_INFO,"remoteWALListenerThread_%d compare start is %s\n",node->no_id,PQgetvalue(res,0,1));
 	slot = strdup(PQgetvalue(res, 0, 0));
-	slon_log(SLON_INFO,"remoteWALListenerThread_%d: replication slot initialized %lld %s",node->no_id,state->startpos,slot);
+	slon_log(SLON_INFO,"remoteWALListenerThread_%d: replication slot initialized %X/%X %s\n",node->no_id,
+			 (uint32)(state->last_committed_pos>>32), (uint32)state->last_committed_pos,slot);
+	pthread_mutex_unlock(&state->position_lock);
 	PQfinish(state->dbconn);
 	state->dbconn=0;
 }
@@ -165,6 +194,7 @@ rtcfg_namespace);
 		{
 			if(copybuf[0] == 'k')
 			{
+				int64 position;
 				/**
 				 * keepalive message
 				 */
@@ -174,13 +204,17 @@ rtcfg_namespace);
 				now  = (int64) (tp.tv_sec -
 					((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
 								* USECS_PER_SEC) + tp.tv_usec;
+				pthread_mutex_lock(&state->position_lock);
+				position = state->last_committed_pos;
+				pthread_mutex_unlock(&state->position_lock);
+				sendFeedback(node,state,position , now,false);
 
-				sendFeedback(node,state,state->startpos , now,false);
 			}
 			else if (copybuf[0]=='w')
 			{
 				size_t hdr_len;
-				int64 temp;
+				XlogRecPtr temp;
+				XlogRecPtr position;
 				int64 now;
 				struct timeval tp;
 
@@ -196,7 +230,7 @@ rtcfg_namespace);
 						 copybuf+hdr_len);
 
 				
-				process_WAL(node,state,copybuf+hdr_len);
+				process_WAL(node,state,copybuf+hdr_len,temp);
 				/**
 				 * process the row
 				 */
@@ -204,7 +238,8 @@ rtcfg_namespace);
 
 				
 				slon_log(SLON_INFO,
-						 "remoteWALListenerThread_%d: new ptr is %lld",temp);
+						 "remoteWALListenerThread_%d: new ptr is %X/%X\n", node->no_id,
+						 (uint32)(temp>>32),(uint32)temp);
 
 				
 	
@@ -212,8 +247,16 @@ rtcfg_namespace);
 				now  = (int64) (tp.tv_sec -
 					((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
 								* USECS_PER_SEC) + tp.tv_usec;
-				sendFeedback(node,state,temp , 0,false);
-				state->startpos=temp;
+				pthread_mutex_lock(&state->position_lock);
+				position = state->last_committed_pos;
+				pthread_mutex_unlock(&state->position_lock);
+				/**
+				 * send feedback if required with the last confirmed position
+				 * which should be BEFORE the position of the WAL just read.
+				 * we don't confirm a record until the remoteWorkerThread has processed it.
+				 */
+				sendFeedback(node,state,position , 0,false);
+
 			}			
 		
 		}
@@ -251,7 +294,7 @@ rtcfg_namespace);
  *      on the transaction.  
  *	   
  */
-int process_WAL(SlonNode * node, SlonWALState * state, char * row)
+static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRecPtr walptr)
 {
 	
 	/**
@@ -329,7 +372,7 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 		 *   3. I could make the COPY stream be different from the 
 		 *      walsender/plugin.
 		 */
-		parseEvent(node,cmdargs);
+		parseEvent(node,cmdargs,walptr);
 	}
 	else if (strcmp(schema_name, rtcfg_namespace)==0 &&
 			 strcmp(table_name,  "sl_confirm")==0)
@@ -362,7 +405,7 @@ int process_WAL(SlonNode * node, SlonWALState * state, char * row)
 }
 
 static void 
-parseEvent(SlonNode * node, char * cmdargs)
+parseEvent(SlonNode * node, char * cmdargs,XlogRecPtr walptr)
 {
 	char * saveptr;
 	char * column;
@@ -533,7 +576,7 @@ parseEvent(SlonNode * node, char * cmdargs)
 	remoteWorker_event(node->no_id,ev_origin,ev_seqno,
 					   ev_timestamp,ev_snapshot,ev_mintxid,ev_maxtxid,
 					   ev_type,ev_data1,ev_data2,ev_data3,ev_data4
-					   ,ev_data5,ev_data6,ev_data7,ev_data8);
+					   ,ev_data5,ev_data6,ev_data7,ev_data8,true,walptr);
 					   
 	if(ev_timestamp != NULL)
 		free(ev_timestamp);
@@ -718,16 +761,7 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 	
 }
 
-/**
- *  tell the WAL sender that we have received up until a certain XLOG
- *  id. We can confirm a XLOG segment when all remote worker DB connections
- *      have committed at least up until that segment.
- */
-void ack_WAL(int node)
-{
-	
-	
-}
+
 
 
 
@@ -735,15 +769,120 @@ void *
 remoteWALListenThread_main(void *cdata)
 {
 	
+	/**
+	 * node is the Node structure for the provider
+	 */
 	SlonNode * node = (SlonNode*) cdata;
 	SlonWALState state;
+	SlonWALState_list * statePtr;
+	SlonWALState_list * prevStatePtr;
+	SlonDString query;
+	SlonConn * conn;
+	PGresult * res1;
 
-	
+
 	slon_log(SLON_INFO,
 			 "remoteWALListenThread_%d: thread starts\n",
 			 node->no_id);
-	init_wal_slot(&state,node);
+	pthread_mutex_lock(&state_list_lock);
+	
+	if (state_list == NULL)
+	{
+		state_list = malloc(sizeof(SlonWALState_list));
+		state_list->next = NULL;
+		state_list->no_id = node->no_id;
+		statePtr = state_list;
+	}
+	else
+	{
+		for(statePtr = state_list; statePtr->next != NULL; statePtr = statePtr->next);
+		statePtr->next = malloc(sizeof(SlonWALState_list));
+		statePtr->next->next=NULL;
+		statePtr->next->no_id=node->no_id;
+		statePtr = statePtr->next;
+	}
+	statePtr->state=&state;
+	pthread_mutex_unlock(&state_list_lock);
+
+	pthread_mutex_init(&state.position_lock,0);
+
+	/**
+	 * check if this slot has been established on the remote end
+	 */
+	
+	dstring_init(&query);
+	slon_mkquery(&query,"select no_last_xid from %s.sl_node where no_id=%d",
+				 rtcfg_namespace,node->no_id);
+
+	/**
+	 * connect to the LOCAL database to query the position(if any) of the replica.
+	 */
+	if ((conn = slon_connectdb(rtcfg_conninfo, "remote_wal_listener.local")) == NULL)
+		slon_retry();
+	res1 = PQexec(conn->dbconn,dstring_data(&query));
+	if ( PQresultStatus(res1) != PGRES_TUPLES_OK) {
+		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: %s - %s\n",node->no_id,
+				 dstring_data(&query),PQresultErrorMessage(res1));
+		slon_retry();
+	}
+	if( PQntuples(res1) > 0 && PQgetisnull(res1,0,0)==false)
+	{	
+		uint32 hi;
+		uint32 lo;
+		char * last_xid;
+
+		last_xid = PQgetvalue(res1,0,0);
+		if(sscanf(last_xid,"%X/%X",&hi,&lo) != 2)
+		{
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing WAL position %s",
+					 node->no_id,last_xid);
+			slon_retry();
+		}
+		state.last_committed_pos = ((uint64) hi<<32) | lo;
+	}
+	else
+	{
+		init_wal_slot(&state,node);
+	}
+	PQclear(res1);
+	slon_disconnectdb(conn);
+
+
+	
 	start_wal(node,&state);
+
+	/**
+	 * the thread is complete.  Remove it from the state list.
+	 */
+	pthread_mutex_lock(&state_list_lock);	
+	prevStatePtr = state_list;
+	if(state_list != NULL && state_list->state == &state)
+	{
+		/*
+		 * first item in list
+		 */
+		statePtr = state_list;
+		state_list = statePtr->next;
+		free(statePtr);
+	}
+	else
+	{
+		for(statePtr = state_list; statePtr != NULL && statePtr->next != NULL ; statePtr = statePtr->next)
+		{
+			if (statePtr->next->state == &state)
+				break;
+		}
+		
+		if(statePtr != NULL &&  statePtr->next == NULL && statePtr->next->state == &state)
+		{
+			prevStatePtr = statePtr->next->next;
+			free(statePtr->next);
+			statePtr->next = prevStatePtr;
+		}
+			
+	}
+	pthread_mutex_destroy(&state.position_lock);
+	pthread_mutex_unlock(&state_list_lock);
 	return 0;
 }
 
@@ -751,14 +890,17 @@ remoteWALListenThread_main(void *cdata)
 static bool
 sendFeedback(SlonNode * node,
 			 SlonWALState * state,
-			  uint64 blockpos, int64 now, bool replyRequested)
+			  XlogRecPtr blockpos, int64 now, bool replyRequested)
 {
 	char		replybuf[1 + 8 + 8 + 8 + 8 + 1];
 	int			len = 0;
 
+#if 0 
 	if (blockpos == state->startpos)
 		return true;
-
+#endif
+	slon_log(SLON_DEBUG2, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
+			 ((uint32)(blockpos>>32)),(uint32)blockpos);
 	replybuf[len] = 'r';
 	len += 1;
 	sendint64(blockpos, &replybuf[len]);		/* write */
@@ -772,7 +914,6 @@ sendFeedback(SlonNode * node,
 	replybuf[len] = replyRequested ? 1 : 0;		/* replyRequested */
 	len += 1;
 
-	state->startpos = blockpos;
 	if (PQputCopyData(state->dbconn, replybuf, len) <= 0 || PQflush(state->dbconn))
 	{
 		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error sending feedback",node->no_id);
@@ -820,4 +961,27 @@ recvint64(char *buf)
 	result |= l32;
 
 	return result;
+}
+
+void remote_wal_processed(XlogRecPtr confirmed, int no_id)
+{
+	SlonWALState_list * statePtr;
+
+	pthread_mutex_lock(&state_list_lock);
+	for(statePtr = state_list; statePtr != NULL; statePtr = statePtr->next)
+	{
+		if (no_id == statePtr->no_id)
+			break;
+		
+	}
+	if ( statePtr == 0)
+	{
+		slon_log(SLON_ERROR,"remoteWALListener_%d thread was not found",no_id);
+		slon_retry();
+	}
+	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
+	pthread_mutex_lock(&statePtr->state->position_lock);
+	statePtr->state->last_committed_pos=confirmed;
+	pthread_mutex_unlock(&statePtr->state->position_lock);
+	pthread_mutex_unlock(&state_list_lock);
 }

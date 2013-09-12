@@ -76,7 +76,10 @@ struct SlonWorkMsg_event_s
 	char	   *ev_data6;
 	char	   *ev_data7;
 	char	   *ev_data8;
+	bool from_wal_provider;
+	XlogRecPtr provider_wal_loc;
 	char		raw_data[1];
+
 };
 
 
@@ -277,6 +280,9 @@ static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_s
 static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
 
 static void lock_workercon(SlonNode * node);
+
+static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
+		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 
 /* ----------
  * slon_remoteWorkerThread
@@ -638,16 +644,27 @@ remoteWorkerThread_main(void *cdata)
 				 * Process the sync and apply the replication data. If
 				 * successful, exit this loop and commit the transaction.
 				 */
-				seconds = sync_event(node, local_conn, wd, event);
-				if (seconds == 0)
+				if(event->from_wal_provider)
 				{
-					sync_status = SYNC_SUCCESS; /* The group of SYNCs have
-												 * succeeded!  Hurray! */
-					rc = SCHED_STATUS_OK;
+					/**
+					 * update sl_setsync for the wal_provider case
+					 */
+					int rc = sync_event_wal(node,local_conn,wd,event);
 					pthread_mutex_unlock(&(node->worker_con_lock));
 					break;
 				}
-
+				else
+				{
+					seconds = sync_event(node, local_conn, wd, event);					
+					if (seconds == 0)
+					{
+						sync_status = SYNC_SUCCESS; /* The group of SYNCs have
+													 * succeeded!  Hurray! */
+						rc = SCHED_STATUS_OK;
+						pthread_mutex_unlock(&(node->worker_con_lock));
+						break;
+					}
+				}
 				/*
 				 * Something went wrong. Rollback and try again after the
 				 * specified timeout.
@@ -667,7 +684,7 @@ remoteWorkerThread_main(void *cdata)
 					break;
 
 			}
-
+		
 
 			lock_workercon(node);
 			
@@ -710,6 +727,8 @@ remoteWorkerThread_main(void *cdata)
 			}
 			node->worker_con_status=SLON_WCON_IDLE;
 			pthread_mutex_unlock(&(node->worker_con_lock));
+			if(event->from_wal_provider)
+				remote_wal_processed(event->provider_wal_loc, node->no_id);
 			/*
 			 * Remember the sync snapshot in the in memory node structure
 			 */
@@ -1850,7 +1869,9 @@ remoteWorker_event(int event_provider,
 				   char *ev_data1, char *ev_data2,
 				   char *ev_data3, char *ev_data4,
 				   char *ev_data5, char *ev_data6,
-				   char *ev_data7, char *ev_data8)
+				   char *ev_data7, char *ev_data8,
+				   bool from_wal_provider,
+	               int64 wal_ptr)
 {
 	SlonNode   *node;
 	SlonWorkMsg_event *msg;
@@ -2023,7 +2044,9 @@ remoteWorker_event(int event_provider,
 		strcpy(cp, ev_data8);
 		cp += len_data8;
 	}
-
+	msg->from_wal_provider=from_wal_provider;
+	msg->provider_wal_loc = wal_ptr;
+	
 	/*
 	 * Add the message to the queue and trigger the condition variable in case
 	 * the worker is idle.
@@ -5631,4 +5654,78 @@ int get_active_log_table(SlonNode * node,
 	PQclear(res1);
 	dstring_free(&query);
 	return result;
+}
+
+static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
+		   WorkerGroupData * wd, SlonWorkMsg_event * event)
+{
+	SlonDString query;
+	char seqbuf[64];
+	PGresult   *res1;
+	int i;
+	ProviderInfo *provider;
+	ProviderSet *pset;
+	int rc;
+
+	/**
+	 * update sl_setsync.
+	 */
+	sprintf(seqbuf,INT64_FORMAT ,event->ev_seqno);
+	dstring_init(&query);
+	slon_mkquery(&query,
+				 "update %s.sl_setsync set "
+				 "    ssy_seqno = '%s', ssy_snapshot = '%s', "
+				 "    ssy_action_list = '' "
+				 "where "
+				 " ssy_setid in (",
+				 rtcfg_namespace,
+				 seqbuf, event->ev_snapshot_c);	
+	i = 0;
+	for (provider = wd->provider_head; provider; provider = provider->next)
+	{
+		for (pset = provider->set_head; pset; pset = pset->next)
+		{
+			slon_appendquery(&query, "%s%d", (i == 0) ? "" : ",",
+							 pset->set_id);
+			i++;
+		}
+	}
+	slon_appendquery(&query,")");
+	if ( i > 0)
+	{
+		slon_log(SLON_DEBUG2,"remoteWorkerThread_%d:%s\n",node->no_id,dstring_data(&query));
+		res1 = PQexec(local_conn->dbconn, dstring_data(&query));
+		if (PQresultStatus(res1) != PGRES_COMMAND_OK)
+		{
+			slon_log(SLON_ERROR,
+					 "remoteWorkerThread_%d: \"%s\" %s\n",
+					 node->no_id, dstring_data(&query),
+					 PQresultErrorMessage(res1));
+			PQclear(res1);
+			dstring_terminate(&query);
+			return 1;
+		}
+		PQclear(res1);
+	}
+	dstring_reset(&query);
+	slon_mkquery(&query,"update %s.sl_node set no_last_xid = '%X/%X'" 
+				 " where no_id=%d", rtcfg_namespace,  (uint32)(event->provider_wal_loc>>32),
+				 (uint32)event->provider_wal_loc,
+				 node->no_id);
+	
+	res1 = PQexec(local_conn->dbconn, dstring_data(&query));
+	if (PQresultStatus(res1) != PGRES_COMMAND_OK)			 
+	{
+		slon_log(SLON_ERROR,
+				 "remoteWorkerThread_%d: \"%s\" %s %s\n",
+				 node->no_id, dstring_data(&query),
+				 PQresStatus(rc),
+				 PQresultErrorMessage(res1));
+		PQclear(res1);
+		dstring_terminate(&query);
+		return 1;
+	}
+	PQclear(res1);
+	dstring_terminate(&query);
+	return 0;
 }
