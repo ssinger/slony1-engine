@@ -591,7 +591,11 @@ slon_appendquery_int(SlonDString * dsp, char *fmt, va_list ap)
 						dstring_append(dsp, buf);
 						fmt++;
 						break;
-
+					case 'X':
+						sprintf(buf, "%X", va_arg(ap,int));
+						dstring_append(dsp,buf);
+						fmt++;
+						break;
 					default:
 						dstring_addchar(dsp, '%');
 						dstring_addchar(dsp, *fmt);
