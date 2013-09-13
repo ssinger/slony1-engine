@@ -374,13 +374,15 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 */
 		parseEvent(node,cmdargs,walptr);
 	}
-	else if (strcmp(schema_name, rtcfg_namespace)==0 &&
+	else if (strcmp(schema_name_quoted, rtcfg_namespace)==0 &&
 			 strcmp(table_name,  "sl_confirm")==0)
 	{
 		/**
 		 * confirms need to be processed ? 
 		 * TODO ? Or can we just pass this to the apply trigger.
 		 */
+		push_copy_row(node,origin_id,row);
+	
 	}
 	else
 	{
@@ -690,7 +692,9 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 	SlonNode * workerNode;
 	int active_log_table;
 	SlonDString copy_in;
-	PGresult   *res1;
+	PGresult * res1;
+	size_t rowlen;
+
 	int rc;
 	rtcfg_lock();
 	workerNode = rtcfg_findNode(origin_id);
@@ -718,6 +722,7 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 	case SLON_WCON_IDLE:
 	case SLON_WCON_INTXN:
 		dstring_init(&copy_in);
+		slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d_%d: starting COPY\n",listening_node->no_id,workerNode->no_id);
 		active_log_table = get_active_log_table(workerNode,
 											workerNode->worker_dbconn);
 		slon_mkquery(&copy_in, "COPY %s.\"sl_log_%d\" ( log_origin, "	\
@@ -730,7 +735,7 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d_%d: error " \
 					 "executing COPY IN:%s\n",listening_node->no_id,
-					 origin_id, PQresultErrorMessage(res1));
+					 origin_id, PQresultErrorMessage(res1 ));
 			dstring_free(&copy_in);
 			PQclear(res1);
 			slon_retry();
@@ -739,7 +744,14 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 		dstring_free(&copy_in);
 		workerNode->worker_con_status = SLON_WCON_INCOPY;
 	case SLON_WCON_INCOPY:
-		rc = PQputCopyData(workerNode->worker_dbconn, row, strlen(row));
+		slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d: COPY IN ROW: %s",listening_node->no_id,row);
+		/**
+		 * replace the NULL at the end of row (PQgetCopyData promises this to be true) 
+		 * with a \n to mark the end of the row. 
+		 */
+		rowlen = strlen(row);
+		row[rowlen] = '\n';
+		rc = PQputCopyData(workerNode->worker_dbconn, row, rowlen+1);
 		if (rc != 1)
 		{
 			/**

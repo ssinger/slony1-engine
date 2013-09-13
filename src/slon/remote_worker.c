@@ -5595,19 +5595,29 @@ monitor_subscriber_iud(PerfMon * perf_info)
 
 static void lock_workercon(SlonNode * node)
 {
+	PGresult * res1;
+
 	pthread_mutex_lock(&(node->worker_con_lock));
 	if ( node->worker_con_status == SLON_WCON_INCOPY)
 	{
 		/**
 		 * Stop the COPY so we can do other things
 		 * on this connection
-		 */
-		if ( ! PQputCopyEnd(node->worker_dbconn,NULL) ) 
+		 */		
+		if (  PQputCopyEnd(node->worker_dbconn,NULL) != 1 ) 
 		{
-			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:\n");
+			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:\n",node->no_id);
 			slon_retry();			 
 
 		}
+		res1 = PQgetResult(node->worker_dbconn);
+		if ( PQresultStatus(res1) != PGRES_COMMAND_OK )
+		{
+			slon_log(SLON_ERROR,"remoteWorkerThread_%d error in COPY:%s\n",node->no_id,
+					 PQresultErrorMessage(res1));
+			slon_retry();
+		}
+		PQclear(res1);
 		node->worker_con_status = SLON_WCON_INTXN;
 	}
 	
