@@ -1639,17 +1639,19 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		query_args[0] = SPI_getbinval(new_row, tupdesc,
 							   SPI_fnumber(tupdesc, "log_tableid"), &isnull);
 		query_args[1] = Int32GetDatum(cs->localNodeId);
+		if (DatumGetInt32(query_args[0]) > 0)
+		{
+			if (SPI_execp(cs->plan_table_info, query_args, NULL, 0) < 0)
+				elog(ERROR, "SPI_execp() failed for table forward lookup");
+			
+			if (SPI_processed != 1)
+				elog(ERROR, "forwarding lookup for table %d failed",
+					 DatumGetInt32(query_args[0]));
 
-		if (SPI_execp(cs->plan_table_info, query_args, NULL, 0) < 0)
-			elog(ERROR, "SPI_execp() failed for table forward lookup");
-
-		if (SPI_processed != 1)
-			elog(ERROR, "forwarding lookup for table %d failed",
-				 DatumGetInt32(query_args[1]));
-
-		cacheEnt->forward = DatumGetBool(
-				  SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
-				SPI_fnumber(SPI_tuptable->tupdesc, "sub_forward"), &isnull));
+			cacheEnt->forward = DatumGetBool(
+				SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
+							  SPI_fnumber(SPI_tuptable->tupdesc, "sub_forward"), &isnull));
+		}
 	}
 
 	/*
