@@ -45,11 +45,11 @@ void _PG_init(void);
 
 extern void pg_decode_init(LogicalDecodingContext * ctx, bool is_init);
 
-extern bool pg_decode_begin_txn(LogicalDecodingContext * ctx, 
+extern void pg_decode_begin_txn(LogicalDecodingContext * ctx, 
 								ReorderBufferTXN* txn);
-extern bool pg_decode_commit_txn(LogicalDecodingContext * ctx,
+extern void pg_decode_commit_txn(LogicalDecodingContext * ctx,
 								 ReorderBufferTXN* txn, XLogRecPtr commit_lsn);
-extern bool pg_decode_change(LogicalDecodingContext * ctx, 
+extern void pg_decode_change(LogicalDecodingContext * ctx, 
 							 ReorderBufferTXN* txn,
 							 Relation relation, ReorderBufferChange *change);
 
@@ -151,7 +151,7 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 }
 
 
-bool
+void
 pg_decode_begin_txn(LogicalDecodingContext * ctx, ReorderBufferTXN* txn)
 {
 	AssertVariableIsOfType(&pg_decode_begin_txn, LogicalDecodeBeginCB);
@@ -162,7 +162,7 @@ pg_decode_begin_txn(LogicalDecodingContext * ctx, ReorderBufferTXN* txn)
 	return true;
 }
 
-bool
+void
 pg_decode_commit_txn( LogicalDecodingContext * ctx,
 					 ReorderBufferTXN* txn, XLogRecPtr commit_lsn)
 {
@@ -176,7 +176,7 @@ pg_decode_commit_txn( LogicalDecodingContext * ctx,
 
 
 
-bool
+void
 pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 				 Relation relation, ReorderBufferChange *change)
 {
@@ -215,7 +215,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	int table_id=0;
 
 	old = MemoryContextSwitchTo(context);
-	ctx->prepare_write(ctx,txn->lsn,txn->xid);
+	ctx->prepare_write(ctx,txn->final_lsn,txn->xid);
 
 	
 
@@ -484,7 +484,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	
 	
 	MemoryContextSwitchTo(old);
-	ctx->write(ctx,txn->lsn,txn->xid);
+	ctx->write(ctx,txn->final_lsn,txn->xid);
 	return true;
 }
 
