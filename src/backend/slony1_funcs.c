@@ -42,6 +42,7 @@
 #include "utils/memutils.h"
 #include "utils/hsearch.h"
 #include "utils/timestamp.h"
+#include "utils/int8.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
@@ -989,7 +990,14 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 		char	   *ddl_script;
 		bool		localNodeFound = true;
 		Datum		script_insert_args[5];
-		char        query[1024];
+		Datum	   *nodeargs;
+		bool	   *nodeargsnulls;
+		int			nodeargsn;
+		Datum	   *seqargs;
+		bool	   *seqargsnulls;
+		int			seqargsn;
+		Datum  array_holder;
+		Datum delim_text;
 
 		apply_num_script++;
 
@@ -1001,29 +1009,64 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 							SPI_fnumber(tupdesc, "log_cmdargs"), &isnull);
 		if (isnull)
 			elog(ERROR, "Slony-I: log_cmdargs is NULL");
-
 		deconstruct_array(DatumGetArrayTypeP(dat),
 						  TEXTOID, -1, false, 'i',
-						  &cmdargs, &cmdargsnulls, &cmdargsn);
-
+						  &cmdargs, &cmdargsnulls, &cmdargsn);		
+		
+		nodeargs=NULL;
+		nodeargsn=0;
+		seqargs=NULL;
+		seqargsn=0;
+		if( cmdargsn >= 2 )
+		{
+			delim_text=DirectFunctionCall1(textin,CStringGetDatum(","));
+			if ( (! cmdargsnulls[1])  )
+			{			
+				char * astr=DatumGetCString(DirectFunctionCall1(textout,
+																cmdargs[1]));
+				
+				if ( strcmp(astr,""))
+				{
+					array_holder = DirectFunctionCall2(text_to_array,cmdargs[1],
+													   delim_text);
+					deconstruct_array(DatumGetArrayTypeP(array_holder),
+									  TEXTOID, -1, false, 'i',
+									  &nodeargs, &nodeargsnulls, &nodeargsn);
+				}
+			}
+		}
+		if(cmdargsn >= 3)
+		{ 
+			if ( (! cmdargsnulls[2])  ) 
+			{
+				char * astr=DatumGetCString(DirectFunctionCall1(textout,
+																cmdargs[2]));	
+				if(  strcmp(astr,"") )
+				{
+					array_holder = DirectFunctionCall2(text_to_array,cmdargs[2],
+													   delim_text);
+					deconstruct_array(DatumGetArrayTypeP(array_holder),
+									  TEXTOID, -1, false, 'i',
+									  &seqargs, &seqargsnulls, &seqargsn);
+				}
+			}
+		}		
 		/*
 		 * The first element is the DDL statement itself.
 		 */
 		ddl_script = DatumGetCString(DirectFunctionCall1(
 													   textout, cmdargs[0]));
-
 		/*
 		 * If there is an optional node ID list, check that we are in it.
 		 */
-		if (cmdargsn > 1)
+		if (nodeargsn > 0)
 		{
 			localNodeFound = false;
-			for (i = 1; i < cmdargsn; i++)
+			for (i = 0; i < nodeargsn; i++)
 			{
 				int32		nodeId = DatumGetInt32(
 												   DirectFunctionCall1(int4in,
-								  DirectFunctionCall1(textout, cmdargs[i])));
-
+								  DirectFunctionCall1(textout, nodeargs[i])));
 				if (nodeId == cs->localNodeId)
 				{
 					localNodeFound = true;
@@ -1038,6 +1081,55 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 		 */
 		if (localNodeFound)
 		{
+
+			char query[1024];
+			Oid argtypes[3];
+			void * plan=NULL;
+
+			argtypes[0] = INT4OID;
+			argtypes[1] = INT4OID;
+			argtypes[2] = INT8OID;
+
+			snprintf(query,1023,"select %s.sequenceSetValue($1,"	\
+					 "$2,NULL,$3,true); ",tg->tg_trigger->tgargs[0]);			
+			plan = SPI_prepare(query,3,argtypes);
+			if ( plan == NULL )
+			{
+
+				elog(ERROR,"could not prepare plan to call sequenceSetValue");
+			}
+			/**
+			 * before we execute the DDL we need to update the sequences.
+			 */
+			if ( seqargsn > 0 )
+			{
+				
+				for( i = 0; (i+2) < seqargsn; i=i+3 )
+				{
+					Datum		call_args[3];
+					bool	    call_nulls[3];
+					call_args[0] = DirectFunctionCall1(int4in,
+													   DirectFunctionCall1(textout,seqargs[i]));
+					call_args[1] = DirectFunctionCall1(int4in,
+													   DirectFunctionCall1(textout,seqargs[i+1]));
+					call_args[2] = DirectFunctionCall1(int8in,
+													   DirectFunctionCall1(textout,seqargs[i+2]));
+
+					call_nulls[0]=0;
+					call_nulls[1]=0;
+					call_nulls[2]=0;
+
+					if ( SPI_execp(plan,call_args,call_nulls,0) < 0 )
+					{
+						elog(ERROR,"error executing sequenceSetValue plan");
+
+					}
+					
+				}
+
+				
+			}
+
 			sprintf(query,"set session_replication_role to local;");
 			if(SPI_exec(query,0) < 0)
 			{
@@ -1606,7 +1698,6 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
 						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
-
 					sprintf(applyQueryPos, "%s%s = $%d",
 							(i > 0) ? " AND " : "",
 							slon_quote_identifier(colname),
