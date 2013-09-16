@@ -265,7 +265,7 @@ localListenThread_main( /* @unused@ */ void *dummy)
 				no_comment = PQgetvalue(res, tupno, 7);
 
 				if (no_id != rtcfg_nodeid)
-					rtcfg_storeNode(no_id, no_comment);
+				  rtcfg_storeNode(no_id, no_comment,false);
 
 				rtcfg_reloadListen(dbconn);
 			}
@@ -328,8 +328,10 @@ localListenThread_main( /* @unused@ */ void *dummy)
 
 				no_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 				no_comment = PQgetvalue(res, tupno, 8);
-
-				rtcfg_storeNode(no_id, no_comment);
+				/**
+				 * FIXME SJS: Add WAL_SENDER argument
+				 */
+				rtcfg_storeNode(no_id, no_comment,false);
 			}
 			else if (strcmp(ev_type, "STORE_PATH") == 0)
 			{
@@ -345,12 +347,10 @@ localListenThread_main( /* @unused@ */ void *dummy)
 				pa_client = (int) strtol(PQgetvalue(res, tupno, 7), NULL, 10);
 				pa_conninfo = PQgetvalue(res, tupno, 8);
 				pa_connretry = (int) strtol(PQgetvalue(res, tupno, 9), NULL, 10);
-				/**
-				 * FIXME SJS: Add WAL_SENDER argument to STORE_PATH
-				 */
+			
 
 				if (pa_client == rtcfg_nodeid)
-				  rtcfg_storePath(pa_server, pa_conninfo, pa_connretry,0);
+				  rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
 
 				rtcfg_reloadListen(dbconn);
 			}

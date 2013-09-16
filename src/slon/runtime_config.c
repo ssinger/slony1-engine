@@ -106,7 +106,7 @@ rtcfg_unlock(void)
  * ----------
  */
 void
-rtcfg_storeNode(int no_id, char *no_comment)
+rtcfg_storeNode(int no_id, char *no_comment, bool walsender)
 {
 	SlonNode   *node;
 
@@ -148,6 +148,7 @@ rtcfg_storeNode(int no_id, char *no_comment)
 	node->no_active = false;
 	node->no_comment = strdup(no_comment);
 	node->last_snapshot = strdup("1:1:");
+	node->pa_walsender = walsender;
 	pthread_mutex_init(&(node->message_lock), NULL);
 	pthread_cond_init(&(node->message_cond), NULL);
 
@@ -378,8 +379,7 @@ rtcfg_findNode(int no_id)
  * ----------
  */
 void
-rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry,
-				bool pa_walsender)
+rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry)
 {
 	SlonNode   *node;
 
@@ -393,7 +393,7 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry,
 
 		slon_log(SLON_WARN,
 			   "storePath: unknown node ID %d - event pending\n", pa_server);
-		rtcfg_storeNode(pa_server, "<event pending>");
+		rtcfg_storeNode(pa_server, "<event pending>",false);
 
 		rtcfg_lock();
 		node = rtcfg_findNode(pa_server);
@@ -410,7 +410,6 @@ rtcfg_storePath(int pa_server, char *pa_conninfo, int pa_connretry,
 		free(node->pa_conninfo);
 	node->pa_conninfo = strdup(pa_conninfo);
 	node->pa_connretry = pa_connretry;
-	node->pa_walsender = pa_walsender;
 
 
 	rtcfg_unlock();

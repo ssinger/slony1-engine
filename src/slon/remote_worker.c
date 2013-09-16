@@ -775,8 +775,11 @@ remoteWorkerThread_main(void *cdata)
 				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
 				char	   *no_comment = event->ev_data2;
 
+				/**
+				 * SJS FIXME WAL SENDER ARGUMENT
+				 */
 				if (no_id != rtcfg_nodeid)
-					rtcfg_storeNode(no_id, no_comment);
+					rtcfg_storeNode(no_id, no_comment,false);
 
 				slon_appendquery(&query1,
 								 "select %s.storeNode_int(%d, '%q'); ",
@@ -858,7 +861,7 @@ remoteWorkerThread_main(void *cdata)
 				int64		last_event_id;
 				PGresult   *res;
 
-				rtcfg_storeNode(no_id, no_comment);
+				rtcfg_storeNode(no_id, no_comment,false);
 				slon_appendquery(&query1,
 								 "lock table %s.sl_config_lock;"
 							"select %s.cloneNodePrepare_int(%d, %d, '%q'); ",
@@ -898,7 +901,7 @@ remoteWorkerThread_main(void *cdata)
 				 * FIXME SJS: Add WAL_SENDER AS A STORE_PATH ARG
 				 */
 				if (pa_client == rtcfg_nodeid)
-					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry,0);
+					rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
 
 				slon_appendquery(&query1,
 								 "lock table %s.sl_config_lock;"

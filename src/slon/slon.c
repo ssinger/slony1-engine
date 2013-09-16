@@ -562,7 +562,8 @@ SlonMain(void)
 				 "        and ev_seqno = (select max(ev_seqno) "
 				 "                    from %s.sl_event "
 				 "                    where ev_origin = no_id "
-			   "                    and ev_type = 'SYNC')) as last_snapshot "
+				 "                    and ev_type = 'SYNC')) as last_snapshot, "
+				 "       no_walsender "
 				 "from %s.sl_node "
 				 "order by no_id; ",
 				 rtcfg_namespace, rtcfg_nodeid,
@@ -583,7 +584,10 @@ SlonMain(void)
 		int			no_active = (*PQgetvalue(res, i, 1) == 't') ? 1 : 0;
 		char	   *no_comment = PQgetvalue(res, i, 2);
 		int64		last_event;
+		char       * c_walsender = PQgetvalue(res,i,5);
+		bool       walsender;
 
+		slon_log(SLON_INFO,"walsender is %s\n",c_walsender);
 		if (no_id == rtcfg_nodeid)
 		{
 			/*
@@ -594,11 +598,17 @@ SlonMain(void)
 		}
 		else
 		{
+			
+			if(!PQgetisnull(res,i,5) && c_walsender[0]=='t' )
+				walsender=true;
+			else
+				walsender=false;
+
 			/*
 			 * Add a remote node
 			 */
 			slon_scanint64(PQgetvalue(res, i, 3), &last_event);
-			rtcfg_storeNode(no_id, no_comment);
+			rtcfg_storeNode(no_id, no_comment,walsender);
 			rtcfg_setNodeLastEvent(no_id, last_event);
 			rtcfg_setNodeLastSnapshot(no_id, PQgetvalue(res, i, 4));
 
@@ -608,6 +618,7 @@ SlonMain(void)
 			 */
 			if (no_active)
 				rtcfg_needActivate(no_id);
+		
 		}
 	}
 	PQclear(res);
@@ -616,7 +627,7 @@ SlonMain(void)
 	 * Read configuration table sl_path - the interesting pieces
 	 */
 	slon_mkquery(&query,
-				 "select pa_server, pa_conninfo, pa_connretry,pa_walsender "
+				 "select pa_server, pa_conninfo, pa_connretry "
 				 "from %s.sl_path where pa_client = %d"
 				 " and pa_conninfo<>'<event pending>'",
 				 rtcfg_namespace, rtcfg_nodeid);
@@ -635,15 +646,8 @@ SlonMain(void)
 		int			pa_server = (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
 		char	   *pa_conninfo = PQgetvalue(res, i, 1);
 		int			pa_connretry = (int) strtol(PQgetvalue(res, i, 2), NULL, 10);
-		char        *pa_walsender_c = PQgetvalue(res,i,3);
-		bool        pa_walsender=0;
-		
-		if(pa_walsender_c != NULL && *pa_walsender_c=='t')
-		  pa_walsender = 1;
-		else
-		  pa_walsender = 0;
 
-		rtcfg_storePath(pa_server, pa_conninfo, pa_connretry,pa_walsender);
+		rtcfg_storePath(pa_server, pa_conninfo, pa_connretry);
 	}
 	PQclear(res);
 

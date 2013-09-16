@@ -173,6 +173,7 @@ struct SlonNode_s
 
 	SlonNode   *prev;
 	SlonNode   *next;
+
 };
 
 /* ----------
@@ -489,7 +490,7 @@ extern int	slon_listen_started;
 extern void rtcfg_lock(void);
 extern void rtcfg_unlock(void);
 
-extern void rtcfg_storeNode(int no_id, char *no_comment);
+extern void rtcfg_storeNode(int no_id, char *no_comment,bool walsender);
 extern void rtcfg_enableNode(int no_id);
 extern void rtcfg_disableNode(int no_id);
 extern SlonNode *rtcfg_findNode(int no_id);
@@ -499,7 +500,7 @@ extern void rtcfg_setNodeLastSnapshot(int no_id, char *snapshot);
 extern char *rtcfg_getNodeLastSnapshot(int no_id);
 
 extern void rtcfg_storePath(int pa_server, char *pa_conninfo,
-							int pa_connretry,bool pa_walsender);
+							int pa_connretry);
 extern void rtcfg_dropPath(int pa_server);
 
 extern void rtcfg_reloadListen(PGconn *db);

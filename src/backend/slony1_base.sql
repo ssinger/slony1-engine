@@ -23,6 +23,7 @@ create table @NAMESPACE@.sl_node (
 	no_active			bool,
 	no_comment			text,
 	no_failed			bool,
+    no_walsender        bool,
 	no_last_xid			text,
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
@@ -164,7 +165,6 @@ create table @NAMESPACE@.sl_path (
 	pa_client			int4,
 	pa_conninfo			text NOT NULL,
 	pa_connretry		int4,
-	pa_walsender        boolean,
 	CONSTRAINT "sl_path-pkey"
 		PRIMARY KEY (pa_server, pa_client),
 	CONSTRAINT "pa_server-no_id-ref"
