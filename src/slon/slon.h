@@ -587,8 +587,23 @@ extern void *localListenThread_main(void *dummy);
  * Functions in remote_listen.c
  * ----------
  */
-extern void *remoteListenThread_main(void *cdata);
+/* ----------
+ * struct listat
+ *
+ * local data structure for nodes we are currently listening for events from.
+ * ----------
+ */
+struct listat
+{
+	int			li_origin;
 
+	struct listat *prev;
+	struct listat *next;
+};
+
+extern void *remoteListenThread_main(void *cdata);
+extern int remoteListen_receive_events(SlonNode * node,
+									   SlonConn * conn, struct listat * listat,int64 max_seqno);
 
 /* ----------
  * Globals in remote_worker.c

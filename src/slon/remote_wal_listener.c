@@ -23,13 +23,24 @@
 #include <pthread.h>
 #include "slon.h"
 
+struct SlonOriginList_t;
 typedef struct  {
 	PGconn * dbconn;
 	XlogRecPtr last_committed_pos;
 	pthread_mutex_t position_lock;
+	struct SlonOriginList_t * origin_list;
 
 } SlonWALState;
 
+
+
+struct SlonOriginList_t {
+	int no_id;
+	XlogRecPtr last_event_lsn;
+	struct SlonOriginList_t * next;
+};
+
+typedef struct SlonOriginList_t SlonOriginList;
 
 struct SlonWALState_list_t;
 
@@ -64,7 +75,7 @@ static int extract_row_metadata(SlonNode * node,char * schema_name,
 static void push_copy_row(SlonNode * listening_node, int origin_id, char * row);
 
 static void 
-parseEvent(SlonNode * node, char * cmdargs,XlogRecPtr walptr);
+parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,XlogRecPtr walptr);
 
 static void sendint64(int64 i, char *buf);
 static int64 recvint64(char *buf);
@@ -88,8 +99,12 @@ static void init_wal_slot(SlonWALState * state, SlonNode * node)
 	uint32 hi;
 	uint32 lo;
 	char * slot;
-
-	state->dbconn = slon_raw_connectdb(node->pa_conninfo);
+	char * conn_info;
+	const char * replication = " replication=database";
+	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
+	sprintf(conn_info,"%s %s",node->pa_conninfo,replication);
+	state->dbconn = slon_raw_connectdb(conn_info);	
+	free(conn_info);
 	if ( state->dbconn == 0) 
 	{
 		/**
@@ -146,8 +161,14 @@ void start_wal(SlonNode * node, SlonWALState * state)
 	PGresult * res;
 	bool time_to_abort=false;
 	int copy_res;
+	char * conn_info;
+	const char * replication = " replication=database";
+	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
+	sprintf(conn_info,"%s %s",node->pa_conninfo,replication);
+	state->dbconn = slon_raw_connectdb(conn_info);	
 
-	state->dbconn = slon_raw_connectdb(node->pa_conninfo);
+	state->dbconn = slon_raw_connectdb(conn_info);
+	free(conn_info);
 	if ( state->dbconn == 0) 
 	{
 		/**
@@ -372,7 +393,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 *   3. I could make the COPY stream be different from the 
 		 *      walsender/plugin.
 		 */
-		parseEvent(node,cmdargs,walptr);
+		parseEvent(node,cmdargs,state,walptr);
 	}
 	else if (strcmp(schema_name_quoted, rtcfg_namespace)==0 &&
 			 strcmp(table_name,  "sl_confirm")==0)
@@ -407,7 +428,8 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 }
 
 static void 
-parseEvent(SlonNode * node, char * cmdargs,XlogRecPtr walptr)
+parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
+		   XlogRecPtr walptr)
 {
 	char * saveptr;
 	char * column;
@@ -428,7 +450,8 @@ parseEvent(SlonNode * node, char * cmdargs,XlogRecPtr walptr)
 	char *ev_data7=NULL; 
 	char *ev_data8=NULL;
 	int ev_origin=0;
-	
+	SlonListen	* listenPtr=NULL;
+
 
 	column=strtok_r(cmdargs+1,",",&saveptr);
 	do
@@ -575,10 +598,81 @@ parseEvent(SlonNode * node, char * cmdargs,XlogRecPtr walptr)
 	}while ( (column = strtok_r(NULL,",",&saveptr)) != NULL);
 	
 	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: adding event %lld %d to queue snapshot %s \n", node->no_id,ev_seqno,ev_origin,ev_snapshot);
-	remoteWorker_event(node->no_id,ev_origin,ev_seqno,
-					   ev_timestamp,ev_snapshot,ev_mintxid,ev_maxtxid,
-					   ev_type,ev_data1,ev_data2,ev_data3,ev_data4
-					   ,ev_data5,ev_data6,ev_data7,ev_data8,true,walptr);
+
+	/**
+	 * do we listen for events from this origin via the provider?
+	 */
+	for(listenPtr = node->listen_head; listenPtr != NULL; listenPtr = listenPtr->next)
+	{
+		if (listenPtr->li_origin == ev_origin)
+		{
+			bool wal_established=false;
+
+			/**
+			 * make sure this is not the first event from the provider for the origin.
+			 */
+			SlonOriginList * origin=NULL;
+			
+			for(origin = state->origin_list; origin != NULL; origin = origin->next)
+			{
+				if (origin->no_id == ev_origin)
+				{
+					/**
+					 * THIS provider has not yet seen an event from ev_origin.
+					 * it might mean that there is an event in sl_event on the
+					 * provider that has not caught in the WAL stream.
+					 *
+					 * 
+					 */
+					if ( origin->last_event_lsn > 0)
+					{
+						break;
+					}
+					wal_established=true;
+					origin->last_event_lsn = walptr;
+				}
+			}
+			if ( ! wal_established )
+			{
+				
+				struct listat list;
+				SlonConn * conn;
+				char conn_string[32];
+				
+				if ( origin == NULL)
+				{
+					origin = malloc ( sizeof(SlonOriginList));
+					memset(origin,0,sizeof(SlonOriginList));
+					origin->no_id = ev_origin;
+					if(state->origin_list == NULL)
+					{
+						state->origin_list = origin;
+					}
+					else
+					{
+						origin->next = state->origin_list;
+						state->origin_list = origin;
+					}
+					origin->last_event_lsn = walptr;	   
+				}
+
+				memset(&list,0,sizeof(list));
+				list.li_origin=ev_origin;
+				snprintf(conn_string,32,"remote_wal_listener_%d.seed",node->no_id);
+				conn = slon_connectdb(node->pa_conninfo,conn_string);
+				remoteListen_receive_events(node, conn, &list,ev_seqno);
+				slon_disconnectdb(conn);
+			}
+
+			remoteWorker_event(node->no_id,ev_origin,ev_seqno,
+							   ev_timestamp,ev_snapshot,ev_mintxid,ev_maxtxid,
+							   ev_type,ev_data1,ev_data2,ev_data3,ev_data4
+							   ,ev_data5,ev_data6,ev_data7,ev_data8,true,walptr);
+			break;
+		}
+	}
+
+
 					   
 	if(ev_timestamp != NULL)
 		free(ev_timestamp);
@@ -801,7 +895,7 @@ remoteWALListenThread_main(void *cdata)
 	if (state_list == NULL)
 	{
 		state_list = malloc(sizeof(SlonWALState_list));
-		state_list->next = NULL;
+		memset(state_list,0,sizeof(SlonWALState_list));
 		state_list->no_id = node->no_id;
 		statePtr = state_list;
 	}
@@ -809,7 +903,7 @@ remoteWALListenThread_main(void *cdata)
 	{
 		for(statePtr = state_list; statePtr->next != NULL; statePtr = statePtr->next);
 		statePtr->next = malloc(sizeof(SlonWALState_list));
-		statePtr->next->next=NULL;
+		memset(state_list,0,sizeof(SlonWALState_list));
 		statePtr->next->no_id=node->no_id;
 		statePtr = statePtr->next;
 	}

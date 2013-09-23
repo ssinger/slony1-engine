@@ -186,6 +186,12 @@ struct ProviderInfo_s
 	ProviderInfo *prev;
 	ProviderInfo *next;
 	bool         pa_walsender;
+
+	/**
+	 * the last WAL lsn from this provider.
+	 */
+	XlogRecPtr provider_wal_loc;
+
 };
 
 
@@ -628,7 +634,7 @@ remoteWorkerThread_main(void *cdata)
 				pthread_mutex_unlock(&(node->message_lock));
 			}
 			while (true)
-			{
+			{				
 				lock_workercon(node);
 				/*
 				 * Execute the forwarding stuff, but do not commit the
@@ -646,11 +652,32 @@ remoteWorkerThread_main(void *cdata)
 				 */
 				if(event->from_wal_provider)
 				{
+					ProviderInfo * provider=NULL;
 					/**
 					 * update sl_setsync for the wal_provider case
 					 */
 					int rc = sync_event_wal(node,local_conn,wd,event);
+
 					pthread_mutex_unlock(&(node->worker_con_lock));
+
+					/**
+					 * update the provider structure
+					 */ 
+					for (provider = wd->provider_head; provider != NULL; provider = provider->next)
+					{
+						if (provider->no_id == event->event_provider)
+						{
+							provider->provider_wal_loc = event->provider_wal_loc;
+							break;
+						}
+					}
+					if( provider == NULL)
+					{
+						slon_log(SLON_ERROR,"remoteWorkerThread_%d: provider %d not found in provider list\n",
+								 node->no_id, event->event_provider);
+						slon_retry();
+					}
+					
 					break;
 				}
 				else
@@ -733,6 +760,8 @@ remoteWorkerThread_main(void *cdata)
 			 * Remember the sync snapshot in the in memory node structure
 			 */
 			rtcfg_setNodeLastSnapshot(node->no_id, event->ev_snapshot_c);
+			
+			
 		}
 		else	/* not SYNC */
 		{
@@ -5253,7 +5282,7 @@ typedef enum
 #define MINMAXINITIAL -1
 
 /* ----------
- * compress_actionseq
+ * compress_actionseqs
  * ----------
  */
 void
@@ -5679,6 +5708,28 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 	ProviderInfo *provider;
 	ProviderSet *pset;
 	int rc;
+
+	/**
+	 *
+	 * if this is the first event of a streaming logical replication session/slot then
+	 * we need to get any events earlier than this first event.
+	 */
+	for ( provider = wd->provider_head; provider != NULL; provider = provider->next)
+	{
+
+		if (provider->no_id == event->event_provider)
+		{
+			if (provider->provider_wal_loc == 0 )
+			{
+				/**
+				 * pull data from the provider directly.
+				 */
+			}
+			break;
+		}
+	}
+	
+
 
 	/**
 	 * update sl_setsync.

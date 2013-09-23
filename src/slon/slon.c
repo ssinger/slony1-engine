@@ -587,7 +587,6 @@ SlonMain(void)
 		char       * c_walsender = PQgetvalue(res,i,5);
 		bool       walsender;
 
-		slon_log(SLON_INFO,"walsender is %s\n",c_walsender);
 		if (no_id == rtcfg_nodeid)
 		{
 			/*

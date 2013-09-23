@@ -28,19 +28,6 @@
 #include "slon.h"
 
 
-/* ----------
- * struct listat
- *
- * local data structure for nodes we are currently listening for events from.
- * ----------
- */
-struct listat
-{
-	int			li_origin;
-
-	struct listat *prev;
-	struct listat *next;
-};
 
 
 /* ----------
@@ -54,8 +41,7 @@ static void remoteListen_cleanup(struct listat ** listat_head,
 					 struct listat ** listat_tail);
 static int remoteListen_forward_confirm(SlonNode * node,
 							 SlonConn * conn);
-static int remoteListen_receive_events(SlonNode * node,
-							SlonConn * conn, struct listat * listat);
+
 
 static int	poll_sleep;
 
@@ -348,7 +334,7 @@ remoteListenThread_main(void *cdata)
 		/*
 		 * Receive events from the provider node
 		 */
-		retVal = remoteListen_receive_events(node, conn, listat_head);
+		retVal = remoteListen_receive_events(node, conn, listat_head,0);
 		if (retVal < 0)
 		{
 			slon_disconnectdb(conn);
@@ -624,9 +610,9 @@ remoteListen_forward_confirm(SlonNode * node, SlonConn * conn)
  * node as provider and add them to the node specific worker message queue.
  * ----------
  */
-static int
+int
 remoteListen_receive_events(SlonNode * node, SlonConn * conn,
-							struct listat * listat)
+							struct listat * listat,int64 max_seqno)
 {
 	SlonNode   *origin;
 	SlonDString query;
@@ -687,8 +673,14 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		}
 		sprintf(seqno_buf, INT64_FORMAT, origin->last_event);
 		slon_appendquery(&query,
-						 " %s (e.ev_origin = '%d' and e.ev_seqno > '%s')",
+						 " %s (e.ev_origin = '%d' and e.ev_seqno > '%s'",
 						 where_or_or, listat->li_origin, seqno_buf);
+		if ( max_seqno > 0 )
+		{
+			sprintf(seqno_buf, INT64_FORMAT, max_seqno);
+			slon_appendquery(&query," and e.ev_seqno < '%s' ", seqno_buf);
+		}
+		slon_appendquery(&query, " ) " );
 
 		where_or_or = "or";
 		listat = listat->next;
