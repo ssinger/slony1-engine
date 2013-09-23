@@ -803,17 +803,20 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
 				char	   *no_comment = event->ev_data2;
+				char       *no_walsender = event->ev_data3;
 
 				/**
 				 * SJS FIXME WAL SENDER ARGUMENT
 				 */
 				if (no_id != rtcfg_nodeid)
-					rtcfg_storeNode(no_id, no_comment,false);
+					rtcfg_storeNode(no_id, no_comment,
+									no_walsender[0]=='t'  );
 
 				slon_appendquery(&query1,
-								 "select %s.storeNode_int(%d, '%q'); ",
+								 "select %s.storeNode_int(%d, '%q',%s); ",
 								 rtcfg_namespace,
-								 no_id, no_comment);
+								 no_id, no_comment,
+								 no_walsender[0]=='t' ? "true" : "false" );
 
 				need_reloadListen = true;
 			}
@@ -1858,7 +1861,8 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 			memset(provider, 0, sizeof(ProviderInfo));
 			provider->no_id = event_provider;
 			provider->wd = wd;
-
+			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: adding event provider %d to provider list\n",
+					 node->no_id, event_provider);
 			dstring_init(&provider->helper_query);
 
 			/*
@@ -3769,8 +3773,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-		if(provider->pa_walsender)
-			continue;
+	
 		if (provider->conn != NULL)
 		{
 			if (PQstatus(provider->conn->dbconn) != CONNECTION_OK)
@@ -3843,11 +3846,13 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
+#if 0 		
 		if(provider->pa_walsender)
 			/**
 			 * sync_event does need to do anything for a WAL sender provider.
 			 */
 			continue;
+#endif
 		/*
 		 * We only need to explicitly check this if the data provider is
 		 * neither the set origin, nor the node we received this event from.
@@ -3903,10 +3908,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			rc;
 		int			need_union;
 		int			sl_log_no;
-
+#if 0 
 		if(provider->pa_walsender)
 			continue;
-	
+#endif
 		slon_log(SLON_DEBUG2,
 			  "remoteWorkerThread_%d: creating log select for provider %d\n",
 				 node->no_id, provider->no_id);
@@ -4356,9 +4361,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-
+#if 0
 		if(provider->pa_walsender)
-			continue;
+   		continue;
+#endif
 		/**
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
@@ -4392,10 +4398,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			ntuples1;
 		int			tupno1;
 		char		min_ssy_seqno_buf[64];
-
+#if 0
 		if(provider->pa_walsender)
 			continue;
-
+#endif
 		/*
 		 * Skip this if the provider is only here for DDL.
 		 */
@@ -4494,10 +4500,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-		
+#if 0 		
 		if(provider->pa_walsender)
 			continue;
-
+#endif
 		for (pset = provider->set_head; pset; pset = pset->next)
 		{
 			slon_appendquery(&query, "%s%d", (i == 0) ? "" : ",",
@@ -5709,27 +5715,9 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 	ProviderSet *pset;
 	int rc;
 
-	/**
-	 *
-	 * if this is the first event of a streaming logical replication session/slot then
-	 * we need to get any events earlier than this first event.
-	 */
-	for ( provider = wd->provider_head; provider != NULL; provider = provider->next)
-	{
 
-		if (provider->no_id == event->event_provider)
-		{
-			if (provider->provider_wal_loc == 0 )
-			{
-				/**
-				 * pull data from the provider directly.
-				 */
-			}
-			break;
-		}
-	}
 	
-
+	adjust_provider_info(node, wd, false, event->event_provider);
 
 	/**
 	 * update sl_setsync.

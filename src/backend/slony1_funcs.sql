@@ -729,7 +729,7 @@ comment on function @NAMESPACE@.registerNodeConnection (p_nodeid int4) is
 --
 --	Initializes a new node.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.initializeLocalNode (p_local_node_id int4, p_comment text)
+create or replace function @NAMESPACE@.initializeLocalNode (p_local_node_id int4, p_comment text, p_logical bool)
 returns int4
 as $$
 declare
@@ -750,7 +750,7 @@ begin
 	-- own system to sl_node.
 	-- ----
 	perform setval('@NAMESPACE@.sl_local_node_id', p_local_node_id);
-	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment);
+	perform @NAMESPACE@.storeNode_int (p_local_node_id, p_comment,p_logical);
 
 	if (pg_catalog.current_setting('max_identifier_length')::integer - pg_catalog.length('@NAMESPACE@')) < 5 then
 		raise notice 'Slony-I: Cluster name length [%] versus system max_identifier_length [%] ', pg_catalog.length('@NAMESPACE@'), pg_catalog.current_setting('max_identifier_length');
@@ -758,16 +758,16 @@ begin
 		raise notice 'You may run into problems later!';
 	end if;
 	
-	--
-	-- Put the apply trigger onto sl_log_1 and sl_log_2
-	--
+	   --
+	   -- Put the apply trigger onto sl_log_1 and sl_log_2
+	   --
 	create trigger apply_trigger
 		before INSERT on @NAMESPACE@.sl_log_1
 		for each row execute procedure @NAMESPACE@.logApply('_@CLUSTERNAME@');
 	alter table @NAMESPACE@.sl_log_1
-	  enable replica trigger apply_trigger;
+	     enable replica trigger apply_trigger;
 	create trigger apply_trigger
-		before INSERT on @NAMESPACE@.sl_log_2
+	   	before INSERT on @NAMESPACE@.sl_log_2
 		for each row execute procedure @NAMESPACE@.logApply('_@CLUSTERNAME@');
 	alter table @NAMESPACE@.sl_log_2
 			enable replica trigger apply_trigger;
@@ -776,7 +776,7 @@ begin
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.initializeLocalNode (p_local_node_id int4, p_comment text) is 
+comment on function @NAMESPACE@.initializeLocalNode (p_local_node_id int4, p_comment text,p_logical bool) is 
   'no_id - Node ID #
 no_comment - Human-oriented comment
 
@@ -787,18 +787,18 @@ Initializes the new node, no_id';
 --
 --	Generate the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.storeNode (p_no_id int4, p_no_comment text)
+create or replace function @NAMESPACE@.storeNode (p_no_id int4, p_no_comment text,p_logical bool)
 returns bigint
 as $$
 begin
-	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment);
+	perform @NAMESPACE@.storeNode_int (p_no_id, p_no_comment,p_logical);
 	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'STORE_NODE',
-									p_no_id::text, p_no_comment::text);
+									p_no_id::text, p_no_comment::text,p_logical::text);
 end;
 $$ language plpgsql
 	called on null input;
 
-comment on function @NAMESPACE@.storeNode(p_no_id int4, p_no_comment text) is
+comment on function @NAMESPACE@.storeNode(p_no_id int4, p_no_comment text,p_logical bool) is
 'no_id - Node ID #
 no_comment - Human-oriented comment
 
@@ -809,7 +809,7 @@ Generate the STORE_NODE event for node no_id';
 --
 --	Process the STORE_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.storeNode_int (p_no_id int4, p_no_comment text)
+create or replace function @NAMESPACE@.storeNode_int (p_no_id int4, p_no_comment text,p_logical bool)
 returns int4
 as $$
 declare
@@ -834,15 +834,15 @@ begin
 		-- New node, insert the sl_node row
 		-- ----
 		insert into @NAMESPACE@.sl_node
-				(no_id, no_active, no_comment,no_failed) values
-				(p_no_id, 'f', p_no_comment,false);
+				(no_id, no_active, no_comment,no_failed,no_walsender) values
+				(p_no_id, 'f', p_no_comment,false,p_logical);
 	end if;
 
 	return p_no_id;
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.storeNode_int(p_no_id int4, p_no_comment text) is
+comment on function @NAMESPACE@.storeNode_int(p_no_id int4, p_no_comment text,p_logical bool) is
 'no_id - Node ID #
 no_comment - Human-oriented comment
 
@@ -3521,6 +3521,7 @@ declare
 	v_n					int4;
 	v_trec	record;
 	v_tgbad	boolean;
+    v_logical boolean;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -3559,18 +3560,21 @@ begin
 	v_tab_attkind := @NAMESPACE@.determineAttKindUnique(v_tab_row.tab_fqname, 
 						v_tab_row.tab_idxname);
 
+	select no_walsender into v_logical from @NAMESPACE@.sl_node where no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+
 	execute 'lock table ' || v_tab_fqname || ' in access exclusive mode';
 
 	-- ----
 	-- Create the log and the deny access triggers
 	-- ----
-	execute 'create trigger "_@CLUSTERNAME@_logtrigger"' || 
+	if not v_logical then
+	   execute 'create trigger "_@CLUSTERNAME@_logtrigger"' || 
 			' after insert or update or delete on ' ||
 			v_tab_fqname || ' for each row execute procedure @NAMESPACE@.logTrigger (' ||
                                pg_catalog.quote_literal('_@CLUSTERNAME@') || ',' || 
 				pg_catalog.quote_literal(p_tab_id::text) || ',' || 
 				pg_catalog.quote_literal(v_tab_attkind) || ');';
-
+	end if;
 	execute 'create trigger "_@CLUSTERNAME@_denyaccess" ' || 
 			'before insert or update or delete on ' ||
 			v_tab_fqname || ' for each row execute procedure ' ||
@@ -3665,6 +3669,7 @@ declare
 	v_tab_row			record;
 	v_tab_fqname		text;
 	v_n					int4;
+	v_logical           bool;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -3700,6 +3705,8 @@ begin
 	end if;
 	v_tab_fqname = v_tab_row.tab_fqname;
 
+	select no_walsender into v_logical from @NAMESPACE@.sl_node where no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+
 	-- ----
 	-- Configuration depends on the origin of the table
 	-- ----
@@ -3708,8 +3715,10 @@ begin
 		-- On the origin the log trigger is configured like a default
 		-- user trigger and the deny access trigger is disabled.
 		-- ----
-		execute 'alter table ' || v_tab_fqname ||
+		if not v_logical then
+		   execute 'alter table ' || v_tab_fqname ||
 				' enable trigger "_@CLUSTERNAME@_logtrigger"';
+		end if;
 		execute 'alter table ' || v_tab_fqname ||
 				' disable trigger "_@CLUSTERNAME@_denyaccess"';
         perform @NAMESPACE@.alterTableConfigureTruncateTrigger(v_tab_fqname,
@@ -3719,8 +3728,10 @@ begin
 		-- On a replica the log trigger is disabled and the
 		-- deny access trigger fires in origin session role.
 		-- ----
-		execute 'alter table ' || v_tab_fqname ||
+		if not v_logical then 
+		   execute 'alter table ' || v_tab_fqname ||
 				' disable trigger "_@CLUSTERNAME@_logtrigger"';
+		end if;
 		execute 'alter table ' || v_tab_fqname ||
 				' enable trigger "_@CLUSTERNAME@_denyaccess"';
         perform @NAMESPACE@.alterTableConfigureTruncateTrigger(v_tab_fqname,

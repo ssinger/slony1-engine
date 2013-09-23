@@ -207,6 +207,7 @@ static int	assign_options(statement_option *so, option_list *ol);
 %token	K_WAIT
 %token	K_SYNC
 %token	K_SLEEP
+%token  K_LOGICAL
 
 /*
  * Other scanner tokens
@@ -594,6 +595,7 @@ stmt_init_cluster	: lno K_INIT K_CLUSTER option_list
 						statement_option opt[] = {
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_STR( O_COMMENT, "Initial Node" ),
+							STMT_OPTION_YN ( O_LOGICAL, false ),
 							STMT_OPTION_END
 						};
 
@@ -608,6 +610,7 @@ stmt_init_cluster	: lno K_INIT K_CLUSTER option_list
 						{
 							new->no_id			= opt[0].ival;
 							new->no_comment		= opt[1].str;
+							new->logical        = opt[2].ival;
 						}
 						else
 							parser_errors++;
@@ -623,6 +626,7 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 							STMT_OPTION_INT( O_ID, -1 ),
 							STMT_OPTION_STR( O_COMMENT, NULL ),
 							STMT_OPTION_INT( O_EVENT_NODE, -1 ),
+							STMT_OPTION_YN( O_LOGICAL, false),
 							STMT_OPTION_END
 						};
 
@@ -638,6 +642,7 @@ stmt_store_node		: lno K_STORE K_NODE option_list
 							new->no_id			= opt[0].ival;
 							new->no_comment		= opt[1].str;
 							new->ev_origin		= opt[2].ival;
+							new->logical        = opt[3].ival;
 						}
 						else
 							parser_errors++;
@@ -1855,6 +1860,12 @@ option_list_item	: K_ID '=' option_item_id
 						$$=$4;
 
 					}
+					| K_LOGICAL '=' option_item_yn
+					{
+
+						$3->opt_code = O_LOGICAL;
+						$$=$3;
+					}
 					;
 
 option_item_id		: id
@@ -2002,6 +2013,7 @@ option_str(option_code opt_code)
 		case O_USE_KEY:			return "key";
 		case O_WAIT_CONFIRMED:	return "confirmed";
 		case O_WAIT_ON:			return "wait on";
+		case O_LOGICAL:         return "logical";
 		case END_OF_OPTIONS:	return "???";
 	}
 	return "???";

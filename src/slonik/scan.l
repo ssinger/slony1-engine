@@ -155,6 +155,7 @@ update			{ return K_UPDATE;			}
 yes				{ return K_YES;				}
 wait			{ return K_WAIT;			}
 resubscribe     { return K_RESUBSCRIBE;		}
+logical         { return K_LOGICAL;         }
 {digit}+		{ return T_NUMBER;			}
 {identifier}	{ return T_IDENT;			}
 

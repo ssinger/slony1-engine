@@ -184,6 +184,7 @@ struct SlonikStmt_init_cluster_s
 	SlonikStmt	hdr;
 	int			no_id;
 	char	   *no_comment;
+	bool        logical;
 };
 
 
@@ -193,6 +194,7 @@ struct SlonikStmt_store_node_s
 	int			no_id;
 	char	   *no_comment;
 	int			ev_origin;
+	bool        logical;
 };
 
 
@@ -688,7 +690,7 @@ typedef enum
 	O_USE_KEY,
 	O_WAIT_CONFIRMED,
 	O_WAIT_ON,
-
+	O_LOGICAL,
 	END_OF_OPTIONS = -1
 } option_code;
 

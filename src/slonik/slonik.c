@@ -2211,11 +2211,12 @@ slonik_init_cluster(SlonikStmt_init_cluster * stmt)
 	dstring_init(&query);
 	slon_mkquery(&query,
 				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-				 "select \"_%s\".initializeLocalNode(%d, '%q'); "
+				 "select \"_%s\".initializeLocalNode(%d, '%q',%s); "
 				 "select \"_%s\".enableNode(%d); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
-				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+				 stmt->hdr.script->clustername, stmt->no_id, 
+				 stmt->no_comment,stmt->logical ? "true" : "false",
 				 stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo, &query) < 0)
 		rc = -1;
@@ -2276,11 +2277,12 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	/* call initializeLocalNode() and enableNode_int() */
 	slon_mkquery(&query,
 				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
-				 "select \"_%s\".initializeLocalNode(%d, '%q'); "
+				 "select \"_%s\".initializeLocalNode(%d, '%q',%s); "
 				 "select \"_%s\".enableNode_int(%d); ",
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername,
 				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+				 stmt->logical ? "true" : "false",
 				 stmt->hdr.script->clustername, stmt->no_id);
 	if (db_exec_command((SlonikStmt *) stmt, adminfo1, &query) < 0)
 	{
@@ -2292,7 +2294,7 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 	 * Duplicate the content of sl_node
 	 */
 	slon_mkquery(&query,
-				 "select no_id, no_active, no_comment "
+				 "select no_id, no_active, no_comment,no_walsender "
 				 "from \"_%s\".sl_node; ",
 				 stmt->hdr.script->clustername);
 	res = db_exec_select((SlonikStmt *) stmt, adminfo2, &query);
@@ -2307,10 +2309,11 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 		char	   *no_id = PQgetvalue(res, tupno, 0);
 		char	   *no_active = PQgetvalue(res, tupno, 1);
 		char	   *no_comment = PQgetvalue(res, tupno, 2);
-
+		char       *no_walsender = PQgetvalue(res,tupno,3);
 		slon_mkquery(&query,
-					 "select \"_%s\".storeNode_int(%s, '%q'); ",
-					 stmt->hdr.script->clustername, no_id, no_comment);
+					 "select \"_%s\".storeNode_int(%s, '%q',%s); ",
+					 stmt->hdr.script->clustername, no_id, no_comment,
+					 no_walsender[0]=='t' ? "true" : "false" );
 		if (*no_active == 't')
 		{
 			slon_appendquery(&query,
@@ -2528,9 +2531,10 @@ slonik_store_node(SlonikStmt_store_node * stmt)
 
 	/* On the existing node, call storeNode() and enableNode() */
 	slon_mkquery(&query,
-				 "select \"_%s\".storeNode(%d, '%q'); "
+				 "select \"_%s\".storeNode(%d, '%q',%s); "
 				 "select \"_%s\".enableNode(%d); ",
 				 stmt->hdr.script->clustername, stmt->no_id, stmt->no_comment,
+				 stmt->logical ? "true" : "false" ,
 				 stmt->hdr.script->clustername, stmt->no_id);
 	if (slonik_submitEvent((SlonikStmt *) stmt, adminfo2, &query,
 						   stmt->hdr.script, auto_wait_disabled) < 0)
