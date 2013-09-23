@@ -177,13 +177,10 @@ void start_wal(SlonNode * node, SlonWALState * state)
 	}
 	snprintf(query,sizeof(query),"START_LOGICAL_REPLICATION \"%d\" %X/%X (\"cluster\" 'test') ",
 			 node->no_id, 
-#if 0 
-(uint32) ((state->startpos) >>32), 
-			 (uint32)state->startpos,
-rtcfg_namespace);
-#else
-	0,0);
-#endif
+			 (uint32)(state->last_committed_pos>>32), 
+			 (uint32)state->last_committed_pos,
+			 rtcfg_namespace);
+
 
 	slon_log(SLON_INFO,"remoteWALListenerThread_%d: %s",node->no_id,query);
 	res = PQexec(state->dbconn,query);
