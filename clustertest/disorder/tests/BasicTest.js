@@ -53,6 +53,11 @@ BasicTest.prototype.getSlonikPreamble = function() {
 	return slonikPre;
 }
 
+BasicTest.prototype.isLogical=function(node_id) {
+
+	return false;
+}
+
 /**
  * 
  * Setup a standard replication configuration.
@@ -87,10 +92,10 @@ BasicTest.prototype.setupReplication = function() {
 		slonikScript += '} on error {\n\techo \'slony not installed\';\n}\n';
 	}
 	// slonikScript += 'sleep(seconds=60);'
-	slonikScript += 'init cluster(id=1);\n';
+	slonikScript += 'init cluster(id=1, logical=' + this.isLogical(1) + ');\n';
 
 	for ( var idx = 2; idx <= this.getNodeCount(); idx++) {
-		slonikScript += 'store node(id=' + idx + ',event node=1);\n';
+		slonikScript += 'store node(id=' + idx + ',event node=1, logical=' + this.isLogical(idx) + ');\n';
 	}
 	/**
 	 * Create paths per the diagram
