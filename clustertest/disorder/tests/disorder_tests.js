@@ -27,6 +27,8 @@ coordinator.includeFile('disorder/tests/BulkAddingTest.js');
 coordinator.includeFile('disorder/tests/WaitForTest.js');
 coordinator.includeFile('disorder/tests/MultinodeFailover.js');
 coordinator.includeFile('disorder/tests/Resubscribe.js');
+coordinator.includeFile('disorder/tests/LogicalRepTest.js');
+
 var tests = 
     [new EmptySet(coordinator,results)
      ,new OmitCopy(coordinator,results)
@@ -60,7 +62,7 @@ var tests =
      ,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
 
-//tests=[new ExecuteScript(coordinator,results)];
+tests=[new LogicalRepTest(coordinator,results)];
 
 var basicTest = new BasicTest(coordinator,results);
 
