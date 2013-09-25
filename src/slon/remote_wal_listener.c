@@ -60,19 +60,13 @@ static pthread_mutex_t state_list_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 
-static void init_wal_slot(SlonWALState * state,SlonNode * node);
-
-static int extract_row_metadata(SlonNode * node,char * schema_name,
-								char * table_name,
-	                            char * xid_str,
-								int * origin_id,
-								char * operation,
-								char ** cmdargs,
-	                            char * row);
+static XlogRecPtr init_wal_slot(SlonWALState * state,SlonNode * node);
 
 
 
-static void push_copy_row(SlonNode * listening_node, int origin_id, char * row);
+
+static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
+						  int origin_id, char * row);
 
 static void 
 parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,XlogRecPtr walptr);
@@ -86,13 +80,23 @@ static bool sendFeedback(SlonNode * node,
 
 static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRecPtr walptr);
 
+static void start_wal(SlonNode * node, SlonWALState * state);
+
+static int extract_row_metadata(SlonNode * node,
+								char * schema_name,
+								char * table_name,
+	                            char * xid_str,
+								int * origin_id,								
+								char * operation,
+								char ** cmdargs,
+	                            char * row);
 
 
 /**
  * connect to the walsender and INIT a logical WAL slot
  *
  */
-static void init_wal_slot(SlonWALState * state, SlonNode * node)
+static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 {
 	char query[1024];
 	PGresult * res;
@@ -100,7 +104,9 @@ static void init_wal_slot(SlonWALState * state, SlonNode * node)
 	uint32 lo;
 	char * slot;
 	char * conn_info;
+	XlogRecPtr result;
 	const char * replication = " replication=database";
+
 	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
 	sprintf(conn_info,"%s %s",node->pa_conninfo,replication);
 	state->dbconn = slon_raw_connectdb(conn_info);	
@@ -136,6 +142,7 @@ static void init_wal_slot(SlonWALState * state, SlonNode * node)
 				 node->no_id, PQgetvalue(res, 0, 1));
 	}
 	pthread_mutex_lock(&state->position_lock);
+
 	state->last_committed_pos = ((uint64) hi) << 32 | lo;
 
 	/**
@@ -147,15 +154,22 @@ static void init_wal_slot(SlonWALState * state, SlonNode * node)
 	slot = strdup(PQgetvalue(res, 0, 0));
 	slon_log(SLON_INFO,"remoteWALListenerThread_%d: replication slot initialized %X/%X %s\n",node->no_id,
 			 (uint32)(state->last_committed_pos>>32), (uint32)state->last_committed_pos,slot);
+
+	/**
+	 * update sl_node with the position returned.
+	 */
+	
+	result = state->last_committed_pos;
 	pthread_mutex_unlock(&state->position_lock);
 	PQfinish(state->dbconn);
 	state->dbconn=0;
+	return result;
 }
 
 /**
  * Establish the connection to the wal sender and START replication
  */
-void start_wal(SlonNode * node, SlonWALState * state)
+static void start_wal(SlonNode * node, SlonWALState * state)
 {
 	char query[1024];
 	PGresult * res;
@@ -175,11 +189,11 @@ void start_wal(SlonNode * node, SlonWALState * state)
 		 * connection failed, retry ?
 		 */
 	}
-	snprintf(query,sizeof(query),"START_LOGICAL_REPLICATION \"%d\" %X/%X (\"cluster\" 'test') ",
+	snprintf(query,sizeof(query),"START_LOGICAL_REPLICATION \"%d\" %X/%X (\"cluster\" '%s') ",
 			 node->no_id, 
 			 (uint32)(state->last_committed_pos>>32), 
 			 (uint32)state->last_committed_pos,
-			 rtcfg_namespace);
+			 rtcfg_cluster_name);
 
 
 	slon_log(SLON_INFO,"remoteWALListenerThread_%d: %s",node->no_id,query);
@@ -287,12 +301,12 @@ void start_wal(SlonNode * node, SlonWALState * state)
 			/**
 			 * copy finished.  What does this mean?
 			 */
-			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: received -1 from COPY?",node->no_id);
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: received -1 from COPY\n",node->no_id);
 		}
 		else 
 		{
-			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: an unknown error"\
-					 " was received while reading data",node->no_id);
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: an unknown error(%d)"\
+					 " was received while reading data\n",node->no_id,copy_res);
 			/**
 			 * error ?
 			 */
@@ -399,7 +413,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 * confirms need to be processed ? 
 		 * TODO ? Or can we just pass this to the apply trigger.
 		 */
-		push_copy_row(node,origin_id,row);
+		push_copy_row(node,state,origin_id,row);
 	
 	}
 	else
@@ -418,7 +432,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 *    and push this row onto it
 		 * 2. Release the connection back to the remoteWorker
 		 */
-		push_copy_row(node,origin_id,row);
+		push_copy_row(node,state,origin_id,row);
 	}
 	return 0;
 		
@@ -778,7 +792,7 @@ static int extract_row_metadata(SlonNode * node,
 }
 
 
-static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
+static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int origin_id, char * row)
 {
 	SlonNode * workerNode;
 	int active_log_table;
@@ -806,7 +820,34 @@ static void push_copy_row(SlonNode * listening_node, int origin_id, char * row)
 				 listening_node->no_id, origin_id);
 		return;
 	}
-	pthread_mutex_lock(&(workerNode->worker_con_lock));
+
+	/**
+	 * the problem we have is what if obtaining the mutex will 
+	 * require blocking.  We don't want to be blocking for this lock
+	 * so long that we don't send feedback to the WAL sender.
+	 * This can happen if the remoteWorkerThread is in a copy.
+	 * 
+	 */
+	while( pthread_mutex_trylock(&workerNode->worker_con_lock) != 0)
+	{
+
+		/**
+		 * we could not get the lock.
+		 * sendFeedback, sleep and try again.
+		 */
+		int64 now;
+		struct timeval tp;		
+		gettimeofday(&tp,NULL);
+		now  = (int64) (tp.tv_sec -
+						((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
+						* USECS_PER_SEC) + tp.tv_usec;
+		slon_log(SLON_INFO,"remoteWALListenerThread_%d: sending feedback while waiting on lock\n",
+				 listening_node->no_id);
+		sendFeedback(listening_node,state,state->last_committed_pos , now,false);
+		sleep( 1 );
+		
+	}
+
 	switch(workerNode->worker_con_status)
 	{
 
@@ -945,9 +986,23 @@ remoteWALListenThread_main(void *cdata)
 	}
 	else
 	{
-		init_wal_slot(&state,node);
+		PGresult * res2;
+		XlogRecPtr loc = init_wal_slot(&state,node);
+		
+		dstring_reset(&query);
+		slon_mkquery(&query,"update %s.sl_node set no_last_xid = '%X/%X' where no_id=%d",
+					 rtcfg_namespace, (uint32)(loc >>32), (uint32)loc, node->no_id);
+		res2 = PQexec(conn->dbconn, dstring_data(&query));
+		if(PQresultStatus(res2) != PGRES_COMMAND_OK) 
+		{
+			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error updating node position\n",
+					 node->no_id);
+			slon_retry();
+		}
+		PQclear(res2);
 	}
 	PQclear(res1);
+	dstring_terminate(&query);
 	slon_disconnectdb(conn);
 
 
