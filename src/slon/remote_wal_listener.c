@@ -66,7 +66,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state,SlonNode * node);
 
 
 static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
-						  int origin_id, char * row);
+						  int origin_id, char * row, char * xid);
 
 static void 
 parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,XlogRecPtr walptr);
@@ -91,6 +91,10 @@ static int extract_row_metadata(SlonNode * node,
 								char ** cmdargs,
 	                            char * row);
 
+
+static bool xid_in_snapshot(SlonNode * node,
+							char * xid_c,
+							char * snapshot_p);
 
 /**
  * connect to the walsender and INIT a logical WAL slot
@@ -413,26 +417,33 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 * confirms need to be processed ? 
 		 * TODO ? Or can we just pass this to the apply trigger.
 		 */
-		push_copy_row(node,state,origin_id,row);
+		push_copy_row(node,state,origin_id,row,xid_str);
 	
 	}
 	else
 	{
 		/**
-		 * have we already processed this row? 
-		 * We need a way to track this?
-		 * One option might be to apply everything and then
-		 * ROLLBACK instead of COMMIT on the next sl_event
-		 * if it has already been applied.
+		 * We need the snapshot value from sl_setsync 
+		 * we then need to compare the XID of this row against
+		 * the snapshot in sl_setsync so we can decide if this
+		 * row has already been processed.
+		 *
+		 * This exposes us to a race condition. 
+		 *        sl_setsync won't be populated until the ENABLE_SUBSCRIPTION
+		 *        event is finished (ie the copy_set) is finished. 
+		 *  but we are making this decision now, ie too early.
+		 * 
+		 *  
 		 */
+		
 		
 		/**
 		 * COPY the row to the connection for the origin.
 		 * 1. Get the remoteWorker COPY connection
 		 *    and push this row onto it
 		 * 2. Release the connection back to the remoteWorker
-		 */
-		push_copy_row(node,state,origin_id,row);
+		 */		
+		push_copy_row(node,state,origin_id,row,xid_str);
 	}
 	return 0;
 		
@@ -499,7 +510,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		}
 		else if (strcmp(column,"ev_timestamp")==0)
 		{
-			ev_timestamp = malloc(strlen(value));
+			ev_timestamp = malloc(strlen(value)+1);
 			strcpy(ev_timestamp,value);
 		}
 		else if (strcmp(column,"ev_snapshot")==0)
@@ -507,26 +518,26 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 			char * saveptr2;
 			char * value2;
 
-			ev_snapshot = malloc(strlen(value));
+			ev_snapshot = malloc(strlen(value)+1);
 			strcpy(ev_snapshot,value);
 			value2 = strtok_r(value,":",&saveptr2);
-			ev_mintxid = malloc(strlen(value2));
+			ev_mintxid = malloc(strlen(value2)+1);
 			strcpy(ev_mintxid,value2);
 			value2 = strtok_r(NULL,":",&saveptr2);
-			ev_maxtxid = malloc(strlen(value2));
+			ev_maxtxid = malloc(strlen(value2)+1);
 			strcpy(ev_maxtxid,value2);
 		
 		}
 		else if (strcmp(column,"ev_type")==0)
 		{
-			ev_type = malloc(strlen(value));
+			ev_type = malloc(strlen(value)+1);
 			strcpy(ev_type,value);
 		}
 		else if (strcmp(column,"ev_data1")==0)
 		{
 			if(value != NULL) 
 			{
-				ev_data1 = malloc(strlen(value));
+				ev_data1 = malloc(strlen(value)+1);
 				strcpy(ev_data1,value);
 			}
 			else
@@ -536,7 +547,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL) 
 			{
-				ev_data2 = malloc(strlen(value));
+				ev_data2 = malloc(strlen(value)+1);
 				strcpy(ev_data2,value);
 			}
 			else
@@ -546,7 +557,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL)
 			{
-				ev_data3 = malloc(strlen(value));
+				ev_data3 = malloc(strlen(value)+1);
 				strcpy(ev_data3,value);
 			}
 			else
@@ -556,7 +567,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL)
 			{
-				ev_data4 = malloc(strlen(value));
+				ev_data4 = malloc(strlen(value)+1);
 				strcpy(ev_data4,value);
 			}
 			else
@@ -566,7 +577,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL)
 			{
-				ev_data5 = malloc(strlen(value));
+				ev_data5 = malloc(strlen(value)+1);
 				strcpy(ev_data5,value);
 			}
 			else
@@ -577,7 +588,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL)
 			{
-				ev_data6 = malloc(strlen(value));
+				ev_data6 = malloc(strlen(value)+1);
 				strcpy(ev_data6, value);
 			}
 			else
@@ -587,7 +598,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL)
 			{
-				ev_data7 = malloc(strlen(value));
+				ev_data7 = malloc(strlen(value)+1);
 				strcpy(ev_data7,value);
 			}
 			else
@@ -598,7 +609,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			if(value != NULL)
 			{
-				ev_data8 = malloc(strlen(value));
+				ev_data8 = malloc(strlen(value)+1);
 				strcpy(ev_data8, value);
 			}
 			ev_data8 = NULL;
@@ -782,7 +793,7 @@ static int extract_row_metadata(SlonNode * node,
 		 */
 		if(*curptr != '\0')
 		{
-			*cmdargs = malloc(strlen(curptr));
+			*cmdargs = malloc(strlen(curptr)+1);
 			strcpy(*cmdargs,curptr);
 		}
 	
@@ -792,7 +803,8 @@ static int extract_row_metadata(SlonNode * node,
 }
 
 
-static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int origin_id, char * row)
+static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int origin_id, char * row,
+						  char * xid)
 {
 	SlonNode * workerNode;
 	int active_log_table;
@@ -820,6 +832,58 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 				 listening_node->no_id, origin_id);
 		return;
 	}
+
+	/**
+	 * Wait until the message queue is empty.
+	 * We do this so we can get a good guess at 
+	 * the sl_setsync value to compare this row against
+	 * to figure out if it has already been applied.
+	 */
+	pthread_mutex_lock(&(workerNode->message_lock));
+	while ( workerNode->message_head != NULL)
+	{
+		struct timespec timeval;
+		int64 now;
+		struct timeval tp;		
+
+		timeval.tv_sec = 0;
+		timeval.tv_sec = 1000;
+		pthread_cond_timedwait(&(workerNode->message_cond),&(workerNode->message_lock),&timeval);
+	
+		gettimeofday(&tp,NULL);
+		now  = (int64) (tp.tv_sec -
+						((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
+						* USECS_PER_SEC) + tp.tv_usec;
+		/** 
+		 * have the lock.
+		 * release it , send feedback and re-aquire it.
+		 * we don't want to hold the lock while we send a network message
+		 */
+		pthread_mutex_unlock(&(workerNode->message_lock));
+		sendFeedback(listening_node,state,state->last_committed_pos , now,false);
+		pthread_mutex_lock(&(workerNode->message_lock));
+		
+	}
+
+	/**
+	 * at this stage the workerNode message queue is empty.
+	 * Check to see if the XID for this row has already been processed
+	 */
+
+	if(  xid_in_snapshot(listening_node,xid,workerNode->last_snapshot))
+	{
+		/**
+		 *
+		 * This row has already been committed. We can ignore it
+		 */
+		 
+		slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: ignoring row - already applied\n",
+				 listening_node->no_id);
+		pthread_mutex_unlock(&(workerNode->message_lock));
+		return;
+	}
+	pthread_mutex_unlock(&(workerNode->message_lock));
+	
 
 	/**
 	 * the problem we have is what if obtaining the mutex will 
@@ -1142,4 +1206,96 @@ void remote_wal_processed(XlogRecPtr confirmed, int no_id)
 	statePtr->state->last_committed_pos=confirmed;
 	pthread_mutex_unlock(&statePtr->state->position_lock);
 	pthread_mutex_unlock(&state_list_lock);
+}
+
+/**
+ * is the XID committed at the time of the snaphsot.
+ * 
+ *  snapshot is of the form   minxip:maxxipactive_xips
+ *  
+ *  If xid < minxip the transaction is committed
+ *  If xid > maxip The transaction is not committed
+ *  If xid is listed in the active list then it is not commited
+ *  else it is committed
+ */
+static bool xid_in_snapshot(SlonNode * node,
+							char * xid_c,
+							char * snapshot_p)
+{
+	char * state;
+	char * minxid_c;
+	char * ip_list;
+	char * maxxid_c;
+	char * elem;
+	int64 xid;
+	int64 minxid;
+	int64 maxxid;
+	char * snapshot;
+
+	/**
+	 * copy snapshot so strtok doesn't change it
+	 */
+	snapshot = malloc(strlen(snapshot_p)+1);
+	strcpy(snapshot,snapshot_p);
+	
+
+	minxid_c = strtok_r(snapshot,":",&state);
+	if ( minxid_c == NULL)
+	{
+		/**
+		 * parse error
+		 */
+		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_retry();
+	}
+	
+	xid = strtoll(xid_c,NULL,10);
+	minxid = strtoll(minxid_c,NULL,10);
+	if ( xid < minxid )
+	{
+		free(snapshot);
+		return true;
+	}
+
+	maxxid_c = strtok_r(NULL,":", &state);
+	if (maxxid_c == NULL)
+	{
+		/**
+		 * parse error
+		 */
+		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_retry();
+	}
+	maxxid = strtoll(maxxid_c,NULL,10);
+	if ( xid > maxxid ) {
+		free(snapshot);
+		return false;
+	}
+	
+
+	ip_list = strtok_r(NULL,":",&state);
+	
+	if ( ip_list == NULL) 
+	{
+		/**
+		 * parse error
+		 */
+		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_retry();
+	}
+
+	for( elem = strtok_r(ip_list,",",&state); elem != NULL; elem = strtok_r(NULL,",",&state))
+	{
+		if (strcmp(elem,xid_c)==0)
+		{
+			/**
+			 * this transaction is in progress.
+			 */
+			free(snapshot);
+			return false;
+		}
+		
+	}
+	free(snapshot);
+	return true;
 }

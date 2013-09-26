@@ -492,6 +492,7 @@ remoteWorkerThread_main(void *cdata)
 		msg = node->message_head;
 		DLLIST_REMOVE(node->message_head, node->message_tail, msg);
 		pthread_mutex_unlock(&(node->message_lock));
+		pthread_cond_signal(&(node->message_cond));
 
 		/*
 		 * Process WAKEUP messages by simply setting the check_config flag.
@@ -629,6 +630,7 @@ remoteWorkerThread_main(void *cdata)
 					event = (SlonWorkMsg_event *) (node->message_head);
 					sync_group[sync_group_size++] = event;
 					DLLIST_REMOVE(node->message_head, node->message_tail, msg);
+					pthread_cond_signal(&(node->message_cond));
 				}
 				sg_last_grouping = sync_group_size;
 				pthread_mutex_unlock(&(node->message_lock));
