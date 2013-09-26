@@ -24,7 +24,7 @@ create table @NAMESPACE@.sl_node (
 	no_comment			text,
 	no_failed			bool,
     no_walsender        bool,
-	no_last_xid			text,
+	no_last_xlog_rec	text,
 	CONSTRAINT "sl_node-pkey"
 		PRIMARY KEY (no_id)
 ) WITHOUT OIDS;

@@ -1019,7 +1019,7 @@ remoteWALListenThread_main(void *cdata)
 	 */
 	
 	dstring_init(&query);
-	slon_mkquery(&query,"select no_last_xid from %s.sl_node where no_id=%d",
+	slon_mkquery(&query,"select no_last_xlog_rec from %s.sl_node where no_id=%d",
 				 rtcfg_namespace,node->no_id);
 
 	/**
@@ -1054,7 +1054,7 @@ remoteWALListenThread_main(void *cdata)
 		XlogRecPtr loc = init_wal_slot(&state,node);
 		
 		dstring_reset(&query);
-		slon_mkquery(&query,"update %s.sl_node set no_last_xid = '%X/%X' where no_id=%d",
+		slon_mkquery(&query,"update %s.sl_node set no_last_xlog_rec = '%X/%X' where no_id=%d",
 					 rtcfg_namespace, (uint32)(loc >>32), (uint32)loc, node->no_id);
 		res2 = PQexec(conn->dbconn, dstring_data(&query));
 		if(PQresultStatus(res2) != PGRES_COMMAND_OK) 

@@ -5762,7 +5762,7 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 		PQclear(res1);
 	}
 	dstring_reset(&query);
-	slon_mkquery(&query,"update %s.sl_node set no_last_xid = '%X/%X'" 
+	slon_mkquery(&query,"update %s.sl_node set no_last_xlog_rec = '%X/%X'" 
 				 " where no_id=%d", rtcfg_namespace,  (uint32)(event->provider_wal_loc>>32),
 				 (uint32)event->provider_wal_loc,
 				 node->no_id);
