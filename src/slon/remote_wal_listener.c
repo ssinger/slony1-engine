@@ -1037,13 +1037,13 @@ remoteWALListenThread_main(void *cdata)
 	{	
 		uint32 hi;
 		uint32 lo;
-		char * last_xid;
+		char * last_xlog;
 
-		last_xid = PQgetvalue(res1,0,0);
-		if(sscanf(last_xid,"%X/%X",&hi,&lo) != 2)
+		last_xlog = PQgetvalue(res1,0,0);
+		if(sscanf(last_xlog,"%X/%X",&hi,&lo) != 2)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing WAL position %s",
-					 node->no_id,last_xid);
+					 node->no_id,last_xlog);
 			slon_retry();
 		}
 		state.last_committed_pos = ((uint64) hi<<32) | lo;
