@@ -208,7 +208,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	HeapTuple array_type_tuple;
 	FmgrInfo flinfo;
 	char action='?';
-	int update_cols=0;
 	const char * table_name;
 	const char * namespace;
 	int origin_id=0;
@@ -476,7 +475,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 					 ,namespace
 					 ,table_name
 					 ,action
-					 ,update_cols
+					 ,cmdnupdates
 					 ,array_text);
 
 
@@ -485,7 +484,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	
 	MemoryContextSwitchTo(old);
 	ctx->write(ctx,txn->final_lsn,txn->xid);
-	return true;
 }
 
 
