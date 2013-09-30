@@ -1645,8 +1645,14 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 				elog(ERROR, "SPI_execp() failed for table forward lookup");
 			
 			if (SPI_processed != 1)
-				elog(ERROR, "forwarding lookup for table %d failed",
-					 DatumGetInt32(query_args[0]));
+			{
+				/**
+				 * this node is not (currently) subscribed to the table.
+				 * ignore the row.
+				 */
+				SPI_finish();
+				return PointerGetDatum(NULL);
+			}
 
 			cacheEnt->forward = DatumGetBool(
 				SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
