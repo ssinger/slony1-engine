@@ -251,7 +251,6 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				size_t hdr_len;
 				XlogRecPtr temp;
 				XlogRecPtr position;
-				int64 now;
 				struct timeval tp;
 
 				hdr_len = 1;			/* msgtype 'w' */
@@ -279,10 +278,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 
 				
 	
-				gettimeofday(&tp,NULL);
-				now  = (int64) (tp.tv_sec -
-					((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
-								* USECS_PER_SEC) + tp.tv_usec;
+				gettimeofday(&tp,NULL);			
 				pthread_mutex_lock(&state->position_lock);
 				position = state->last_committed_pos;
 				pthread_mutex_unlock(&state->position_lock);
@@ -354,9 +350,11 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 	 * working variables;
 	 */
 	int rc;
-   
+	char * tmp;
+
+	tmp = operation;
 	rc = extract_row_metadata(node,schema_name,table_name,xid_str,&origin_id,
-							  &operation,&cmdargs,row);
+							  tmp,&cmdargs,row);
 	if( rc < 0 )
 	{
 		return rc;
