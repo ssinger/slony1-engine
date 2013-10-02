@@ -75,6 +75,7 @@ typedef struct  {
 
 } replicated_table;
 
+#if 0 
 static uint32
 replicated_table_hash(const void *kp, Size ksize)
 {
@@ -91,6 +92,7 @@ replicated_table_cmp(const void *kp1, const void *kp2, Size ksize)
 
 static bool is_replicated(const char * namespace,const char * table);
 static int lookup_origin(const char * namespace, const char * table);
+#endif
 
 void
 _PG_init(void)
@@ -159,7 +161,7 @@ pg_decode_begin_txn(LogicalDecodingContext * ctx, ReorderBufferTXN* txn)
 	 * we can ignore the begin and commit. slony operates
 	 * on SYNC boundaries.
 	 */
-	return true;
+
 }
 
 void
@@ -171,7 +173,6 @@ pg_decode_commit_txn( LogicalDecodingContext * ctx,
 	 * we can ignore the begin and commit. slony operates
 	 * on SYNC boundaries.
 	 */
-	return true;
 }
 
 
@@ -276,7 +277,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	{
 
 		MemoryContextSwitchTo(old);
-		return false;
+		return;
 	}
 	if(change->action == REORDER_BUFFER_CHANGE_INSERT)
 	{		
@@ -467,7 +468,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
 	ReleaseSysCache(array_type_tuple);
-	appendStringInfo(ctx->out,"%d\t%lld\t%d\t%lld\t%s\t%s\t%c\t%d\t%s"
+	appendStringInfo(ctx->out,"%d\t%u\t%d\t%u\t%s\t%s\t%c\t%d\t%s"
 					 ,origin_id
 					 ,txn->xid
 					 ,table_id
@@ -528,6 +529,8 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 	return outputstr;
 }
 
+
+#if 0 
 /**
  * checks to see if the table described by class_form is
  * replicated from this origin/provider to the recevier
@@ -536,7 +539,6 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx)
 bool is_replicated(const char * namespace,const char * table)
 {
 	char * search_key = palloc(strlen(namespace) + strlen(table)+2);
-	replicated_table * entry;
 	bool found;
 
 	sprintf(search_key,"%s.%s",namespace,table);
@@ -546,6 +548,7 @@ bool is_replicated(const char * namespace,const char * table)
 	return found;
 	
 }
+#endif
 
 static int 
 lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
@@ -617,7 +620,6 @@ lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
 	  TupleDesc slset_tupdesc;
 	  AttrNumber origin_attnum;
 	  AttrNumber slset_setid_attnum;
-	  TupleDesc slset_desc;
 	  HeapScanDesc slset_scandesc;
 
 	  slset_oid = get_relname_relid("sl_set",slony_namespace);
