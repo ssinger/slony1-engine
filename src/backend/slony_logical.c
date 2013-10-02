@@ -265,7 +265,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		if(origin_attnum != InvalidAttrNumber)
 		{
 			bool isnull;
-			Datum storedValue = fastgetattr(&change->newtuple->tuple,
+			Datum storedValue = fastgetattr(&change->tp.newtuple->tuple,
 											origin_attnum,tupdesc,&isnull);
 			if( ! isnull )
 				origin_id  = DatumGetInt32(storedValue);
@@ -283,7 +283,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		/**
 		 * convert all columns to a pair of arrays (columns and values)
 		 */
-		tuple=&change->newtuple->tuple;
+		tuple=&change->tp.newtuple->tuple;
 		action='I';
 		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) 
 										* sizeof(Datum)  );
@@ -355,7 +355,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 			column= NameStr(tupdesc->attrs[i]->attname);
 
 			
-			value_new = columnAsText(tupdesc,&change->newtuple->tuple,i);		
+			value_new = columnAsText(tupdesc,&change->tp.newtuple->tuple,i);		
 			*cmdargselem++=PointerGetDatum(cstring_to_text(column));
 			*cmdnullselem++=false;
 			
@@ -395,10 +395,10 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 			*cmdargselem++= PointerGetDatum(cstring_to_text(column));
 			*cmdnullselem++=false;
 
-			if(change->oldtuple != NULL )
-				value = columnAsText(indexdesc,&change->oldtuple->tuple,i);
+			if(change->tp.oldtuple != NULL )
+				value = columnAsText(indexdesc,&change->tp.oldtuple->tuple,i);
 			else
-				value = columnAsText(indexdesc,&change->newtuple->tuple,i);
+			  value = columnAsText(indexdesc,&change->tp.newtuple->tuple,i);
 			*cmdnullselem++=false;
 			*cmdargselem++=PointerGetDatum(cstring_to_text(value));
 		}
@@ -412,7 +412,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		 * convert the key columns to a pair of arrays.
 		 */
 	  action='D';
-	  tuple=&change->oldtuple->tuple;
+	  tuple=&change->tp.oldtuple->tuple;
 	  
 	  /**
 	   * populate relation->rd_primary with the primary or candidate
