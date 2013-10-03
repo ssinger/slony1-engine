@@ -13,7 +13,7 @@ SLFILEDESC="Slony replication functions"
 NAME		= slony1_funcs
 SO_NAME = $(NAME).$(VERSION)$(DLSUFFIX)
 include $(slony_top_builddir)/Makefile.global
-
+CPPFLAGS:=$(CPPFLAGS_SERVER)
 override CFLAGS += -I$(slony_top_builddir) $(CFLAGS_SL)
 
 
