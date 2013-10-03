@@ -11,7 +11,7 @@ slony_subdir = src/slon
 slony_top_builddir = ../..
 SLFILEDESC="Slony replication engine"
 include $(slony_top_builddir)/Makefile.global
-
+CPPFLAGS:=$(CPPFLAGS_CLIENT)
 SFILES=$(wildcard *.c)
 SFILES2=$(filter-out snmp_thread.c, $(SFILES))
 CC = $(PTHREAD_CC)

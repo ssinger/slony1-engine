@@ -10,6 +10,7 @@ slony_subdir = src/slonik
 slony_top_builddir = ../..
 SLFILEDESC="Slony command interpreter"
 include $(slony_top_builddir)/Makefile.global
+CPPFLAGS:=$(CPPFLAGS_CLIENT)
 
 ifeq ($(PORTNAME), aix)
   CFLAGS += -D_LARGE_FILES

@@ -313,7 +313,8 @@ if test x"$with_perlsharedir" = x""; then
 fi
 
 AC_SUBST(perlsharedir, $with_perlsharedir)
-
+AC_SUBST(CPPFLAGS_SERVER)
+AC_SUBST(CPPFLAGS_CLIENT)
 AC_CONFIG_FILES([
 	Makefile.global GNUmakefile
 ])

@@ -2,6 +2,8 @@ slony_subdir = src/parsestatements
 slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
+CPPFLAGS:=$(CPPFLAGS_CLIENT)
+
 PROG=test-scanner
 FLEX=flex
 

@@ -226,7 +226,6 @@ else
 fi
 
 TEMP_CPPFLAGS=$CPPFLAGS
-
 CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR"
 AC_CHECK_HEADER(libpq-fe.h, HAVE_LIBPQFE=1)
 if test -n "HAVE_LIBPQFE" ; then
@@ -237,8 +236,9 @@ else
     )
 fi
 
-CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR -I$PG_INCLUDESERVERDIR"
-
+CPPFLAGS_SERVER="$TEMP_CPPFLAGS  -I$PG_INCLUDESERVERDIR"
+CPPFLAGS_CLIENT="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR"
+CPPFLAGS=$CPPFLAGS_SERVER
 dnl ---------------------------------------------------
 dnl Add the port specific include directory if required
 dnl ---------------------------------------------------
@@ -377,7 +377,7 @@ case "${host_os}" in
 	*)
 		LIBS="$LIBS -L$PG_LIBDIR -Wl,-rpath,$PG_LIBDIR -lpq"
 esac
-
+CPPFLAGS=$CPPFLAGS_CLIENT
 AC_RUN_IFELSE(
 	[AC_LANG_PROGRAM([#include "libpq-fe.h"], [if (PQisthreadsafe()) {return 0;} else {return 1;}])], 
 	[echo "PQisthreadsafe() true"], 
@@ -400,6 +400,8 @@ else
      ac_cv_ScanKeywordLookup_args=1)
   AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
 fi
+
+CPPFLAGS=$CPPFLAGS_SERVER
 
 AC_MSG_CHECKING(for typenameTypeId)
 if test -z "$ac_cv_typenameTypeId_args"; then
