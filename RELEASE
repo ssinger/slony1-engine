@@ -1,4 +1,7 @@
 #+OPTIONS: ^:{}
+* 2.2.1
+  - Bug 315 :: Fixes to compile time include directories
+
 * Slony-I 2.2 Release Notes
 
 ** Significant Changes
