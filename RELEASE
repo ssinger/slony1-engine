@@ -1,5 +1,8 @@
 #+OPTIONS: ^:{}
 * Slony-I Release Notes
+** 2.1.5
+- Bug 315 :: Fixes to the compile time include directories
+
 ** 2.1.4 
 
 - Bug #299 :: Fix race condition in MOVE SET where a third node could pull data from the old origin using
