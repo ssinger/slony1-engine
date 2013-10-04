@@ -767,6 +767,7 @@ static int extract_row_metadata(SlonNode * node,
 				 * origin_id is the first column.
 				 */
 				char * tmp_buf = malloc(curptr - prev_start );
+				memset(tmp_buf,0,curptr - prev_start );
 				strncpy(tmp_buf,prev_start, curptr-prev_start);
 				*origin_id = strtol(tmp_buf,NULL, 10 );				
 				free(tmp_buf);
@@ -822,9 +823,9 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 
 		return;
 	}
+	rtcfg_unlock();
 	if (!listening_node->no_active)
 	{
-		rtcfg_unlock();
 		slon_log(SLON_WARN,
 				 "remoteWALListenerThread_%d: worker  %d is not active\n",
 				 listening_node->no_id, origin_id);
@@ -838,14 +839,15 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 	 * to figure out if it has already been applied.
 	 */
 	pthread_mutex_lock(&(workerNode->message_lock));
+
 	while ( workerNode->message_head != NULL)
 	{
 		struct timespec timeval;
 		int64 now;
 		struct timeval tp;		
 
-		timeval.tv_sec = 0;
-		timeval.tv_sec = 1000;
+		timeval.tv_sec = 1;
+		timeval.tv_nsec = 0;
 		pthread_cond_timedwait(&(workerNode->message_cond),&(workerNode->message_lock),&timeval);
 	
 		gettimeofday(&tp,NULL);
@@ -862,7 +864,7 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 		pthread_mutex_lock(&(workerNode->message_lock));
 		
 	}
-
+	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: the message queue is empty\n",listening_node->no_id);
 	/**
 	 * at this stage the workerNode message queue is empty.
 	 * Check to see if the XID for this row has already been processed
@@ -962,7 +964,6 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 
 	}				   
 	pthread_mutex_unlock(&(workerNode->worker_con_lock));
-	rtcfg_unlock();	
 	
 	
 }

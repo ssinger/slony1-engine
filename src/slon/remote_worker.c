@@ -492,7 +492,7 @@ remoteWorkerThread_main(void *cdata)
 		msg = node->message_head;
 		DLLIST_REMOVE(node->message_head, node->message_tail, msg);
 		pthread_mutex_unlock(&(node->message_lock));
-		pthread_cond_signal(&(node->message_cond));
+		pthread_cond_broadcast(&(node->message_cond));
 
 		/*
 		 * Process WAKEUP messages by simply setting the check_config flag.
@@ -630,7 +630,7 @@ remoteWorkerThread_main(void *cdata)
 					event = (SlonWorkMsg_event *) (node->message_head);
 					sync_group[sync_group_size++] = event;
 					DLLIST_REMOVE(node->message_head, node->message_tail, msg);
-					pthread_cond_signal(&(node->message_cond));
+					pthread_cond_broadcast(&(node->message_cond));
 				}
 				sg_last_grouping = sync_group_size;
 				pthread_mutex_unlock(&(node->message_lock));
@@ -2091,7 +2091,9 @@ remoteWorker_event(int event_provider,
 	 */
 	DLLIST_ADD_TAIL(node->message_head, node->message_tail,
 					(SlonWorkMsg *) msg);
-	pthread_cond_signal(&(node->message_cond));
+	slon_log(SLON_DEBUG2,"remoteWorker_event_%d added to queue\n",
+			 event_provider);
+	pthread_cond_broadcast(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
 
@@ -2141,7 +2143,7 @@ remoteWorker_wakeup(int no_id)
 
 	pthread_mutex_lock(&(node->message_lock));
 	DLLIST_ADD_TAIL(node->message_head, node->message_tail, msg);
-	pthread_cond_signal(&(node->message_cond));
+	pthread_cond_broadcast(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
 
@@ -2230,6 +2232,7 @@ remoteWorker_confirm(int no_id,
 					}
 				}
 				pthread_mutex_unlock(&(node->message_lock));
+				pthread_cond_broadcast(&(node->message_cond));
 				return;
 			}
 		}
@@ -2254,7 +2257,7 @@ remoteWorker_confirm(int no_id,
 	 * Send a condition signal to the worker thread in case it is waiting for
 	 * new messages.
 	 */
-	pthread_cond_signal(&(node->message_cond));
+	pthread_cond_broadcast(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
 
