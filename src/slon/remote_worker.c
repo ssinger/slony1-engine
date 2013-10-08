@@ -648,6 +648,7 @@ remoteWorkerThread_main(void *cdata)
 					slon_retry();
 				}
 
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: processing SYNC event from %d\n",node->no_id,event->event_provider);
 				/*
 				 * Process the sync and apply the replication data. If
 				 * successful, exit this loop and commit the transaction.
