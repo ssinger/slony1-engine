@@ -96,6 +96,10 @@ static bool xid_in_snapshot(SlonNode * node,
 							char * xid_c,
 							char * snapshot_p);
 
+
+static char * 
+parse_csv_token(char * str,  char  delim, char ** storage);
+
 /**
  * connect to the walsender and INIT a logical WAL slot
  *
@@ -260,7 +264,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				
 				temp = recvint64(&copybuf[1]);
 
-				slon_log(SLON_INFO,"remoteWALListenerThread_%d: %s\n",
+				slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: read row: %s\n",
 						 node->no_id,
 						 copybuf+hdr_len);
 
@@ -357,6 +361,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 							  tmp,&cmdargs,row);
 	if( rc < 0 )
 	{
+		slon_log(SLON_INFO,"remoteWALListenerThread_%d: skipping row - unable to extract metadata:%s\n",node->no_id,row);
 		return rc;
 	}
 	
@@ -373,7 +378,11 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 
 	}
 	if(listener == NULL)
+	{
+		slon_log(SLON_WARN,"remoteWALListenerThread_%d: no listener found for %d\n", node->no_id, origin_id);
 		return 0;
+
+	}
 
 	/**
 	 * are we subscribed to the set ?
@@ -472,13 +481,15 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 	int ev_origin=0;
 	SlonListen	* listenPtr=NULL;
 
-
-	column=strtok_r(cmdargs+1,",",&saveptr);
+	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: inside of parseEvent %s\n",
+			 node->no_id,cmdargs+1);
+	column=parse_csv_token(cmdargs+1,',',&saveptr);
 	do
 		 
 	{
 
-		value = strtok_r(NULL,",",&saveptr);
+		value = parse_csv_token(NULL,',',&saveptr);
+		slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: parsed %s %s\n",node->no_id,column,value);
 		if(value == NULL)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: " \
@@ -615,7 +626,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 
 		
 		
-	}while ( (column = strtok_r(NULL,",",&saveptr)) != NULL);
+	}while ( (column = parse_csv_token(NULL,',',&saveptr)) != NULL);
 	
 	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: adding event %lld %d to queue snapshot %s \n", node->no_id,ev_seqno,ev_origin,ev_snapshot);
 
@@ -769,6 +780,7 @@ static int extract_row_metadata(SlonNode * node,
 				char * tmp_buf = malloc(curptr - prev_start );
 				memset(tmp_buf,0,curptr - prev_start );
 				strncpy(tmp_buf,prev_start, curptr-prev_start);
+				tmp_buf[curptr-prev_start]='\0';
 				*origin_id = strtol(tmp_buf,NULL, 10 );				
 				free(tmp_buf);
 				start=false;
@@ -846,7 +858,7 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 		int64 now;
 		struct timeval tp;		
 
-		timeval.tv_sec = 1;
+		timeval.tv_sec = 5;
 		timeval.tv_nsec = 0;
 		pthread_cond_timedwait(&(workerNode->message_cond),&(workerNode->message_lock),&timeval);
 	
@@ -1236,8 +1248,10 @@ static bool xid_in_snapshot(SlonNode * node,
 	 */
 	snapshot = malloc(strlen(snapshot_p)+1);
 	strcpy(snapshot,snapshot_p);
-	
-
+#if 0 
+	slon_log(SLON_DEBUG2,"remoteWALListener_%d: comparing %s and %s\n",
+			 node->no_id, xid_c,snapshot_p);
+#endif
 	minxid_c = strtok_r(snapshot,":",&state);
 	if ( minxid_c == NULL)
 	{
@@ -1297,4 +1311,63 @@ static bool xid_in_snapshot(SlonNode * node,
 	}
 	free(snapshot);
 	return true;
+}
+
+static char * 
+parse_csv_token(char * str,  char  delim, char ** storage)
+{
+	bool in_quote;
+	bool last_escape;
+	char * ptr;
+	if ( str != NULL)
+	{
+		/**
+		 * first invocation.
+		 */
+		*storage=str;
+	}
+	else if (*storage==NULL)
+	{
+		return NULL;
+	}
+
+	in_quote=false;
+	last_escape=false;
+	ptr = *storage;
+	while(1)
+	{
+		if ( *ptr == '\0')
+		{
+			char * ret = *storage;
+			/**
+			 * string finished.
+			 */
+			*storage=NULL;
+			return ret;
+		}
+		if ( !in_quote && *ptr == delim)
+		{
+			char * ret = *storage;
+			*storage=ptr;
+			*ptr='\0';
+			*storage = *storage+1;
+			return ret;
+		}
+		if ( in_quote && !last_escape && *ptr=='"')
+		{
+			in_quote=false;
+		}
+		else if( !in_quote && !last_escape && *ptr=='"')
+		{
+			in_quote=true;
+		}
+		else if ( *ptr=='\\' )
+		{
+			last_escape=true;
+		}
+		last_escape=false;
+		ptr++;
+	}
+	
+	return NULL;
 }
