@@ -224,9 +224,11 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	lookupSlonyInfo(relation->rd_id,ctx, &origin_id,&table_id);
 	if( origin_id <= 0 ) 
 	{
+
 		Oid slony_namespace;
 		Oid slevent_oid;
 		Oid slconfirm_oid;
+		Oid slseqlog_oid;
 		AttrNumber origin_attnum = InvalidAttrNumber;
 		char * schema_name;
 
@@ -245,6 +247,8 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		 */
 		slevent_oid = get_relname_relid("sl_event",slony_namespace);
 		slconfirm_oid = get_relname_relid("sl_confirm",slony_namespace);
+		slseqlog_oid = get_relname_relid("sl_seqlog",slony_namespace);
+
 		if(slevent_oid == relation->rd_id &&
 		   change->action == REORDER_BUFFER_CHANGE_INSERT)
 		{
@@ -262,6 +266,15 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 			 * extract con_origin from the tuple
 			 */
 			origin_attnum = get_attnum(relation->rd_id,"con_received");			
+		}
+		else if (slseqlog_oid == relation->rd_id &&
+				 change->action == REORDER_BUFFER_CHANGE_INSERT)
+		{
+			/**
+			 * 
+			 */
+			
+			origin_attnum = get_attnum(relation->rd_id,"seql_origin");	
 		}
 		if(origin_attnum != InvalidAttrNumber)
 		{

@@ -3341,7 +3341,8 @@ begin
 			and SQ.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 	if not found then
-		raise exception 'Slony-I: sequenceSetValue(): sequence % not found', p_seq_id;
+		--raise exception 'Slony-I: sequenceSetValue(): sequence % not found', p_seq_id;
+		return 0;
 	end if;
 
 	-- ----

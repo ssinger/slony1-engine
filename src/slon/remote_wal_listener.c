@@ -100,6 +100,10 @@ static bool xid_in_snapshot(SlonNode * node,
 static char * 
 parse_csv_token(char * str,  char  delim, char ** storage);
 
+
+static void drain_worker_queue(SlonNode * workerNode,SlonNode * listening_node,SlonWALState * state);
+static void push_seqlog_row(SlonNode * listening_node, SlonWALState * state, int origin_id,
+							char * cmdargs,XlogRecPtr walptr);
 /**
  * connect to the walsender and INIT a logical WAL slot
  *
@@ -426,6 +430,15 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 */
 		push_copy_row(node,state,origin_id,row,xid_str);
 	
+	}
+	else if (strcmp(schema_name_quoted, rtcfg_namespace)==0 &&
+			 strcmp(table_name,  "sl_seqlog")==0)
+	{
+		/**
+		 * a sequence update.
+		 */
+		push_seqlog_row(node,state,origin_id,cmdargs,walptr);
+		
 	}
 	else
 	{
@@ -844,38 +857,8 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 		return;
 	}
 
-	/**
-	 * Wait until the message queue is empty.
-	 * We do this so we can get a good guess at 
-	 * the sl_setsync value to compare this row against
-	 * to figure out if it has already been applied.
-	 */
-	pthread_mutex_lock(&(workerNode->message_lock));
+	drain_worker_queue(workerNode,listening_node,state);
 
-	while ( workerNode->message_head != NULL)
-	{
-		struct timespec timeval;
-		int64 now;
-		struct timeval tp;		
-
-		timeval.tv_sec = 5;
-		timeval.tv_nsec = 0;
-		pthread_cond_timedwait(&(workerNode->message_cond),&(workerNode->message_lock),&timeval);
-	
-		gettimeofday(&tp,NULL);
-		now  = (int64) (tp.tv_sec -
-						((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
-						* USECS_PER_SEC) + tp.tv_usec;
-		/** 
-		 * have the lock.
-		 * release it , send feedback and re-aquire it.
-		 * we don't want to hold the lock while we send a network message
-		 */
-		pthread_mutex_unlock(&(workerNode->message_lock));
-		sendFeedback(listening_node,state,state->last_committed_pos , now,false);
-		pthread_mutex_lock(&(workerNode->message_lock));
-		
-	}
 	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: the message queue is empty\n",listening_node->no_id);
 	/**
 	 * at this stage the workerNode message queue is empty.
@@ -1370,4 +1353,149 @@ parse_csv_token(char * str,  char  delim, char ** storage)
 	}
 	
 	return NULL;
+}
+
+
+static void push_seqlog_row(SlonNode * listening_node, SlonWALState * state, int origin_id,
+							char * cmdargs,XlogRecPtr walptr)
+{
+
+	char * column;
+	char * value;
+	char * saveptr;
+	char * seqid=NULL;
+	char * seqno=NULL;
+	char * last_value=NULL;
+	SlonDString query;
+	SlonNode * workerNode;
+	PGresult * res;
+	int value_len;
+
+	column = parse_csv_token(cmdargs+1,',',&saveptr);
+	dstring_init(&query);
+	/**
+	 * 
+	 */
+	do 
+	{
+		value = parse_csv_token(NULL,',',&saveptr);
+		value_len = strlen(value);
+		if(value[value_len-1]=='}')
+		{
+			value[value_len-1]='\0';
+		}		
+		if ( strcmp(column, "seql_seqid") == 0 )
+		{
+			seqid = value;
+		}
+		else if (strcmp(column,"seql_ev_seqno") == 0)
+		{
+			seqno = value;
+		}
+		else if (strcmp(column,"seql_last_value") == 0)
+		{
+			last_value = value;
+		}
+		
+	} while ( (column = parse_csv_token(NULL,',',&saveptr)) != NULL );
+	
+	slon_mkquery(&query,
+				 "select %s.sequenceSetValue(%s,%d,'%s','%s');",
+				 rtcfg_namespace,seqid, origin_id,seqno,last_value);
+	rtcfg_lock();
+	workerNode = rtcfg_findNode(origin_id);
+	if (workerNode == NULL)
+	{
+		rtcfg_unlock();
+		slon_log(SLON_WARN,
+				 "remoteWALListenerThread_%d: unknown origin %d\n",
+				 listening_node->no_id, origin_id);
+
+		return;
+	}
+	rtcfg_unlock();
+	if (!listening_node->no_active)
+	{
+		slon_log(SLON_WARN,
+				 "remoteWALListenerThread_%d: worker  %d is not active\n",
+				 listening_node->no_id, origin_id);
+		return;
+	}
+	drain_worker_queue(workerNode,listening_node,state);	
+	pthread_mutex_lock(&workerNode->worker_con_lock);
+	switch(workerNode->worker_con_status)
+	{
+		
+		case SLON_WCON_IDLE:
+			PQexec(workerNode->worker_dbconn,"start transaction;");
+			workerNode->worker_con_status = SLON_WCON_INTXN;
+			break;
+		case SLON_WCON_INCOPY:
+			if ( PQputCopyEnd(workerNode->worker_dbconn,NULL) != 1 )
+			{
+				slon_log(SLON_ERROR,"remoteWALListener_%d_%d error ending COPY:\n",listening_node->no_id,
+					workerNode->no_id);
+				slon_retry();			 
+			}
+			res = PQgetResult(workerNode->worker_dbconn);
+			if ( PQresultStatus(res) != PGRES_COMMAND_OK )
+			{
+				slon_log(SLON_ERROR,"remoteWALListenerThread_%d error in COPY:%s\n",listening_node->no_id,
+						 PQresultErrorMessage(res));
+				slon_retry();
+			}
+			PQclear(res);
+			workerNode->worker_con_status = SLON_WCON_INTXN;
+			break;
+		case SLON_WCON_INTXN:
+			break;
+	}
+	res = PQexec(workerNode->worker_dbconn,dstring_data(&query));
+	if ( PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR,"remoteWALListenerThread_%d : error setting sequences: %s",
+				 listening_node->no_id,PQresultErrorMessage(res));
+		slon_retry();
+	}
+	PQclear(res);
+	pthread_mutex_unlock(&(workerNode->worker_con_lock));
+	pthread_mutex_unlock(&(workerNode->message_lock));
+	dstring_terminate(&query);
+	
+}
+
+static void drain_worker_queue(SlonNode * workerNode,SlonNode * listening_node,SlonWALState * state)
+{
+	/**
+	 * Wait until the message queue is empty.
+	 * We do this so we can get a good guess at 
+	 * the sl_setsync value to compare this row against
+	 * to figure out if it has already been applied.
+	 */
+	pthread_mutex_lock(&(workerNode->message_lock));
+
+	while ( workerNode->message_head != NULL)
+	{
+		struct timespec timeval;
+		int64 now;
+		struct timeval tp;		
+
+		timeval.tv_sec = 5;
+		timeval.tv_nsec = 0;
+		pthread_cond_timedwait(&(workerNode->message_cond),&(workerNode->message_lock),&timeval);
+	
+		gettimeofday(&tp,NULL);
+		now  = (int64) (tp.tv_sec -
+						((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
+						* USECS_PER_SEC) + tp.tv_usec;
+		/** 
+		 * have the lock.
+		 * release it , send feedback and re-aquire it.
+		 * we don't want to hold the lock while we send a network message
+		 */
+		pthread_mutex_unlock(&(workerNode->message_lock));
+		sendFeedback(listening_node,state,state->last_committed_pos , now,false);
+		pthread_mutex_lock(&(workerNode->message_lock));
+		
+	}
 }
