@@ -5651,7 +5651,7 @@ static void lock_workercon(SlonNode * node)
 		if (  PQputCopyEnd(node->worker_dbconn,NULL) != 1 ) 
 		{
 			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:\n",node->no_id);
-			slon_retry();			 
+			slon_retry();
 
 		}
 		res1 = PQgetResult(node->worker_dbconn);
