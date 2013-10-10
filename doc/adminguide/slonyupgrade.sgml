@@ -55,14 +55,17 @@ cannot upgrade to new sl_log_N format due to existing unreplicated data
 </para>
 <para> A suggested approach is as follows:
 <itemizedlist>
-<listitem><para> Use <xref linkend="stmtlockset"> to lock all sets, so that no new changes are being injected into the log tables </para></listitem>
+<listitem><para> Use <xref linkend="stmtlockset"> to lock all sets, so that no new changes are being injected into the log tables </para>
+<para> Note that, at this point, an application <quote>outage</quote> begins as far as write operations are concerned. </para>
+</listitem>
 <listitem><para> Set &lslon; parameter <xref linkend="slon-config-cleanup-interval"> to a very low value (a few seconds) so that the &lslon; cleanup thread will trim data out of &sllog1; and &sllog2; immediately</para></listitem>
 <listitem><para> Restart &lslon; for each node and let it run through a cleanup cycle to empty out &sllog1; and &sllog2; on all nodes. </para>
 </listitem>
 <listitem><para> Verify that &sllog1; and &sllog2; are empty on all nodes in the cluster. </para></listitem>
 <listitem><para> Use <xref
 linkend="stmtupdatefunctions"> against each node to upgrade to version 2.2  </para></listitem>
-<listitem><para> Use <xref linkend="stmtunlockset"> to unlock all sets </para></listitem>
+<listitem><para> Use <xref linkend="stmtunlockset"> to unlock all sets </para>
+<para> After this operation, replicated tables are again available for writes. </para></listitem>
 </itemizedlist>
 </para>
 </sect2>
