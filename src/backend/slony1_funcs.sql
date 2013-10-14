@@ -1234,7 +1234,8 @@ begin
 	-- the failed node even if it *does* become accessible
 
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
-	   		  pa_server=p_failed_node;
+	   		  pa_server=p_failed_node
+			  and pa_conninfo<>'<event pending>';
 
 	if found then
 	   v_restart_required:=true;
