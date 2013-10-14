@@ -4241,8 +4241,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		dstring_free(&query);
 		dstring_free(&lsquery);
 		archive_terminate(node);
-		slon_disconnectdb(provider->conn);
-		provider->conn = NULL;
 		return 20;
 	}
 	ntuples1 = PQntuples(res1);
@@ -4254,8 +4252,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		dstring_free(&query);
 		dstring_free(&lsquery);
 		archive_terminate(node);
-		slon_disconnectdb(provider->conn);
-		provider->conn = NULL;
 		return 20;
 	}
 	wd->active_log_table = (strtol(PQgetvalue(res1, 0, 0), NULL, 10) & 0x01) + 1;
