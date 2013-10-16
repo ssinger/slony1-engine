@@ -2,6 +2,10 @@
 * 2.2.1
   - Bug 315 :: Fixes to compile time include directories
 
+  - Bug 318 :: Fix to FAILOVER logic to avoid slon restart loop
+
+  - Bug 320 :: Fix UPDATE FUNCTIONS so it adds sl_node.no_failed on a upgrade
+               from slony version before 2.2.0
 * Slony-I 2.2 Release Notes
 
 ** Significant Changes
