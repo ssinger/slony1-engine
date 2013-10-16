@@ -56,6 +56,7 @@ Failover.prototype.runTest = function() {
 	this.subscribeSet(1,1, 3, [ 4, 5 ]);
 	this.slonikSync(1,1);
 
+
 	
 
 	var load = this.generateLoad();
@@ -305,7 +306,28 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db4','db3');
 	this.compareDb('db3','db2');
 	this.compareDb('db4','db2');
-
+    
+    	this.dropNode(1,2);
+	this.reAddNode(1,2,2);	
+    this.slonikSync(1,2);
+    this.moveSet(1,2,1);
+    //stop slon 4
+    this.coordinator.log('starting bug 318 test');
+    this.slonArray[3].stop();
+    this.coordinator.join(this.slonArray[3]);
+    load2 = this.generateLoad();
+    this.coordinator.log('stopping load');
+    java.lang.Thread.sleep(3*30*1000);
+    load2.stop();
+    this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
+				this.slonArray[3].run();    
+    this.failNode(1,3,true);
+    
+    this.compareDb('db2', 'db3');
+    this.compareDb('db2', 'db4');
+    this.compareDb('db3','db4');
+    this.compareDb('db3','db5');
+    
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);
