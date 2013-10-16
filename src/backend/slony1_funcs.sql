@@ -5371,6 +5371,10 @@ create table @NAMESPACE@.sl_components (
   	   execute v_query;
 	end if;
 
+	
+
+
+
 	if not exists (select 1 from information_schema.tables t where table_schema = '_@CLUSTERNAME@' and table_name = 'sl_event_lock') then
 	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
 	   execute v_query;
@@ -5565,6 +5569,11 @@ create table @NAMESPACE@.sl_components (
 		   	and direct_recv.sub_receiver=subs3.sub_receiver)
 	    		where subs3.sub_receiver is null
 	    	);
+	end if;
+
+	if not @NAMESPACE@.check_table_field_exists('_@CLUSTERNAME@', 'sl_node', 'no_failed') then
+	   alter table @NAMESPACE@.sl_node add column no_failed bool;
+	   update @NAMESPACE@.sl_node set no_failed=false;
 	end if;
 	return p_old;
 end;
