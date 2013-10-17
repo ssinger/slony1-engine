@@ -831,8 +831,8 @@ remoteWorkerThread_main(void *cdata)
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d error querying "
-							 "last confirmed id for node %d in CLONE NODE\n",
-							 node->no_id, no_id);
+							 "last confirmed id for node %d in CLONE NODE:%s\n",
+							 node->no_id, no_id,PQerrorMessage(local_dbconn));
 					slon_retry();
 				}
 				if (PQntuples(res) != 0)
