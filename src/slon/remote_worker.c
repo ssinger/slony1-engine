@@ -831,8 +831,11 @@ remoteWorkerThread_main(void *cdata)
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d error querying "
-							 "last confirmed id for node %d in CLONE NODE\n",
-							 node->no_id, no_id);
+							 "last confirmed id for node %d in CLONE NODE "
+							 "- %s %s\n",
+							 node->no_id, no_id,
+							 PQresultErrorMessage(res),
+							 PQerrorMessage(local_dbconn));
 					slon_retry();
 				}
 				if (PQntuples(res) != 0)
@@ -3657,19 +3660,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			dstring_free(&lsquery);
 			return 60;
 		}
-	}
-
-	/*
-	 * Make sure that we have the event provider in our provider list.
-	 */
-	for (provider = wd->provider_head; provider; provider = provider->next)
-	{
-		if (provider->no_id == event->event_provider)
-			break;
-	}
-	if (provider == NULL)
-	{
-		adjust_provider_info(node, wd, false, event->event_provider);
 	}
 
 	/*
