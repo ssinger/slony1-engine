@@ -1526,24 +1526,44 @@ comment on function @NAMESPACE@.cloneNodePrepare(p_no_id int4, p_no_provider int
 create or replace function @NAMESPACE@.cloneNodePrepare_int (p_no_id int4, p_no_provider int4, p_no_comment text)
 returns int4
 as $$
+declare
+   v_dummy int4;
 begin
-	insert into @NAMESPACE@.sl_node
+	select 1 into v_dummy from @NAMESPACE@.sl_node where
+	       no_id = p_no_id;
+	if not found then
+	   insert into @NAMESPACE@.sl_node
 		(no_id, no_active, no_comment,no_failed)
 		select p_no_id, no_active, p_no_comment,no_failed
 		from @NAMESPACE@.sl_node
 		where no_id = p_no_provider;
-
-	insert into @NAMESPACE@.sl_path
+	else
+		update @NAMESPACE@.sl_node set
+		       no_active= np.no_active
+		       ,no_comment=np.no_comment
+		       ,no_failed=np.no_failed
+		       from @NAMESPACE@.sl_node np
+		       where np.no_id=p_no_provider
+		       and sl_node.no_id=p_no_id;
+	end if;
+	select 1 into v_dummy from @NAMESPACE@.sl_path where
+	        pa_server=p_no_provider and pa_client=p_no_id;
+	if not found then  
+	   insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
 		select pa_server, p_no_id, '<event pending>', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_client = p_no_provider;
-	insert into @NAMESPACE@.sl_path
+	end if;
+	select 1 into v_dummy from @NAMESPACE@.sl_path where
+	       pa_server=p_no_id and pa_client=p_no_provider;
+	if not found then
+	   insert into @NAMESPACE@.sl_path
 		(pa_server, pa_client, pa_conninfo, pa_connretry)
 		select p_no_id, pa_client, '<event pending>', pa_connretry
 		from @NAMESPACE@.sl_path
 		where pa_server = p_no_provider;
-
+	end if;
 	insert into @NAMESPACE@.sl_subscribe
 		(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
 		select sub_set, sub_provider, p_no_id, sub_forward, sub_active
