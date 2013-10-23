@@ -3630,6 +3630,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString lsquery;
 	SlonDString *provider_query;
 	SlonDString actionseq_subquery;
+	SlonSet * set_ptr = NULL;
 
 	int			actionlist_len;
 	int64		min_ssy_seqno;
@@ -3661,6 +3662,41 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			return 60;
 		}
 	}
+
+
+	/*
+	 * Make sure that we have the event provider in our provider list.
+    */
+   for (provider = wd->provider_head; provider; provider = provider->next)
+   {
+       if (provider->no_id == event->event_provider)
+           break;
+   }
+   if (provider == NULL)
+   {
+	   rtcfg_lock();
+	   /**
+		* is this remote_worker a set origin?
+		* if not we can ignore the SYNC event.
+		*/
+	   for(set_ptr = rtcfg_set_list_head ; 
+		   set_ptr != NULL; set_ptr = set_ptr->next)
+
+	   {
+		   if ( set_ptr->set_origin == node->no_id && set_ptr->sub_active)
+			   break;
+	   }
+	   if ( set_ptr != NULL && event->event_provider != node->no_id  && set_ptr->sub_active )
+	   {
+		   //adjust_provider_info(node, wd, false, event->event_provider); 
+		   slon_log(SLON_ERROR,"remoteWorkerThread_%d: event provider %d is not in the provider list\n",
+					node->no_id,event->event_provider);
+		   rtcfg_unlock();
+		   slon_retry();
+	   }	   
+	   rtcfg_unlock();
+   }
+
 
 	/*
 	 * Establish all required data provider connections
