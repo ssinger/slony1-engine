@@ -297,8 +297,11 @@ Failover.prototype.runTest = function() {
 	this.createSecondSet(1);
 	this.subscribeSet(2,1, 1, [ 2, 3 ]);
 	this.slonikSync(1,1);
-	this.failNode(1,2,true);	
+	this.failNode(1,2,true);
+
+	
     this.slonikSync(1,2);
+	
 
 	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
@@ -309,6 +312,18 @@ Failover.prototype.runTest = function() {
     
     	this.dropNode(1,2);
 	this.reAddNode(1,2,2);	
+
+
+	this.addCompletePaths();
+	// NODE 4  MIGHT have been unsubscribed
+	// from set 1.  This is because 
+	// node 4 isn't subscribe to set 2.
+	// If node 4 was more ahead
+	// they are now unsubscribed.
+	this.slonikSync(1,1);
+	this.slonikSync(1,4);
+	this.subscribeSet(1,1,1,[4]);
+
     this.slonikSync(1,2);
     this.moveSet(1,2,1);
     //stop slon 4
@@ -319,6 +334,7 @@ Failover.prototype.runTest = function() {
     this.coordinator.log('stopping load');
     java.lang.Thread.sleep(3*30*1000);
     load2.stop();
+ 
     this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
 				this.slonArray[3].run();    
     this.failNode(1,3,true);
