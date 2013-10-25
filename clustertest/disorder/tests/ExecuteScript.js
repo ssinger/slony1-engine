@@ -437,9 +437,13 @@ ExecuteScript.prototype.testDDLFailure = function() {
 	 */
 	statement.execute('DROP TABLE disorder.test_transient');
 	this.slonikSync(1, 1);
-	var lag = this.measureLag(1,2);
-	this.coordinator.log('we do not expect lag, we measure it as ' + lag);
-	this.testResults.assertCheck('node is not lagged', lag < 10,true);
+	/**
+	 * sl_status showing some lag of 10 seconds or more is not
+	 * unusual because of the way confirms propagate.
+	 */
+	// var lag = this.measureLag(1,2);
+	// this.coordinator.log('we do not expect lag, we measure it as ' + lag);
+	// this.testResults.assertCheck('node is not lagged', lag < 10,true);
 	this.slonikSync(1,1);
 	this.dropTestTable(1,1,false);
 	
