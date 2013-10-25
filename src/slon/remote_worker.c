@@ -246,7 +246,7 @@ static void monitor_subscriber_query(PerfMon * pm);
 static void monitor_subscriber_iud(PerfMon * pm);
 
 static void adjust_provider_info(SlonNode * node,
-					 WorkerGroupData * wd, int cleanup, int event_provider);
+					 WorkerGroupData * wd, int cleanup);
 static int query_execute(SlonNode * node, PGconn *dbconn,
 			  SlonDString * dsp);
 static void query_append_event(SlonDString * dsp,
@@ -391,7 +391,7 @@ remoteWorkerThread_main(void *cdata)
 
 			if (curr_config != rtcfg_seq_get())
 			{
-				adjust_provider_info(node, wd, false, -1);
+				adjust_provider_info(node, wd, false);
 				curr_config = rtcfg_seq_get();
 
 				/*
@@ -1530,7 +1530,7 @@ remoteWorkerThread_main(void *cdata)
 	 * Thread exit time has arrived. Disconnect from all data providers and
 	 * free memory
 	 */
-	adjust_provider_info(node, wd, true, -1);
+	adjust_provider_info(node, wd, true);
 
 	slon_disconnectdb(local_conn);
 	dstring_free(&query1);
@@ -1555,8 +1555,7 @@ remoteWorkerThread_main(void *cdata)
  * ----------
  */
 static void
-adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
-					 int event_provider)
+adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup)
 {
 	ProviderInfo *provider;
 	ProviderInfo *provnext;
@@ -1755,45 +1754,6 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 				provider->pa_conninfo = NULL;
 			else
 				provider->pa_conninfo = strdup(rtcfg_node->pa_conninfo);
-		}
-	}
-
-	/*
-	 * Step 4.
-	 *
-	 * If we don't have ANY provider at this point, fall back
-	 * on the node that we got this event from.
-	 */
-	if (event_provider >= 0 && wd->provider_head == NULL)
-	{
-		/*
-		 * No provider entry found. Create a new one.
-		 */
-		provider = (ProviderInfo *)
-			malloc(sizeof(ProviderInfo));
-		memset(provider, 0, sizeof(ProviderInfo));
-		provider->no_id = event_provider;
-		provider->wd = wd;
-
-		dstring_init(&provider->helper_query);
-
-		/*
-		 * Add the provider to our work group
-		 */
-		DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
-						provider);
-
-		/*
-		 * Copy the runtime configurations conninfo into the provider
-		 * info.
-		 */
-		rtcfg_node = rtcfg_findNode(provider->no_id);
-		if (rtcfg_node != NULL)
-		{
-			provider->pa_connretry = rtcfg_node->pa_connretry;
-			if (rtcfg_node->pa_conninfo != NULL)
-				provider->pa_conninfo =
-					strdup(rtcfg_node->pa_conninfo);
 		}
 	}
 }
@@ -3630,7 +3590,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString lsquery;
 	SlonDString *provider_query;
 	SlonDString actionseq_subquery;
-	SlonSet * set_ptr = NULL;
 
 	int			actionlist_len;
 	int64		min_ssy_seqno;
@@ -3663,40 +3622,23 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
-
 	/*
-	 * Make sure that we have the event provider in our provider list.
-    */
-   for (provider = wd->provider_head; provider; provider = provider->next)
-   {
-       if (provider->no_id == event->event_provider)
-           break;
-   }
-   if (provider == NULL)
-   {
-	   rtcfg_lock();
-	   /**
-		* is this remote_worker a set origin?
-		* if not we can ignore the SYNC event.
-		*/
-	   for(set_ptr = rtcfg_set_list_head ; 
-		   set_ptr != NULL; set_ptr = set_ptr->next)
-
-	   {
-		   if ( set_ptr->set_origin == node->no_id && set_ptr->sub_active)
-			   break;
-	   }
-	   if ( set_ptr != NULL && event->event_provider != node->no_id  && set_ptr->sub_active )
-	   {
-		   //adjust_provider_info(node, wd, false, event->event_provider); 
-		   slon_log(SLON_ERROR,"remoteWorkerThread_%d: event provider %d is not in the provider list\n",
-					node->no_id,event->event_provider);
-		   rtcfg_unlock();
-		   slon_retry();
-	   }	   
-	   rtcfg_unlock();
-   }
-
+	 * If the provider list is empty, there are no sets from this
+	 * origin that are replicated.
+	 */
+	if (wd->provider_head == NULL)
+	{
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: SYNC " INT64_FORMAT
+				 " not subscribed to any sets from this origin\n",
+				 node->no_id, event->ev_seqno);
+		if (archive_dir)
+		{
+			rc = archive_close(node);
+			if (rc < 0)
+				slon_retry();
+		}
+		return 0;
+	}
 
 	/*
 	 * Establish all required data provider connections
