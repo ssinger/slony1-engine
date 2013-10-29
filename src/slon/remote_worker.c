@@ -647,6 +647,12 @@ remoteWorkerThread_main(void *cdata)
 
 				if ((rc = sched_msleep(node, seconds * 1000)) != SCHED_STATUS_OK)
 					break;
+				if (curr_config != rtcfg_seq_get())
+				{
+					adjust_provider_info(node, wd, false, -1);
+					curr_config = rtcfg_seq_get();
+				}
+
 			}
 			if (rc != SCHED_STATUS_OK)
 				break;
@@ -831,8 +837,11 @@ remoteWorkerThread_main(void *cdata)
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d error querying "
-							 "last confirmed id for node %d in CLONE NODE\n",
-							 node->no_id, no_id);
+							 "last confirmed id for node %d in CLONE NODE "
+							 "- %s %s\n",
+							 node->no_id, no_id,
+							 PQresultErrorMessage(res),
+							 PQerrorMessage(local_dbconn));
 					slon_retry();
 				}
 				if (PQntuples(res) != 0)
@@ -3660,16 +3669,13 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	}
 
 	/*
-	 * Make sure that we have the event provider in our provider list.
+	 * If the provider list is empty, we need some provider
+	 * 
 	 */
-	for (provider = wd->provider_head; provider; provider = provider->next)
+	if (wd->provider_head == NULL)
 	{
-		if (provider->no_id == event->event_provider)
-			break;
-	}
-	if (provider == NULL)
-	{
-		adjust_provider_info(node, wd, false, event->event_provider);
+
+		adjust_provider_info(node, wd, false, event->event_provider);	
 	}
 
 	/*
