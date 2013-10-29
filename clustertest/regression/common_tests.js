@@ -70,8 +70,6 @@ function launch_slon(coordinator) {
 function terminate_slon(coordinator) {
 	for(var idx=0; idx < slon_array.length; idx++) {
 		slon_array[idx].stop();		
-	}
-	for(var idx=0; idx < slon_array.length; idx++) {
 		coordinator.join(slon_array[idx]);		
 	}
 }
