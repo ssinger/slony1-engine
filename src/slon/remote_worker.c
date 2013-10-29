@@ -3862,12 +3862,12 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 node->no_id, provider->no_id, provider->log_status);
 
 		/*
-		 * Add the DDL selection to the provider_query if this is the event
-		 * provider. In case we are subscribed to any set(s) from the origin,
-		 * this is implicitly the data provider because we only listen for
-		 * events on that node.
+		 * Add the DDL selection to the first provider.
+		 * Earlier checks ensured that the provider is caught
+		 * up to this SYNC.  All nodes act as 'forwarder' nodes
+		 * for DDL.
 		 */
-		if (provider->no_id == event->event_provider)
+		if (provider == wd->provider_head)
 		{
 			slon_appendquery(provider_query,
 							 "select log_origin, log_txid, "
