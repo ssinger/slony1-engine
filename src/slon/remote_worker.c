@@ -1681,8 +1681,14 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	 * Step 3.
 	 *
 	 * Remove all providers that we don't need any more.
+	 * we only do this if event_provider is -1
+	 * which means that this function was called in response
+	 * to a reconfiguration event.  If the event_provider just
+	 * isn't in the provider list we don't want to drop other
+	 * providers because they might be needed in the near future.
 	 */
-	for (provider = wd->provider_head; provider; provider = provnext)
+	for (provider = wd->provider_head; provider && 
+			 event_provider==-1 ; provider = provnext)
 	{
 		SlonNode   *rtcfg_node;
 
@@ -1758,10 +1764,16 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	/*
 	 * Step 4.
 	 *
-	 * If we don't have ANY provider at this point, fall back
-	 * on the node that we got this event from.
+	 * make sure that the node we got this message from
+	 * is in the provider list
 	 */
-	if (event_provider >= 0 && wd->provider_head == NULL)
+	for(provider = wd->provider_head ; event_provider > 0 &&
+			provider != NULL; provider = provider->next)
+	{
+		if (provider->no_id == event_provider)
+			break;
+	}
+	if (event_provider >= 0 && provider == NULL)
 	{
 		/*
 		 * No provider entry found. Create a new one.
@@ -3749,10 +3761,14 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	{
 		/*
 		 * We only need to explicitly check this if the data provider is
-		 * neither the set origin, nor the node we received this event from.
+		 * neither the set origin, nor the node we received this event from
+		 * and we receive data from this provider.
+		 *
+		 *
 		 */
 		if (event->ev_origin != provider->no_id &&
-			event->event_provider != provider->no_id)
+			event->event_provider != provider->no_id &&
+			provider->set_head != NULL )
 		{
 			int64		prov_seqno;
 
@@ -3790,6 +3806,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
+
 	min_ssy_seqno = -1;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -3803,6 +3820,21 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			need_union;
 		int			sl_log_no;
 
+		/**
+		 * ONLY use the event_provider.
+		 * If this provider has a set then that should be the
+		 * only provider anyway. 
+		 *
+		 * If the provider doesn't then we get the DDL from the event_provider.
+		 */
+		if(provider->no_id != event->event_provider)
+		{
+			slon_log(SLON_DEBUG2,
+					 "remoteWorkerThread_%d: skipping provider %d we want %d\n",
+					 node->no_id, provider->no_id,event->event_provider);
+
+			continue;
+		}
 		slon_log(SLON_DEBUG2,
 			  "remoteWorkerThread_%d: creating log select for provider %d\n",
 				 node->no_id, provider->no_id);
