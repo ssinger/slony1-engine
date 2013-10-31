@@ -3827,7 +3827,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 *
 		 * If the provider doesn't then we get the DDL from the event_provider.
 		 */
-		if(provider->no_id != event->event_provider)
+		if(provider->no_id != event->event_provider && provider->set_head == NULL)
 		{
 			slon_log(SLON_DEBUG2,
 					 "remoteWorkerThread_%d: skipping provider %d we want %d\n",
