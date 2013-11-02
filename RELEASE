@@ -4,8 +4,16 @@
 
   - Bug 318 :: Fix to FAILOVER logic to avoid slon restart loop
 
+  - Bug 319 :: Fix dereferencing of NULL pointer on a lost connection
+
   - Bug 320 :: Fix UPDATE FUNCTIONS so it adds sl_node.no_failed on a upgrade
                from slony version before 2.2.0
+
+  - Bug 321 :: Fixing frequent slon connect and disconnects to providers
+
+  - Bug 322 :: Allow CLONE PREPARE processing to deal with an earlier STORE PATH
+
+  -
 * Slony-I 2.2 Release Notes
 
 ** Significant Changes
