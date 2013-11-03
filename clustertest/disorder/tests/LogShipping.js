@@ -225,7 +225,7 @@ LogShipping.prototype.ddlTest = function() {
 		rs.close();
 	}
 	catch (e) {
-		this.assertResults.assertCheck('select count threw an exception:' + e.getMessage(),true,false);
+		this.testResults.assertCheck('select count threw an exception:' + e.getMessage(),true,false);
 	}
 	finally {
 		stat.close();
