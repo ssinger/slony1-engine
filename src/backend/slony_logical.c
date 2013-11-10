@@ -16,6 +16,7 @@
 #include "catalog/pg_type.h"
 #include "catalog/index.h"
 #include "catalog/namespace.h"
+#include "access/sysattr.h"
 
 #include "replication/output_plugin.h"
 #include "replication/snapbuild.h"
@@ -337,9 +338,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_UPDATE)
 	{
-
-		Relation indexrel;
-		TupleDesc indexdesc;
 		/**
 		 * convert all columns into two pairs of arrays.
 		 * one for key columns, one for non-key columns
@@ -386,80 +384,111 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 			cmdnupdates++;					
 		}
 		
-		/**
-		 * populate relation->rd_primary with the primary or candidate
-		 * index used to WAL values that specify which row is being updated.
-		 */
-		RelationGetIndexList(relation);
-				
-		indexrel = RelationIdGetRelation(relation->rd_primary);
-		indexdesc = RelationGetDescr(indexrel);
-	    for(i = 0; i < indexrel->rd_att->natts; i++)
+		if(change->tp.oldtuple == NULL)
 		{
-			const char * column;
+			/**
+			 * If oldtuple is NULL then no columns
+			 * that are in the REPLICA IDENTITY have changed.
+			 * Get the columns in the replica identity from the relation and
+			 * use the values in newtuple to make up identity values.
+			 */
+			Bitmapset * id_attrs;
+			const char * column;			
 			const char * value;
-			
-			if(indexdesc->attrs[i]->attisdropped)
-				/** you can't drop a column from an index, something is wrong */
-				continue;
-			if(indexdesc->attrs[i]->attnum < 0)
-				continue;
-
-			column = NameStr(indexdesc->attrs[i]->attname);
-			*cmdargselem++= PointerGetDatum(cstring_to_text(column));
-			*cmdnullselem++=false;
-
-			if(change->tp.oldtuple != NULL )
-				value = columnAsText(indexdesc,&change->tp.oldtuple->tuple,i);
-			else
-			  value = columnAsText(indexdesc,&change->tp.newtuple->tuple,i);
-			*cmdnullselem++=false;
-			*cmdargselem++=PointerGetDatum(cstring_to_text(value));
+			id_attrs = RelationGetIndexAttrBitmap(relation,
+												  INDEX_ATTR_BITMAP_IDENTITY_KEY);
+			for(i = 0; i < relation->rd_att->natts; i++)
+			{
+				if( bms_is_member(i-FirstLowInvalidHeapAttributeNumber+1,id_attrs))
+				{
+					column= NameStr(tupdesc->attrs[i]->attname);
+					elog(NOTICE,"attribute %d is member %s\n",i,column);
+					value = columnAsText(tupdesc,&change->tp.newtuple->tuple,i);		
+					if (value == NULL) 
+					{
+						continue;
+					}
+					*cmdargselem++=PointerGetDatum(cstring_to_text(column));
+					*cmdnullselem++=false;			
+					*cmdnullselem++=false;
+					*cmdargselem++=PointerGetDatum(cstring_to_text(value));																	
+					
+				}
+				else
+				{
+					elog(NOTICE,"attribute %d is NOT A member\n",i);	
+				}
+			}
 		}
-		RelationClose(indexrel);
+		else 
+		{
+			/**
+			 * At least one of the columns that make  up the replica
+			 * identity has changed.
+			 * Use the columns in oldtuple as the replica identity.
+			 */
+			for(i = 0; i < relation->rd_att->natts; i++)
+			{
+				const char * column;			
+				const char * value_old;
+				
+				if(tupdesc->attrs[i]->attisdropped)
+					continue;
+				if(tupdesc->attrs[i]->attnum < 0)
+					continue;
+				column= NameStr(tupdesc->attrs[i]->attname);
+				
+				value_old = columnAsText(tupdesc,&change->tp.oldtuple->tuple,i);		
+				if (value_old == NULL) 
+				{
+					continue;
+				}
+				*cmdargselem++=PointerGetDatum(cstring_to_text(column));
+				*cmdnullselem++=false;			
+				*cmdnullselem++=false;
+				*cmdargselem++=PointerGetDatum(cstring_to_text(value_old));
+		   			
+				
+				
+				
+			}
+		}
+
 	}
 	else if (change->action == REORDER_BUFFER_CHANGE_DELETE)
 	{
-	  Relation indexrel;
-	  TupleDesc indexdesc;
-		/**
-		 * convert the key columns to a pair of arrays.
-		 */
+	  /**
+	   * convert the key columns to a pair of arrays.
+	   */
 	  action='D';
 	  tuple=&change->tp.oldtuple->tuple;
 	  
-	  /**
-	   * populate relation->rd_primary with the primary or candidate
-	   * index used to WAL values that specify which row is being deleted.
-	   */
-	  RelationGetIndexList(relation);
-
-	  indexrel = RelationIdGetRelation(relation->rd_primary);
-	  indexdesc = RelationGetDescr(indexrel);
 	  
 
-	  cmdargs = cmdargselem = palloc( (indexrel->rd_att->natts * 2 + 2)
+	  cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 + 2)
 									  * sizeof (Datum));
-	  cmdnulls = cmdnullselem = palloc( (indexrel->rd_att->natts * 2 + 2)
+	  cmdnulls = cmdnullselem = palloc( (relation->rd_att->natts * 2 + 2)
 										* sizeof(bool));
-	  for(i = 0; i < indexrel->rd_att->natts; i++)
+	  for(i = 0; i < relation->rd_att->natts; i++)
 	  {
 		  const char * column;
 		  const char * value;
 		  
-		  if(indexdesc->attrs[i]->attisdropped)
+		  if(tupdesc->attrs[i]->attisdropped)
 			  /** you can't drop a column from an index, something is wrong */
 			  continue;
-		  if(indexdesc->attrs[i]->attnum < 0)
+		  if(tupdesc->attrs[i]->attnum < 0)
 			  continue;
-		  column = NameStr(indexdesc->attrs[i]->attname);
+		  value = columnAsText(tupdesc,tuple,i);
+		  if ( value == NULL)
+			  continue;
+		  column = NameStr(tupdesc->attrs[i]->attname);
 		  *cmdargselem++= PointerGetDatum(cstring_to_text(column));
 		  *cmdnullselem++=false;
-		  value = columnAsText(indexdesc,tuple,i);
+		
 		  *cmdnullselem++=false;
 		  *cmdargselem++=PointerGetDatum(cstring_to_text(value));
 	  }
-	  RelationClose(indexrel);
 	}
 	else
 	{
