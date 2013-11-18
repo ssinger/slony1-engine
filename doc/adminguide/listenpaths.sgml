@@ -208,6 +208,61 @@ linkend="table.sl-path"> are modified,
 the listener paths.</para>
 
 </sect2>
+
+<sect2 id="listenandconnections"> <title> Connection Management </title>
+
+<para> &slony1; uses the listen paths to determine which database
+connections to use to listen for events, which has the consequence
+that the paths set up using <xref linkend="stmtstorepath"> indicate
+which databases connections to open and monitor.  That may seem
+(particularly with the bit of recursion done in computing listen paths
+in <function>RebuildListenEntries()</function>) rather
+self-referential; things may be clarified by examining the
+trade-offs.  Consider that, effectively, all paths indicated
+by <xref linkend="stmtstorepath"> will be used.</para>
+
+<itemizedlist>
+<listitem><para> In a cluster with many nodes, that is fully, or
+nearly fully, connected, each node tends to open (n-1) connections,
+most of which are merely used to listen for events. </para>
+
+<para> If most nodes have one data provider, that means that (n-2) of
+those connections are arguably spurious, as it 
+<emphasis>ought</emphasis> to be possible for such nodes to draw in
+events via their data provider. </para>
+
+<para> Across a large, fully-connected cluster, this means that there
+will be around (n-1)(n-1), or O(n*n) connections that are not actively
+used.</para>
+
+<itemizedlist>
+<listitem><para> On a cluster with 10 nodes, that's 81 connections that aren't
+doing you much good, and it would be nice to get rid of those.</para>
+<para> You could do so by eliminating <xref linkend="stmtstorepath">
+entries that connect subscriber nodes to most or all
+nodes <emphasis>aside from the provider for that
+node</emphasis>.</para>
+</listitem>
+
+<listitem><para> On a small cluster, these <quote>extra</quote>
+connections aren't much of an issue.  If there are only two nodes,
+there <emphasis>are</emphasis> no unnecessary connections; for
+replication to work, altogether, the cluster must be fully connected.
+In a cluster with three nodes, there is likely only one arguably
+unnecessary connection, and eliminating it is quite likely not worth
+the effort and potential <xref linkend="stmtfailover">
+complications. </para></listitem>
+</itemizedlist>
+</listitem>
+<listitem><para> If a cluster is <emphasis>not</emphasis> fully
+connected, then, in case of <xref linkend="stmtfailover">, the
+administrator is liable to need to preface failover efforts by adding
+back additional <xref linkend="stmtstorepath"> requests to ensure the
+new post-failover configuration of the replication network is suitably
+connected.  This complicates failover.</para></listitem>
+</itemizedlist>
+
+</sect2>
 </sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
