@@ -132,7 +132,6 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 			DefElem * def_option = (DefElem * ) option->data.ptr_value;
 
 			
-			elog(NOTICE,"option found is %s",defGetString(def_option));
 			if( strcmp(def_option->defname,"cluster") == 0)
 			{
 				const char * value = defGetString(def_option);
@@ -402,7 +401,6 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 				if( bms_is_member(i-FirstLowInvalidHeapAttributeNumber+1,id_attrs))
 				{
 					column= NameStr(tupdesc->attrs[i]->attname);
-					elog(NOTICE,"attribute %d is member %s\n",i,column);
 					value = columnAsText(tupdesc,&change->tp.newtuple->tuple,i);		
 					if (value == NULL) 
 					{
@@ -413,11 +411,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 					*cmdnullselem++=false;
 					*cmdargselem++=PointerGetDatum(cstring_to_text(value));																	
 					
-				}
-				else
-				{
-					elog(NOTICE,"attribute %d is NOT A member\n",i);	
-				}
+				}			
 			}
 		}
 		else 
