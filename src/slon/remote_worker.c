@@ -270,6 +270,11 @@ static int sync_event(SlonNode * node, SlonConn * local_conn,
 		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 static int	sync_helper(void *cdata, PGconn *local_dbconn);
 
+int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
+						   char * seqbuf,ProviderInfo * provider,PerfMon * pm,
+						   SlonWorkMsg_event * event,
+						   int64	*	min_ssy_seqno,
+						   int * need_union,SlonDString *provider_query);
 
 static int archive_open(SlonNode * node, char *seqbuf,
 			 PGconn *dbconn);
@@ -3694,7 +3699,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	/* TODO: tab_forward array to know if we need to store the log */
 	PGconn	   *local_dbconn = local_conn->dbconn;
 	PGresult   *res1;
-	int			num_sets = 0;
 	int			num_errors = 0;
 
 	int			i;
@@ -3706,9 +3710,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	SlonDString query;
 	SlonDString lsquery;
 	SlonDString *provider_query;
-	SlonDString actionseq_subquery;
 
-	int			actionlist_len;
+
 	int64		min_ssy_seqno;
 	PerfMon		pm;
 	int ntuples1;
@@ -3883,15 +3886,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	min_ssy_seqno = -1;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-		int			ntuples1;
-		int			tupno1;
-		PGresult   *res2;
-		int			ntuples2;
-		int			tupno2;
-		int			ntables_total = 0;
+		
+		
+	
 		int			rc;
 		int			need_union;
-		int			sl_log_no;
 
 		/**
 		 * ONLY use the event_provider.
@@ -4011,294 +4010,18 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 */
 		if (provider->set_head != NULL)
 		{
-			/*
-			 * Select all sets we receive from this provider and which are not
-			 * synced better than this SYNC already.
-			 */
-			(void) slon_mkquery(&query,
-								"select SSY.ssy_setid, SSY.ssy_seqno, "
-				  "    \"pg_catalog\".txid_snapshot_xmax(SSY.ssy_snapshot), "
-								"    SSY.ssy_snapshot, "
-								"    SSY.ssy_action_list "
-								"from %s.sl_setsync SSY "
-								"where SSY.ssy_seqno < '%s' "
-								"    and SSY.ssy_setid in (",
-								rtcfg_namespace, seqbuf);
-			for (pset = provider->set_head; pset; pset = pset->next)
-				slon_appendquery(&query, "%s%d",
-								 (pset->prev == NULL) ? "" : ",",
-								 pset->set_id);
-			slon_appendquery(&query, ") and SSY.ssy_origin=%d; ",node->no_id);
-
-			start_monitored_event(&pm);
-			res1 = PQexec(local_dbconn, dstring_data(&query));
-			monitor_subscriber_query(&pm);
-
-			slon_log(SLON_DEBUG1, "about to monitor_subscriber_query - pulling big actionid list for %d\n", provider->no_id);
-
-			if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+			rc = construct_sl_log_query(node,local_conn,seqbuf,provider,
+										&pm,event,&min_ssy_seqno,
+										&need_union,provider_query);
+			if ( rc  > 0 )
 			{
-				slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-						 node->no_id, dstring_data(&query),
-						 PQresultErrorMessage(res1));
-				PQclear(res1);
 				dstring_free(&query);
 				dstring_free(&lsquery);
 				archive_terminate(node);
-				return 60;
+				return rc;
 			}
-
-			ntuples1 = PQntuples(res1);
-			if (ntuples1 == 0)
-			{
-				slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
-						 "no setsync found for provider %d\n",
-						 node->no_id, provider->no_id);
-				PQclear(res1);
-				if (need_union)
-				{
-					dstring_append(provider_query,
-								   " order by log_actionseq) TO STDOUT");
-					dstring_terminate(provider_query);
-				}
-				else
-				{
-					slon_mkquery(provider_query,
-								 "COPY ( "
-								 "select log_origin, log_txid, log_tableid, "
-								 "log_actionseq, log_tablenspname, "
-								 "log_tablerelname, log_cmdtype, "
-								 "log_cmdupdncols, log_cmdargs "
-								 "from %s.sl_log_1 "
-								 "where false) TO STDOUT",
-								 rtcfg_namespace);
-				}
-
+			else if (rc < 0 )
 				continue;
-			}
-			num_sets += ntuples1;
-
-			/*
-			 * For every set we receive from this provider
-			 */
-			for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
-			{
-				int			sub_set = strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
-				char	   *ssy_maxxid = PQgetvalue(res1, tupno1, 2);
-				char	   *ssy_snapshot = PQgetvalue(res1, tupno1, 3);
-				char	   *ssy_action_list = PQgetvalue(res1, tupno1, 4);
-				int64		ssy_seqno;
-
-				if (strcmp(ssy_snapshot,"1:1:")==0 &&
-					ssy_seqno==0)
-				{
-					/**
-					 * we don't yet have a row in setsync with real data
-					 * this means the ACCEPT_SET has not yet come in.
-					 * ignore this set.
-					 */
-					slon_log(SLON_WARN, "remoteWorkerThread_%d: skipping set %d ACCEPT_SET not yet received\n",
-							 node->no_id, sub_set);
-					continue;
-				}
-
-				slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
-				if (min_ssy_seqno < 0 || ssy_seqno < min_ssy_seqno)
-					min_ssy_seqno = ssy_seqno;
-
-				/*
-				 * Select the tables in that set ...
-				 */
-				(void) slon_mkquery(&query,
-									"select T.tab_id, T.tab_set, "
-							"    %s.slon_quote_brute(PGN.nspname) || '.' || "
-						"    %s.slon_quote_brute(PGC.relname) as tab_fqname "
-									"from %s.sl_table T, "
-									"    \"pg_catalog\".pg_class PGC, "
-									"    \"pg_catalog\".pg_namespace PGN "
-									"where T.tab_set = %d "
-									"    and PGC.oid = T.tab_reloid "
-									"    and PGC.relnamespace = PGN.oid; ",
-									rtcfg_namespace,
-									rtcfg_namespace,
-									rtcfg_namespace,
-									sub_set);
-
-				start_monitored_event(&pm);
-				res2 = PQexec(local_dbconn, dstring_data(&query));
-				monitor_subscriber_query(&pm);
-
-				if (PQresultStatus(res2) != PGRES_TUPLES_OK)
-				{
-					slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
-							 node->no_id, dstring_data(&query),
-							 PQresultErrorMessage(res2));
-					PQclear(res2);
-					PQclear(res1);
-					dstring_free(&query);
-					dstring_free(&lsquery);
-					archive_terminate(node);
-					return 60;
-				}
-				ntuples2 = PQntuples(res2);
-				slon_log(SLON_INFO, "remoteWorkerThread_%d: "
-						 "syncing set %d with %d table(s) from provider %d\n",
-						 node->no_id, sub_set, ntuples2,
-						 provider->no_id);
-
-				if (ntuples2 == 0)
-				{
-					PQclear(res2);
-					continue;
-				}
-				ntables_total += ntuples2;
-
-				/*
-				 * ... and build up the log selection query
-				 */
-				for (sl_log_no = 1; sl_log_no <= 2; sl_log_no++)
-				{
-					/*
-					 * We only need to query sl_log_1 when log_status is 0 or
-					 * during log switching (log_status 2 and 3).
-					 */
-					if (sl_log_no == 1 && provider->log_status == 1)
-						continue;
-
-					/*
-					 * Likewise we only query sl_log_2 when log_status is 1, 2
-					 * or 3.
-					 */
-					if (sl_log_no == 2 && provider->log_status == 0)
-						continue;
-
-					if (need_union)
-					{
-						slon_appendquery(provider_query, " union all ");
-					}
-					need_union = 1;
-
-					/*
-					 * First for the big chunk that does the index scan with
-					 * upper and lower bounds:
-					 *
-					 * select ... from sl_log_N where log_origin = X and
-					 * log_tableid in (<this set's tables>)
-					 */
-					slon_appendquery(provider_query,
-								 "select log_origin, log_txid, log_tableid, "
-									 "log_actionseq, log_tablenspname, "
-									 "log_tablerelname, log_cmdtype, "
-									 "log_cmdupdncols, log_cmdargs "
-									 "from %s.sl_log_%d "
-									 "where log_origin = %d "
-									 "and log_tableid in (",
-									 rtcfg_namespace, sl_log_no,
-									 node->no_id);
-					for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
-					{
-						if (tupno2 > 0)
-							dstring_addchar(provider_query, ',');
-						dstring_append(provider_query,
-									   PQgetvalue(res2, tupno2, 0));
-					}
-					dstring_append(provider_query, ") ");
-
-					/*
-					 * and log_txid >= '<maxxid_last_snapshot>' and log_txid <
-					 * '<maxxid_this_snapshot>' and
-					 * txit_visible_in_snapshot(log_txid, '<this_snapshot>')
-					 */
-					slon_appendquery(provider_query,
-									 "and log_txid >= '%s' "
-									 "and log_txid < '%s' "
-									 "and \"pg_catalog\".txid_visible_in_snapshot(log_txid, '%s') ",
-									 ssy_maxxid,
-									 event->ev_maxtxid_c,
-									 event->ev_snapshot_c);
-
-					/*
-					 * and (<actionseq_qual_on_first_sync>)
-					 */
-					actionlist_len = strlen(ssy_action_list);
-					slon_log(SLON_DEBUG2, "remoteWorkerThread_%d_%d: "
-							 "ssy_action_list length: %d\n",
-							 node->no_id, provider->no_id,
-							 actionlist_len);
-					slon_log(SLON_DEBUG4, "remoteWorkerThread_%d_%d: "
-							 "ssy_action_list value: %s\n",
-							 node->no_id, provider->no_id,
-							 ssy_action_list);
-					if (actionlist_len > 0)
-					{
-						dstring_init(&actionseq_subquery);
-						compress_actionseq(ssy_action_list, &actionseq_subquery);
-						slon_appendquery(provider_query,
-										 " and (%s)",
-										 dstring_data(&actionseq_subquery));
-						dstring_free(&actionseq_subquery);
-					}
-
-					/*
-					 * Now do it all over again to get the log rows from
-					 * in-progress transactions at snapshot one that have
-					 * committed by the time of snapshot two. again, we do:
-					 *
-					 * select ... from sl_log_N where log_origin = X and
-					 * log_tableid in (<this set's tables>)
-					 */
-
-					slon_appendquery(provider_query,
-									 "union all "
-								 "select log_origin, log_txid, log_tableid, "
-									 "log_actionseq, log_tablenspname, "
-									 "log_tablerelname, log_cmdtype, "
-									 "log_cmdupdncols, log_cmdargs "
-									 "from %s.sl_log_%d "
-									 "where log_origin = %d "
-									 "and log_tableid in (",
-									 rtcfg_namespace, sl_log_no,
-									 node->no_id);
-					for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
-					{
-						if (tupno2 > 0)
-							dstring_addchar(provider_query, ',');
-						dstring_append(provider_query,
-									   PQgetvalue(res2, tupno2, 0));
-					}
-					dstring_append(provider_query, ") ");
-
-					/*
-					 * and log_txid in (select
-					 * txid_snapshot_xip('<last_snapshot>')) and
-					 * txit_visible_in_snapshot(log_txid, '<this_snapshot>')
-					 */
-					slon_appendquery(provider_query,
-									 "and log_txid in (select * from "
-									 "\"pg_catalog\".txid_snapshot_xip('%s') "
-									 "except "
-									 "select * from "
-								  "\"pg_catalog\".txid_snapshot_xip('%s') )",
-									 ssy_snapshot,
-									 event->ev_snapshot_c);
-
-					/*
-					 * and (<actionseq_qual_on_first_sync>)
-					 */
-					actionlist_len = strlen(ssy_action_list);
-					if (actionlist_len > 0)
-					{
-						dstring_init(&actionseq_subquery);
-						compress_actionseq(ssy_action_list, &actionseq_subquery);
-						slon_appendquery(provider_query,
-										 " and (%s)",
-										 dstring_data(&actionseq_subquery));
-						dstring_free(&actionseq_subquery);
-					}
-				}
-				PQclear(res2);
-			}
-			PQclear(res1);
 		}
 
 		/*
@@ -5657,6 +5380,329 @@ monitor_subscriber_iud(PerfMon * perf_info)
 	(perf_info->subscr_iud__t) += diff;
 	(perf_info->subscr_iud__c)++;
 }
+
+
+/**
+ * Constructs a query for sl_log_1/2 and appends the query
+ * to provider_query.
+ */
+int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
+						   char * seqbuf,ProviderInfo * provider,PerfMon * pm,
+						   SlonWorkMsg_event * event,
+						   int64	*	min_ssy_seqno,
+						   int * need_union,SlonDString *provider_query)
+	
+{
+
+	SlonDString query;
+	ProviderSet *pset;
+	int			tupno1;
+	int			tupno2;
+	int			ntuples1;
+	int			ntuples2;
+	PGresult   *res1;
+	PGresult   *res2;
+	int			ntables_total = 0;
+	int			sl_log_no;
+	SlonDString actionseq_subquery;
+	int			actionlist_len;
+	int			num_sets = 0;
+	PGconn	   *local_dbconn = local_conn->dbconn;
+
+
+	/*
+	 * Select all sets we receive from this provider and which are not
+	 * synced better than this SYNC already.
+	 */
+	dstring_init(&query);
+	(void) slon_mkquery(&query,
+						"select SSY.ssy_setid, SSY.ssy_seqno, "
+						"    \"pg_catalog\".txid_snapshot_xmax(SSY.ssy_snapshot), "
+						"    SSY.ssy_snapshot, "
+						"    SSY.ssy_action_list "
+						"from %s.sl_setsync SSY "
+						"where SSY.ssy_seqno < '%s' "
+						"    and SSY.ssy_setid in (",
+						rtcfg_namespace, seqbuf);
+	for (pset = provider->set_head; pset; pset = pset->next)
+		slon_appendquery(&query, "%s%d",
+						 (pset->prev == NULL) ? "" : ",",
+						 pset->set_id);
+	slon_appendquery(&query, ") and SSY.ssy_origin=%d; ",node->no_id);
+	
+	start_monitored_event(pm);
+	res1 = PQexec(local_dbconn, dstring_data(&query));
+	monitor_subscriber_query(pm);
+	
+	slon_log(SLON_DEBUG1, "about to monitor_subscriber_query - pulling big actionid list for %d\n", provider->no_id);
+	
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				 node->no_id, dstring_data(&query),
+				 PQresultErrorMessage(res1));
+		PQclear(res1);
+		dstring_free(&query);	   
+		return 60;
+	}
+	
+	ntuples1 = PQntuples(res1);
+	if (ntuples1 == 0)
+	{
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
+				 "no setsync found for provider %d\n",
+				 node->no_id, provider->no_id);
+		PQclear(res1);
+		if (*need_union)
+		{
+			dstring_append(provider_query,
+						   " order by log_actionseq) TO STDOUT");
+			dstring_terminate(provider_query);
+		}
+		else
+		{
+			slon_mkquery(provider_query,
+						 "COPY ( "
+						 "select log_origin, log_txid, log_tableid, "
+						 "log_actionseq, log_tablenspname, "
+						 "log_tablerelname, log_cmdtype, "
+						 "log_cmdupdncols, log_cmdargs "
+						 "from %s.sl_log_1 "
+						 "where false) TO STDOUT",
+						 rtcfg_namespace);
+		}
+		
+		/**
+		 * return  -1 means continue to the next provider.
+		 */
+		return -1;
+	}
+	num_sets += ntuples1;
+	
+	/*
+	 * For every set we receive from this provider
+	 */
+	for (tupno1 = 0; tupno1 < ntuples1; tupno1++)
+	{
+		int			sub_set = strtol(PQgetvalue(res1, tupno1, 0), NULL, 10);
+		char	   *ssy_maxxid = PQgetvalue(res1, tupno1, 2);
+		char	   *ssy_snapshot = PQgetvalue(res1, tupno1, 3);
+		char	   *ssy_action_list = PQgetvalue(res1, tupno1, 4);
+		int64		ssy_seqno;
+		
+		if (strcmp(ssy_snapshot,"1:1:")==0 &&
+			ssy_seqno==0)
+		{
+			/**
+			 * we don't yet have a row in setsync with real data
+			 * this means the ACCEPT_SET has not yet come in.
+			 * ignore this set.
+			 */
+			slon_log(SLON_WARN, "remoteWorkerThread_%d: skipping set %d ACCEPT_SET not yet received\n",
+					 node->no_id, sub_set);
+			continue;
+		}
+		
+		slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
+		if (*min_ssy_seqno < 0 || ssy_seqno < *min_ssy_seqno)
+			*min_ssy_seqno = ssy_seqno;
+		
+		/*
+		 * Select the tables in that set ...
+		 */
+		(void) slon_mkquery(&query,
+							"select T.tab_id, T.tab_set, "
+							"    %s.slon_quote_brute(PGN.nspname) || '.' || "
+							"    %s.slon_quote_brute(PGC.relname) as tab_fqname "
+							"from %s.sl_table T, "
+							"    \"pg_catalog\".pg_class PGC, "
+							"    \"pg_catalog\".pg_namespace PGN "
+							"where T.tab_set = %d "
+							"    and PGC.oid = T.tab_reloid "
+							"    and PGC.relnamespace = PGN.oid; ",
+							rtcfg_namespace,
+							rtcfg_namespace,
+							rtcfg_namespace,
+							sub_set);
+		
+		start_monitored_event(pm);
+		res2 = PQexec(local_dbconn, dstring_data(&query));
+		monitor_subscriber_query(pm);
+		
+		if (PQresultStatus(res2) != PGRES_TUPLES_OK)
+		{
+			slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+					 node->no_id, dstring_data(&query),
+					 PQresultErrorMessage(res2));
+			PQclear(res2);
+			PQclear(res1);
+			dstring_free(&query);		  
+			return 60;
+		}
+		ntuples2 = PQntuples(res2);
+		slon_log(SLON_INFO, "remoteWorkerThread_%d: "
+				 "syncing set %d with %d table(s) from provider %d\n",
+				 node->no_id, sub_set, ntuples2,
+				 provider->no_id);
+		
+		if (ntuples2 == 0)
+		{
+			PQclear(res2);
+			continue;
+		}
+		ntables_total += ntuples2;
+	
+		/*
+		 * ... and build up the log selection query
+		 */
+		for (sl_log_no = 1; sl_log_no <= 2; sl_log_no++)
+		{
+			/*
+			 * We only need to query sl_log_1 when log_status is 0 or
+			 * during log switching (log_status 2 and 3).
+			 */
+			if (sl_log_no == 1 && provider->log_status == 1)
+				continue;
+			
+			/*
+			 * Likewise we only query sl_log_2 when log_status is 1, 2
+			 * or 3.
+			 */
+			if (sl_log_no == 2 && provider->log_status == 0)
+				continue;
+			
+			if (*need_union)
+			{
+				slon_appendquery(provider_query, " union all ");
+			}
+			*need_union = 1;
+			
+			/*
+			 * First for the big chunk that does the index scan with
+			 * upper and lower bounds:
+			 *
+			 * select ... from sl_log_N where log_origin = X and
+			 * log_tableid in (<this set's tables>)
+			 */
+			slon_appendquery(provider_query,
+							 "select log_origin, log_txid, log_tableid, "
+							 "log_actionseq, log_tablenspname, "
+							 "log_tablerelname, log_cmdtype, "
+							 "log_cmdupdncols, log_cmdargs "
+							 "from %s.sl_log_%d "
+							 "where log_origin = %d "
+							 "and log_tableid in (",
+							 rtcfg_namespace, sl_log_no,
+							 node->no_id);
+			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
+			{
+				if (tupno2 > 0)
+					dstring_addchar(provider_query, ',');
+				dstring_append(provider_query,
+							   PQgetvalue(res2, tupno2, 0));
+			}
+			dstring_append(provider_query, ") ");
+			
+			/*
+			 * and log_txid >= '<maxxid_last_snapshot>' and log_txid <
+			 * '<maxxid_this_snapshot>' and
+			 * txit_visible_in_snapshot(log_txid, '<this_snapshot>')
+			 */
+			slon_appendquery(provider_query,
+							 "and log_txid >= '%s' "
+							 "and log_txid < '%s' "
+							 "and \"pg_catalog\".txid_visible_in_snapshot(log_txid, '%s') ",
+							 ssy_maxxid,
+							 event->ev_maxtxid_c,
+							 event->ev_snapshot_c);
+			
+			/*
+			 * and (<actionseq_qual_on_first_sync>)
+			 */
+			actionlist_len = strlen(ssy_action_list);
+			slon_log(SLON_DEBUG2, "remoteWorkerThread_%d_%d: "
+					 "ssy_action_list length: %d\n",
+					 node->no_id, provider->no_id,
+					 actionlist_len);
+			slon_log(SLON_DEBUG4, "remoteWorkerThread_%d_%d: "
+					 "ssy_action_list value: %s\n",
+					 node->no_id, provider->no_id,
+					 ssy_action_list);
+			if (actionlist_len > 0)
+			{
+				dstring_init(&actionseq_subquery);
+				compress_actionseq(ssy_action_list, &actionseq_subquery);
+				slon_appendquery(provider_query,
+								 " and (%s)",
+								 dstring_data(&actionseq_subquery));
+				dstring_free(&actionseq_subquery);
+			}
+			
+			/*
+			 * Now do it all over again to get the log rows from
+			 * in-progress transactions at snapshot one that have
+			 * committed by the time of snapshot two. again, we do:
+			 *
+			 * select ... from sl_log_N where log_origin = X and
+			 * log_tableid in (<this set's tables>)
+			 */
+			
+			slon_appendquery(provider_query,
+							 "union all "
+							 "select log_origin, log_txid, log_tableid, "
+							 "log_actionseq, log_tablenspname, "
+							 "log_tablerelname, log_cmdtype, "
+							 "log_cmdupdncols, log_cmdargs "
+							 "from %s.sl_log_%d "
+							 "where log_origin = %d "
+							 "and log_tableid in (",
+							 rtcfg_namespace, sl_log_no,
+							 node->no_id);
+			for (tupno2 = 0; tupno2 < ntuples2; tupno2++)
+			{
+				if (tupno2 > 0)
+					dstring_addchar(provider_query, ',');
+				dstring_append(provider_query,
+							   PQgetvalue(res2, tupno2, 0));
+			}
+			dstring_append(provider_query, ") ");
+			
+			/*
+			 * and log_txid in (select
+			 * txid_snapshot_xip('<last_snapshot>')) and
+			 * txit_visible_in_snapshot(log_txid, '<this_snapshot>')
+			 */
+			slon_appendquery(provider_query,
+							 "and log_txid in (select * from "
+							 "\"pg_catalog\".txid_snapshot_xip('%s') "
+							 "except "
+							 "select * from "
+							 "\"pg_catalog\".txid_snapshot_xip('%s') )",
+							 ssy_snapshot,
+							 event->ev_snapshot_c);
+			
+			/*
+			 * and (<actionseq_qual_on_first_sync>)
+			 */
+			actionlist_len = strlen(ssy_action_list);
+			if (actionlist_len > 0)
+			{
+				dstring_init(&actionseq_subquery);
+				compress_actionseq(ssy_action_list, &actionseq_subquery);
+				slon_appendquery(provider_query,
+								 " and (%s)",
+								 dstring_data(&actionseq_subquery));
+				dstring_free(&actionseq_subquery);
+			}
+		}
+		PQclear(res2);
+	}
+	PQclear(res1);
+	dstring_free(&query);
+	return 0;
+}
+
+
 
 static void lock_workercon(SlonNode * node)
 {
