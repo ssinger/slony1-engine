@@ -15,7 +15,7 @@
 
 create or replace function @NAMESPACE@.createEvent(p_cluster_name name, p_event_type text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -1756,11 +1756,11 @@ begin
 		-- ----
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_pa_server) then
-			perform @NAMESPACE@.storeNode_int (p_pa_server, '<event pending>');
+			perform @NAMESPACE@.storeNode_int (p_pa_server, '<event pending>',false);
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_pa_client) then
-			perform @NAMESPACE@.storeNode_int (p_pa_client, '<event pending>');
+			perform @NAMESPACE@.storeNode_int (p_pa_client, '<event pending>',false);
 		end if;
 		insert into @NAMESPACE@.sl_path
 				(pa_server, pa_client, pa_conninfo, pa_connretry) values
@@ -1933,15 +1933,15 @@ begin
 		-- ----
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_origin) then
-			perform @NAMESPACE@.storeNode_int (p_li_origin, '<event pending>');
+			perform @NAMESPACE@.storeNode_int (p_li_origin, '<event pending>',false);
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_provider) then
-			perform @NAMESPACE@.storeNode_int (p_li_provider, '<event pending>');
+			perform @NAMESPACE@.storeNode_int (p_li_provider, '<event pending>',false);
 		end if;
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_li_receiver) then
-			perform @NAMESPACE@.storeNode_int (p_li_receiver, '<event pending>');
+			perform @NAMESPACE@.storeNode_int (p_li_receiver, '<event pending>',false);
 		end if;
 
 		insert into @NAMESPACE@.sl_listen
@@ -2071,7 +2071,7 @@ begin
 	else
 		if not exists (select 1 from @NAMESPACE@.sl_node
 						where no_id = p_set_origin) then
-			perform @NAMESPACE@.storeNode_int (p_set_origin, '<event pending>');
+			perform @NAMESPACE@.storeNode_int (p_set_origin, '<event pending>',false);
 		end if;
 		insert into @NAMESPACE@.sl_set
 				(set_id, set_origin, set_comment) values

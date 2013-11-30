@@ -837,17 +837,17 @@ remoteWorkerThread_main(void *cdata)
 								 node->no_id);
 					
 						slon_appendquery(&query1, "commit transaction; ");
-						if (query_execute(node, local_dbconn, &query1) < 0)
+						if (query_execute(node, node->worker_dbconn, &query1) < 0)
 						slon_retry();
 
 						(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
 											rtcfg_namespace);
-						if (query_execute(node, local_dbconn, &query1) < 0)
+						if (query_execute(node, node->worker_dbconn, &query1) < 0)
 							slon_retry();
 						
 						(void) slon_mkquery(&query1, "drop schema %s cascade; ",
 											rtcfg_namespace);
-						query_execute(node, local_dbconn, &query1);
+						query_execute(node, node->worker_dbconn, &query1);
 						
 						slon_retry();
 					}
@@ -3711,6 +3711,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	int			actionlist_len;
 	int64		min_ssy_seqno;
 	PerfMon		pm;
+	int ntuples1;
 
 	gettimeofday(&tv_start, NULL);
 
@@ -4350,16 +4351,20 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	ntuples1 = PQntuples(res1);
 	if (ntuples1 != 1)
 	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: cannot determine current log status\n",
+				 node->no_id);
+		PQclear(res1);
 		dstring_free(&query);
 		dstring_free(&lsquery);
 		archive_terminate(node);
 		return 20;
 	}
-	wd->active_log_table = rc;
+	wd->active_log_table = (strtol(PQgetvalue(res1, 0, 0), NULL, 10) & 0x01) + 1;
 
 	slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: "
 			 "current local log_status is %d\n",
-			 node->no_id, wd->active_log_table);
+			 node->no_id, strtol(PQgetvalue(res1, 0, 0), NULL, 10));
+	PQclear(res1);
 
 	/*
 	 * If we have a explain_interval, run the query through explain and output
