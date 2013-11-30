@@ -287,8 +287,6 @@ static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
 
 static void lock_workercon(SlonNode * node);
 
-static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
-		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 
 /* ----------
  * slon_remoteWorkerThread
@@ -653,48 +651,17 @@ remoteWorkerThread_main(void *cdata)
 				 * Process the sync and apply the replication data. If
 				 * successful, exit this loop and commit the transaction.
 				 */
-				if(event->from_wal_provider)
+			
+				seconds = sync_event(node, local_conn, wd, event);					
+				if (seconds == 0)
 				{
-					ProviderInfo * provider=NULL;
-					/**
-					 * update sl_setsync for the wal_provider case
-					 */
-					int rc = sync_event_wal(node,local_conn,wd,event);
-
+					sync_status = SYNC_SUCCESS; /* The group of SYNCs have
+												 * succeeded!  Hurray! */
+					rc = SCHED_STATUS_OK;
 					pthread_mutex_unlock(&(node->worker_con_lock));
-
-					/**
-					 * update the provider structure
-					 */ 
-					for (provider = wd->provider_head; provider != NULL; provider = provider->next)
-					{
-						if (provider->no_id == event->event_provider)
-						{
-							provider->provider_wal_loc = event->provider_wal_loc;
-							break;
-						}
-					}
-					if( provider == NULL)
-					{
-						slon_log(SLON_ERROR,"remoteWorkerThread_%d: provider %d not found in provider list\n",
-								 node->no_id, event->event_provider);
-						slon_retry();
-					}
-					
 					break;
 				}
-				else
-				{
-					seconds = sync_event(node, local_conn, wd, event);					
-					if (seconds == 0)
-					{
-						sync_status = SYNC_SUCCESS; /* The group of SYNCs have
-													 * succeeded!  Hurray! */
-						rc = SCHED_STATUS_OK;
-						pthread_mutex_unlock(&(node->worker_con_lock));
-						break;
-					}
-				}
+				
 				/*
 				 * Something went wrong. Rollback and try again after the
 				 * specified timeout.
@@ -3852,13 +3819,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-#if 0 		
-		if(provider->pa_walsender)
-			/**
-			 * sync_event does need to do anything for a WAL sender provider.
-			 */
-			continue;
-#endif
+
 		/*
 		 * We only need to explicitly check this if the data provider is
 		 * neither the set origin, nor the node we received this event from.
@@ -3902,6 +3863,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
+
+
 	min_ssy_seqno = -1;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -3914,10 +3877,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			rc;
 		int			need_union;
 		int			sl_log_no;
-#if 0 
-		if(provider->pa_walsender)
-			continue;
-#endif
+
 		slon_log(SLON_DEBUG2,
 			  "remoteWorkerThread_%d: creating log select for provider %d\n",
 				 node->no_id, provider->no_id);
@@ -4367,10 +4327,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 */
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-#if 0
-		if(provider->pa_walsender)
-   		continue;
-#endif
+
 		/**
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
@@ -4396,6 +4353,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		return 10;
 	}
 
+
+/** END OF sl_log_1 and sl_log_2 stuff */
+
 	/*
 	 * Get all sequence updates
 	 */
@@ -4404,10 +4364,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			ntuples1;
 		int			tupno1;
 		char		min_ssy_seqno_buf[64];
-#if 0
-		if(provider->pa_walsender)
-			continue;
-#endif
+
 		/*
 		 * Skip this if the provider is only here for DDL.
 		 */
@@ -4506,10 +4463,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
-#if 0 		
-		if(provider->pa_walsender)
-			continue;
-#endif
+
 		for (pset = provider->set_head; pset; pset = pset->next)
 		{
 			slon_appendquery(&query, "%s%d", (i == 0) ? "" : ",",

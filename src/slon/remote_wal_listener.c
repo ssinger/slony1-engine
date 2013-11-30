@@ -326,7 +326,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 }
 
 /**
- * process a single WAL record 
+ * Process a single WAL record 
  *  If the WAL record is for a replicated table
  *          push the WAL record into the connection for that origin
  *  If the WAL record is for a EVENT (sl_event) hand the event over
@@ -370,8 +370,9 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 	}
 	
 	/**
-	 * check to see if origin_id is an origin that we are listening from
-	 * if not we ignore this row.
+	 * check to see if origin_id is an origin that we are subscribed from:
+	 * TODO: Make this a check based on sl_subscription data not sl_listen data
+	 *
 	 */
 	for(listener = node->listen_head; listener != NULL; 
 		listener=listener->next) 
@@ -408,54 +409,23 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 	{
 		/**
 		 * sl_event updates need to be processed.
-		 * TODO
 		 *
-		 * We need to parse this structure and turn it into
-		 * data that can be passed to the remoteWorker_event function.
-		 * This means parsing cmdargs.
-		 *   1. I could manually write parse code
-		 *   2. I could write a SET returning function in plpgsql that did
-		 *      this, or invoke a select ARRAY_TO_SOMETHING
-		 *   3. I could make the COPY stream be different from the 
-		 *      walsender/plugin.
+		 * The only sl_event rows we are care about are SYNC
+		 * events.  When we see a SYNC event in the WAL stream
+		 * we we can tell the remoteWorker to stop waiting for
+		 * more data for that SYNC.
 		 */
 		parseEvent(node,cmdargs,state,walptr);
-	}
-	else if (strcmp(schema_name_quoted, rtcfg_namespace)==0 &&
-			 strcmp(table_name,  "sl_confirm")==0)
-	{
-		/**
-		 * confirms need to be processed ? 
-		 * TODO ? Or can we just pass this to the apply trigger.
-		 */
-		push_copy_row(node,state,origin_id,row,xid_str);
-	
-	}
-	else if (strcmp(schema_name_quoted, rtcfg_namespace)==0 &&
-			 strcmp(table_name,  "sl_seqlog")==0)
-	{
-		/**
-		 * a sequence update.
-		 */
-		push_seqlog_row(node,state,origin_id,cmdargs,walptr);
-		
-	}
+	}	
 	else
 	{
 		/**
-		 * We need the snapshot value from sl_setsync 
-		 * we then need to compare the XID of this row against
-		 * the snapshot in sl_setsync so we can decide if this
-		 * row has already been processed.
-		 *
-		 * This exposes us to a race condition. 
-		 *        sl_setsync won't be populated until the ENABLE_SUBSCRIPTION
-		 *        event is finished (ie the copy_set) is finished. 
-		 *  but we are making this decision now, ie too early.
-		 * 
-		 *  
+		 * Is the LSN of this row lower than the 
+		 * LSN of the last confirmed SYNC for that origin from
+		 * this provider.
+		 * If so we can ignore this row.
+		 * TODO: Implement this check
 		 */
-		
 		
 		/**
 		 * COPY the row to the connection for the origin.

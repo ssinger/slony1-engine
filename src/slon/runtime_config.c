@@ -1053,22 +1053,19 @@ rtcfg_startStopNodeThread(SlonNode * node)
 						rtcfg_unlock();
 						slon_retry();	
 					}
-
 				}
-				else 
+				if (pthread_create(&(node->listen_thread), NULL,
+								   remoteListenThread_main, (void *) node)
+					< 0)
 				{
-					if (pthread_create(&(node->listen_thread), NULL,
-									   remoteListenThread_main, (void *) node)
-						< 0)
-					{
-						slon_log(SLON_FATAL,
-								 "startStopNodeThread: cannot create "
-								 "remoteListenThread - %s\n",
-								 strerror(errno));
-						rtcfg_unlock();
-						slon_retry();
-					}
+					slon_log(SLON_FATAL,
+							 "startStopNodeThread: cannot create "
+							 "remoteListenThread - %s\n",
+							 strerror(errno));
+					rtcfg_unlock();
+					slon_retry();
 				}
+				
 				break;
 
 			case SLON_TSTAT_RUNNING:
