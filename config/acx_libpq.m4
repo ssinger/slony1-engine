@@ -230,7 +230,6 @@ else
 fi
 
 TEMP_CPPFLAGS=$CPPFLAGS
-
 CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR"
 AC_CHECK_HEADER(libpq-fe.h, HAVE_LIBPQFE=1)
 if test -n "HAVE_LIBPQFE" ; then
@@ -241,8 +240,9 @@ else
     )
 fi
 
-CPPFLAGS="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR -I$PG_INCLUDESERVERDIR"
-
+CPPFLAGS_SERVER="$TEMP_CPPFLAGS  -I$PG_INCLUDESERVERDIR"
+CPPFLAGS_CLIENT="$TEMP_CPPFLAGS -I$PG_INCLUDEDIR"
+CPPFLAGS=$CPPFLAGS_SERVER
 dnl ---------------------------------------------------
 dnl Add the port specific include directory if required
 dnl ---------------------------------------------------
@@ -381,7 +381,7 @@ case "${host_os}" in
 	*)
 		LIBS="$LIBS -L$PG_LIBDIR -Wl,-rpath,$PG_LIBDIR -lpq"
 esac
-
+CPPFLAGS=$CPPFLAGS_CLIENT
 AC_RUN_IFELSE(
 	[AC_LANG_PROGRAM([#include "libpq-fe.h"], [if (PQisthreadsafe()) {return 0;} else {return 1;}])], 
 	[echo "PQisthreadsafe() true"], 
@@ -404,6 +404,8 @@ else
      ac_cv_ScanKeywordLookup_args=1)
   AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
 fi
+
+CPPFLAGS=$CPPFLAGS_SERVER
 
 AC_MSG_CHECKING(for typenameTypeId)
 if test -z "$ac_cv_typenameTypeId_args"; then
@@ -505,6 +507,41 @@ AC_CHECK_DECLS([GetTopTransactionId],[],[],[
 ])
 
 AC_SUBST(NLSLIB)
+
+if test "$with_pgport" = "yes"; then
+   AC_MSG_CHECKING(for pgport)
+   # check if we have pgcommon this is a lib in 9.3+ that
+   # is needed  with PGPORT
+   OLD_LIBS=$LIBS
+   AC_DEFINE(HAVE_PGCOMMON)
+   LIBS="$LIBS -lpgcommon"
+   AC_TRY_LINK_FUNC(pg_malloc,[HAVE_PGCOMMON=1
+                                  AC_MSG_RESULT(yes)],
+                                HAVE_PGCOMMON=0  )
+   LIBS=$OLD_LIBS 
+   AC_DEFINE(HAVE_PGPORT)
+   if test $HAVE_PGCOMMON = 1  ; then
+       EXTRALIBS=" -lpgcommon"
+   fi
+   LIBS="$LIBS -lpgport $EXTRALIBS"
+   AC_TRY_LINK_FUNC(find_my_exec,[HAVE_PGPORT=1
+                                  AC_MSG_RESULT(yes)], 
+                    AC_MSG_ERROR("pgport was not found. build without --with-pgport=yes to disable"))
+fi
+
+
+AC_MSG_CHECKING(for LookupExplicitNamespace 2 args)
+AC_TRY_COMPILE(
+    [#include "postgres.h"
+     #include "catalog/namespace.h"],
+    [LookupExplicitNamespace(NULL,false);],
+    [ac_cv_LookupExplicitNamespace_args=2
+    AC_MSG_RESULT([yes, and it takes $ac_cv_LookupExplicitNamespace_args arguments])],
+	AC_MSG_RESULT([no]) )
+
+if test "$ac_cv_LookupExplicitNamespace_args" = 2; then
+   AC_DEFINE(HAS_LOOKUPEXPLICITNAMESPACE_2)
+fi
 
 AC_LANG_RESTORE
 ])dnl ACX_LIBPQ

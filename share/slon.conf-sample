@@ -111,3 +111,21 @@
 
 # Should slon run the monitoring thread?
 # monitor_threads=true
+
+# TCP keep alive configurations
+# Enable sending of TCP keep alive between slon and the PostgreSQL backends
+# tcp_keepalive = true
+
+# The number of seconds after which a TCP keep alive is sent across an idle
+# connection. tcp_keepalive must be enabled for this to take effect. Default 
+# value of 0 means use operating system default
+# tcp_keepalive_idle = 0
+
+# The number of keep alive requests to the server that can be lost before 
+# the connection is declared dead. tcp_keepalive must be on.Default value 
+# of 0 means use operating system default
+# tcp_keepalive_count = 0
+
+# The number of seconds in between TCP keep alive requests. tcp_keepalive 
+# must be enabled. Default value of 0 means use operating system defaut
+# tcp_keepalive_interval = 0

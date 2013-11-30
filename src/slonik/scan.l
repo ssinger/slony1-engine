@@ -80,7 +80,6 @@ admin			{ return K_ADMIN;			}
 all				{ return K_ALL;				}
 backup			{ return K_BACKUP;			}
 client			{ return K_CLIENT;			}
-copy			{ return K_COPY;			}
 clone			{ return K_CLONE;			}
 cluster			{ return K_CLUSTER;			}
 comment			{ return K_COMMENT;			}
@@ -88,6 +87,7 @@ config			{ return K_CONFIG;			}
 confirmed		{ return K_CONFIRMED;		}
 conninfo		{ return K_CONNINFO;		}
 connretry		{ return K_CONNRETRY;		}
+copy			{ return K_COPY;			}
 create			{ return K_CREATE;			}
 date			{ return K_DATE;			}
 drop			{ return K_DROP;			}
@@ -100,8 +100,8 @@ failover		{ return K_FAILOVER;		}
 false			{ return K_FALSE;			}
 filename		{ return K_FILENAME;		}
 finish			{ return K_FINISH;			}
-format			{ return K_DFORMAT;			}
 for				{ return K_FOR;				}
+format			{ return K_DFORMAT;			}
 forward			{ return K_FORWARD;			}
 full			{ return K_FULL;			}
 fully			{ return K_FULL;			}
@@ -120,7 +120,7 @@ no				{ return K_NO;				}
 node			{ return K_NODE;			}
 off				{ return K_OFF;				}
 old				{ return K_OLD;				}
-omit				{ return K_OMIT;				}
+omit			{ return K_OMIT;			}
 on				{ return K_ON;				}
 only			{ return K_ONLY;			}
 origin			{ return K_ORIGIN;			}
@@ -131,6 +131,7 @@ qualified		{ return K_QUALIFIED;		}
 receiver		{ return K_RECEIVER;		}
 repair			{ return K_REPAIR;			}
 restart			{ return K_RESTART;			}
+resubscribe     { return K_RESUBSCRIBE;		}
 script			{ return K_SCRIPT;			}
 seconds         { return K_SECONDS;         }
 sequence		{ return K_SEQUENCE;		}
@@ -138,6 +139,7 @@ sequences		{ return K_SEQUENCES;		}
 server			{ return K_SERVER;			}
 set				{ return K_SET;				}
 sleep			{ return K_SLEEP;			}
+sql				{ return K_SQL;				}
 store			{ return K_STORE;			}
 subscribe		{ return K_SUBSCRIBE;		}
 success			{ return K_SUCCESS;			}
@@ -152,10 +154,10 @@ uninstall		{ return K_UNINSTALL;		}
 unlock			{ return K_UNLOCK;			}
 unsubscribe		{ return K_UNSUBSCRIBE;		}
 update			{ return K_UPDATE;			}
-yes				{ return K_YES;				}
 wait			{ return K_WAIT;			}
 resubscribe     { return K_RESUBSCRIBE;		}
 logical         { return K_LOGICAL;         }
+yes				{ return K_YES;				}
 {digit}+		{ return T_NUMBER;			}
 {identifier}	{ return T_IDENT;			}
 
@@ -178,7 +180,16 @@ logical         { return K_LOGICAL;         }
 			instring_buffer[instring_length]=*yytext;
 			BEGIN(IN_STRING);
 		}
-<IN_STRING>''	
+<IN_STRING>''	{
+				if (  instring_buf_length < instring_length + yyleng+1 )
+				{
+						instring_buffer=realloc(instring_buffer,instring_buf_length*2);
+						instring_buf_length=instring_buf_length*2;
+				}
+				instring_buffer[instring_length++] = '\'';
+
+				
+		}
 <IN_STRING>[^']+ { 
 				if (  instring_buf_length < instring_length + yyleng+1 )
 				{

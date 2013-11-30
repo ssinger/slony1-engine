@@ -94,7 +94,7 @@ LogShipping.prototype.runTest = function() {
 	var logShippingDaemon = this.coordinator.createLogShippingDaemon('db6',this.logdirectoryFile);
 
 															 
-
+	
 
 	logShippingDaemon.run();
 	
@@ -118,6 +118,8 @@ LogShipping.prototype.runTest = function() {
 	this.coordinator.log("LogShipping.prototype.runTest - compare db4,6");
 	this.compareDb('db4','db6');		
 	this.truncateTest();
+	this.ddlTest();
+
 	
     this.coordinator.log("LogShipping.prototype.runTest - shut down slons");
 	this.coordinator.log("Shutting down slons");
@@ -192,4 +194,50 @@ LogShipping.prototype.truncateTest = function() {
 		stat.close();
 		db6Con.close();
 	}
+}
+
+/**
+ * test DDL - EXECUTE SCRIPT.
+ * We want to make sure that EXECUTE SCRIPT, scripts get applied to log shipping nodes.
+ */
+LogShipping.prototype.ddlTest = function() {
+	var db6Con = this.coordinator.createJdbcConnection('db6');
+	
+	var slonikPreamble = this.getSlonikPreamble();
+	var slonikScript = 'echo \'LogShipping.prototype.ddlTest\';\n' + 
+		"EXECUTE SCRIPT(event node=1, SQL='CREATE TABLE not_replicated(a int4); INSERT INTO not_replicated values (1);');";
+	
+	var slonik = this.coordinator.createSlonik('CREATE TABLE', slonikPreamble,
+											   slonikScript);
+	slonik.run();
+	this.coordinator.join(slonik);
+	this.testResults.assertCheck('slonik executed create table okay', slonik
+								 .getReturnCode(), 0);
+	this.slonikSync(1,1);
+	java.lang.Thread.sleep(30*1000);
+
+	var stat = db6Con.createStatement();
+	try {
+		var rs = stat.executeQuery("select count(*) FROM not_replicated;");
+		rs.next();
+		this.testResults.assertCheck('logshipping ddl replicated',
+									 rs.getInt(1),1);
+		rs.close();
+	}
+	catch (e) {
+		this.assertResults.assertCheck('select count threw an exception:' + e.getMessage(),true,false);
+	}
+	finally {
+		stat.close();
+		db6Con.close();
+	}
+
+	slonikScript = 'echo \'LogShipping.prototype.ddlTest\';\n' + 
+		"EXECUTE SCRIPT(event node=1, SQL='DROP TABLE not_replicated;');";
+	slonik = this.coordinator.createSlonik('DROP TABLE', slonikPreamble,
+											   slonikScript);
+	slonik.run();
+	this.coordinator.join(slonik);
+	this.testResults.assertCheck('slonik executed drop table okay', slonik
+								 .getReturnCode(), 0);
 }

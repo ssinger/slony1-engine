@@ -32,6 +32,16 @@ insert into table4 (data) values ('HM Murdoch');
 insert into table4 (data) values ('Face');
 insert into table4 (data) values ('Hannibal');
 
+CREATE TABLE table5 (
+  id	serial,
+  data	int4,
+  primary key (id)
+);
+
+insert into table5 (data) values (1);
+insert into table5 (data) values (2);
+insert into table5 (data) values (3);
+
 create sequence billing_discount_seq;
 
 CREATE TABLE billing_discount (
@@ -50,3 +60,13 @@ zone_id integer
 ALTER TABLE ONLY billing_discount
     ADD CONSTRAINT billing_discount_pkey PRIMARY KEY (billing_discount_id);
 
+CREATE OR REPLACE FUNCTION insert_table1() returns trigger
+as $$
+declare
+
+begin
+ insert into table1(data) values (NEW.data);
+  return NEW;
+end;
+$$
+language plpgsql;

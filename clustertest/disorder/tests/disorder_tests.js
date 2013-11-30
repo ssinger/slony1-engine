@@ -27,7 +27,9 @@ coordinator.includeFile('disorder/tests/BulkAddingTest.js');
 coordinator.includeFile('disorder/tests/WaitForTest.js');
 coordinator.includeFile('disorder/tests/MultinodeFailover.js');
 coordinator.includeFile('disorder/tests/Resubscribe.js');
+coordinator.includeFile('disorder/tests/SiteFailover.js');
 coordinator.includeFile('disorder/tests/LogicalRepTest.js');
+
 
 var tests = 
     [new EmptySet(coordinator,results)
@@ -56,13 +58,19 @@ var tests =
 	 ,new WaitForTest(coordinator,results)
 	 ,new MultinodeFailover(coordinator,results)
 	 ,new Resubscribe(coordinator,results)
+	 ,new SiteFailover(coordinator,results)
 	 //Below tests are known to fail.
-	 ,new UnsubscribeBeforeEnable(coordinator,results)
-     ,new DropSet(coordinator,results) //fails bug 133
-     ,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
+	 //,new UnsubscribeBeforeEnable(coordinator,results)
+     //,new DropSet(coordinator,results) //fails bug 133
+     //,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
 
 tests=[new LogicalRepTest(coordinator,results)];
+
+//tests=[new Failover(coordinator,results),
+//	   new MultinodeFailover(coordinator,results)
+//	   ,new SiteFailover(coordinator,results)];
+
 
 var basicTest = new BasicTest(coordinator,results);
 

@@ -26,6 +26,7 @@
 <!entity slonikref          SYSTEM "slonik_ref.sgml">
 <!entity slon               SYSTEM "slon.sgml">
 <!entity slonconf	    SYSTEM "slonconf.sgml">
+
 <!entity schemadoc          SYSTEM "schemadoc.sgml">
 
 <!entity history            SYSTEM "history.sgml">
@@ -34,6 +35,7 @@
 <!entity problems           SYSTEM "problems.sgml">
 <!entity slonybook          SYSTEM "slony.sgml">
 <!entity logshipfile        SYSTEM "logshipping.sgml">
+<!entity logshippingref SYSTEM "logshipping_ref.sgml">
 <!entity locking            SYSTEM "locking.sgml">
 <!entity testbed            SYSTEM "testbed.sgml">
 <!entity loganalysis        SYSTEM "loganalysis.sgml">

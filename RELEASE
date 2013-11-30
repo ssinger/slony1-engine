@@ -1,57 +1,54 @@
 #+OPTIONS: ^:{}
-* Slony-I Release Notes
+* Slony-I 2.2 Release Notes
 
-- Bug #240 :: Improve notes on VACUUM
+** Significant Changes
 
-- Bug #278 :: assorted spelling fixes
+   - Shared Libraries are now named so as to allow having multiple
+     versions of Slony installed simultaneously on a database cluster
 
-- Bug #280 :: shared library build should use CFLAGS and LDFLAGS
+     - Bug 287 :: Fix UPDATE FUNCTIONS so it works when the old shared
+                  library is no longer around
 
-- altperl tool improvements including: better support for running multiple slons 
-  on the same server,let start_slon invoke slon with a config file,
-  fix node_is_subscribing, $LOGDIR directory behaviours, use PGPASSWORDFILE 
-  when querying state
+     - Bug 290 :: Make the symbols in the shared library unique 
 
+     - The slony1_funcs.so and .sql files that get installed are also
+       versioned, which allows multiple versions of slony to be
+       installed in the same postgresql lib directory.
 
-** 2.2.0
-- Bug #276 :: Fixed detection of duplicate value in sl_nodelock
-- Bug #275 :: fix memory leak in monitor thread
-- Bug #272 :: Fix memory overwrite in slonik parsing
+   - Allow linking with pgport on 9.3+ by including pgcommon
 
-- Bug #258 :: The cleanup thread should no longer block waiting on a lock
+   - Let DDL for EXECUTE SCRIPT to be specified inline - bug 151
 
-- Bug #264 :: Add an ORDER BY to the log selection query so the xid's get compressed
+   - Numerous revisions to documentation
 
-- Bug 274  :: Include schemadoc.xml as part of the distribution tar(again)
-- Bug #268 :: Use pid instead of procpid in pg_stat_activity with PG 9.2+
+   - altperl tool improvements including ::
+     - better support for running multiple slons on the same server
+     - let start_slon invoke slon with a config file
+     - fix node_is_subscribing
+     - $LOGDIR directory behaviours
+     - use PGPASSWORDFILE when querying state
+     - Add correct 'ps' arguments to the altperl tools for Darwin.
 
-- Bug #263 :: CPPFLAGS and LDFLAGS on configure get passed on
+   - SYNC GROUP sizes now dynamically grow from 1 to a maximum size
+     set in the config file.  The old logic based on time it took to
+     complete the last SYNC has been removed.  - bug #235
 
-- Bug #250 :: Log shipper does not report application name - add in setting of GUC
+   - Added a RESUBSCRIBE NODE command to reshape clusters. This must
+     be used instead of SUBSCRIBE SET to reshape subscriptions when an
+     origin has more than one set.
 
-- Bug #235 :: SYNC GROUP sizes are now dynamically grow from 1 to a
-              maximum size set in the config file.  The old logic
-              based on time it took to complete the last SYNC has been
-              removed.
+   - Bug #178 :: The FAILOVER process has been reworked to be more
+                 reliable. Some nodes can no longer be used as
+                 failover targets.
 
-- Add correct 'ps' arguments to the altperl tools for Darwin.
+   - SET ID is no longer an option to EXECUTE SCRIPT.
 
-- Bug #256 :: set_conf_option() has an extra elevel parameter on PG 9.2
+   - Major "protocol" change; rather than constructing cursors to
+     query logged updates, version 2.2 now uses the COPY protocol to
+     stream data into log tables on subscribers.  This is discussed in
+     greater detail in the following section.
 
-- The slony1_funcs.so and .sql files that get installed are now
-  versioned.  This allows multiple versions of slony to be installed
-  in the same postgresql lib directory.
-
-- Added a RESUBSCRIBE NODE command to reshape clusters. This must be
-  used instead of SUBSCRIBE SET to reshape subscriptions when an origin
-  has more than one set. 
-
-- Bug #178 :: The FAILOVER process has been reworked to be more
-  reliable. Some nodes can no longer be used as failover targets.
-
-- SET ID is no longer an option to EXECUTE SCRIPT. 
-
-*** Major 2.2 change: COPY protocol
+** Major 2.2 change: COPY protocol
 
     In versions before 2.2, Slony-I log triggers would capture logged
     data into tables ~sl_log_1~ and ~sl_log_2~ in the form of
@@ -109,28 +106,41 @@
 
     - DDL handling
 
-	  - The old behaviour was that DDL was treated as a special
-            Slony event, and it never was clear whether that should be
-            executed before or after other replication activity that
-            might have taken place during that Slony event.  This was
-            fine in Slony 1.2 and earlier, when the processing of DDL
-            forcibly required that Slony take out locks on the origin
-            on ALL replicated tables; those locks would prevent there
-            from being any other activity going on during the
-            processing of DDL.  But when much of that locking
-            disappeared, in version 2.0, it became possible for there
-            to be replication activity on tables not being modified by
-            DDL, and timing anomalies could occur.
+	  - The old behaviour was that DDL was treated as a special Slony
+        event, and it never was clear whether that should be executed
+        before or after other replication activity that might have
+        taken place during that Slony event.  This was fine in Slony
+        1.2 and earlier, when the processing of DDL forcibly required
+        that Slony take out locks on the origin on ALL replicated
+        tables; those locks would prevent there from being any other
+        activity going on during the processing of DDL.  But when much
+        of that locking disappeared, in version 2.0, it became
+        possible for there to be replication activity on tables not
+        being modified by DDL, and timing anomalies could occur.
 
-	  - In version 2.2, a third log table, sl_log_script, is added
-            to capture script queries which would notably include DDL.
-            This table uses the same sequence value that controls
-            order of application for replicated data, so DDL will be
-            applied at exactly the appropriate point in the
-            transaction stream on subscribers.
+	  - In version 2.2, a third log table, sl_log_script, is added to
+        capture script queries which would notably include DDL.  This
+        table uses the same sequence value that controls order of
+        application for replicated data, so DDL will be applied at
+        exactly the appropriate point in the transaction stream on
+        subscribers.
 
-          - Note that this rectifies bug #137, *execute script does
-            not get applied in the correct order*
+        - Note that this rectifies bug #137, *execute script does not
+          get applied in the correct order*
+
+      - Sequence handling changes somewhat (see Bug 304).
+
+		Previously, when DDL was processed as "an event," this would
+        naturally mean that sequence values would have values based on
+        the previous SYNC, and, at the end, capture values at the end
+        of the DDL SYNC, and the "DDL Sync" could make use of those
+        values.
+
+		Now, with DDL being processed along with ordinary replicated
+        DML within a SYNC, sequence usage by DML needs to be captured
+        and mixed into the updates.  Now, each time a DDL statement is
+        applied, sequences need to be updated, which can now take
+        place in the middle of a SYNC.		
 
     - Expected effects
       - Lower processing overhead in slon process :: By using COPY,
@@ -153,3 +163,23 @@
            where DDL could be performed in the wrong order with
            respect to logged data changes.  The shift of "script" data
            from ~sl_event~ to ~sl_log_script~ resolves this issue.
+   
+** Bugs fixed in the course of the release
+
+	These are expected to represent bugs that were previously present,
+	not a consequence of problems introduced and subsequently fixed in
+	the 2.2 branch.
+
+- No bug  :: Make log_truncate() SECURITY DEFINER
+- Bug 250 :: Log shipper does not report application name - add in setting of GUC
+- Bug 252 :: cloneNodePrepare() store a valid conninfo in sl_path
+- Bug 273 :: Slon can try to pull data from a behind provider.  Fix is
+             to not force the event provider to be part of the
+             providers unless we don't find any provider at all
+             otherwise.
+- Bug 286 :: Support to compile against PG 9.3
+- Bug 297 :: Make test_slony_state-dbi.pl work with PG 9.2
+- Bug 299 :: Fix a bug in MOVE SET where slon might pull data from the old origin using
+             SYNC values for the new origin
+
+

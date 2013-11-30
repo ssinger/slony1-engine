@@ -40,8 +40,24 @@ Failover.prototype.runTest = function() {
 	 * Subscribe the first node.
 	 */
 	this.subscribeSet(1,1, 1, [ 2, 3 ]);
+
+
+	/**
+	 * try failing over node 1 to node 4 first.
+	 * node 4 is NOT subscribed to the sets of node
+	 * 1 so this had better fail.
+	 */
+	this.slonikSync(1,1);
+	this.failNode(1,4,false);
+	this.slonArray[1 - 1] = this.coordinator.createSlonLauncher('db' + 1);
+	this.slonArray[1 - 1].run();
+	
+	
 	this.subscribeSet(1,1, 3, [ 4, 5 ]);
 	this.slonikSync(1,1);
+
+
+	
 
 	var load = this.generateLoad();
 	
@@ -51,11 +67,11 @@ Failover.prototype.runTest = function() {
 	 * Node 5 is not a provider.
 	 * This should go off smoothly.
 	 */
-	this.failNode(5,1,false);
+	this.failNode(5,1,true);
   
 	var lag1 = this.measureLag(1,5);
 	java.lang.Thread.sleep(10*1000);
-	var lag2 = this.measureLag(1,5);	
+	var lag2 = this.measureLag(1,5);
 	this.testResults.assertCheck('lag on node 5 is increasing',lag2 > lag1 ,true);
 		
 	
@@ -97,6 +113,18 @@ Failover.prototype.runTest = function() {
 	this.addCompletePaths();
 	
 	this.moveSet(1,3,1);
+	/**
+	 * make sure we perform a SYNC after the move set
+	 * but before we start failing nodes.  The listen network
+	 * is different after the move set and we want to make sure
+	 * all nodes have the new listen network.
+	 * Node 5 might have a 1,SYNC event more recent
+	 * than node 3 because prior to the MOVE SET
+	 * the listen network allowed for this.
+	 * The FAILOVER logic can't deal with 5 being
+	 * the most-ahead node since it isn't a direct subscriber.
+	 */
+	this.slonikSync(1,1);
 	load = this.generateLoad();
 	
 	
@@ -157,7 +185,7 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db1', 'db4');
 	this.addCompletePaths();
 	this.moveSet(1,3,1)
-
+	this.slonikSync(1,1);
 	/**
 	 * Now shutdown the slon for node 3, see how a failover to node 3 behaves.
 	 */
@@ -207,6 +235,7 @@ Failover.prototype.runTest = function() {
 	
 	this.addCompletePaths();	
 	this.moveSet(1,3,1);
+	this.slonikSync(1,1);
 	load = this.generateLoad();
 	this.coordinator.log('stopping load');
 	java.lang.Thread.sleep(30*1000);
@@ -268,8 +297,11 @@ Failover.prototype.runTest = function() {
 	this.createSecondSet(1);
 	this.subscribeSet(2,1, 1, [ 2, 3 ]);
 	this.slonikSync(1,1);
-	this.failNode(1,2,true);	
+	this.failNode(1,2,true);
+
+	
     this.slonikSync(1,2);
+	
 
 	this.compareDb('db1','db2');
 	this.compareDb('db1', 'db3');
@@ -277,7 +309,41 @@ Failover.prototype.runTest = function() {
 	this.compareDb('db4','db3');
 	this.compareDb('db3','db2');
 	this.compareDb('db4','db2');
+    
+    	this.dropNode(1,2);
+	this.reAddNode(1,2,2);	
 
+
+	this.addCompletePaths();
+	// NODE 4  MIGHT have been unsubscribed
+	// from set 1.  This is because 
+	// node 4 isn't subscribe to set 2.
+	// If node 4 was more ahead
+	// they are now unsubscribed.
+	this.slonikSync(1,1);
+	this.slonikSync(1,4);
+	this.subscribeSet(1,1,1,[4]);
+
+    this.slonikSync(1,2);
+    this.moveSet(1,2,1);
+    //stop slon 4
+    this.coordinator.log('starting bug 318 test');
+    this.slonArray[3].stop();
+    this.coordinator.join(this.slonArray[3]);
+    load2 = this.generateLoad();
+    this.coordinator.log('stopping load');
+    java.lang.Thread.sleep(3*30*1000);
+    load2.stop();
+ 
+    this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
+				this.slonArray[3].run();    
+    this.failNode(1,3,true);
+    
+    this.compareDb('db2', 'db3');
+    this.compareDb('db2', 'db4');
+    this.compareDb('db3','db4');
+    this.compareDb('db3','db5');
+    
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);
@@ -326,7 +392,6 @@ Failover.prototype.failNode=function(node_id,backup_id, expect_success) {
 	slonik.run();
 	this.coordinator.join(slonik);	
 	this.testResults.assertCheck('slonik failover status okay',slonik.getReturnCode()==0,expect_success);
-	
 	
 	this.coordinator.log('subscribe list is now');
 	rs = stat.executeQuery("SELECT * FROM _disorder_replica.sl_set");

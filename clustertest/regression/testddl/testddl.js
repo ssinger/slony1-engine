@@ -27,7 +27,11 @@ function init_tables() {
 	+"set add table (id=2, set id=1, origin=1, fully qualified name = 'public.table2', key='table2_id_key');\n"
 	+"set add table (id=3, set id=1, origin=1, fully qualified name = 'public.table3');\n"
 	+"set add table (id=4, set id=1, origin=1, fully qualified name = 'public.table4');\n"
-	+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.billing_discount');\n"
+	+"set add table (id=5, set id=1, origin=1, fully qualified name = 'public.table5');\n"
+	+"set add table (id=6, set id=1, origin=1, fully qualified name = 'public.billing_discount');\n"
+	+ "set add sequence(id=1,set id=1, origin=1, fully qualified name= 'public.table1_id_seq');\n"
+	+ "set add sequence(id=2,set id=1, origin=1, fully qualified name= 'public.table5_id_seq');\n"
+	
 	
 	return script;
 }
@@ -73,6 +77,27 @@ function generate_data() {
 	return sqlScript;
 }
 
+function generate_table5_transaction() {
+	var sqlScript='';	
+
+	// This transaction inserts rows into table5, then does
+	// DDL as it is supposed to be done by an application, and
+	// continues to insert. The test ensures that the apply
+	// trigger is flushing out the apply query cache to avoid
+	// using incompatible SPI plans.
+	sqlScript += "START TRANSACTION;\n";
+	sqlScript += "INSERT INTO table5(data) VALUES (4);\n";
+	sqlScript += "INSERT INTO table5(data) VALUES (5);\n";
+	sqlScript += "SELECT _slonyregress.ddlcapture('ALTER TABLE public.table5 ALTER COLUMN data TYPE text USING data::text;', NULL);\n";
+	sqlScript += "SELECT _slonyregress.ddlscript_complete(NULL);\n";
+	sqlScript += "INSERT INTO table5(data) VALUES ('six');\n";
+	sqlScript += "INSERT INTO table5(data) VALUES ('seven');\n";
+	sqlScript += "COMMIT;\n";
+		
+	java.lang.System.out.println(sqlScript);
+	return sqlScript;
+}
+
 function exec_ddl(coordinator) {
 	preamble = get_slonik_preamble();
 	var slonikScript = 'EXECUTE SCRIPT( FILENAME=\'regression/testddl/ddl_updates.sql\''
@@ -93,13 +118,80 @@ function exec_ddl(coordinator) {
 
 
 function individual_ddl(coordinator, nodenum) {
-	
 	premable = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT( FILENAME=\'regression/testddl/ddl_update_part2.sql\''
 		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +');';
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
+}
+
+function trigger_function(coordinator) {
+	/**
+	 * We stop the slons because we want to make sure that a SYNC does not
+	 * happen in between the EXECUTE_SCRIPT and the next SYNC.
+	 */
+	terminate_slon(coordinator);
+	var sql = '';
+	for(var idx=0; idx < 1000; idx++) {
+		sql = sql + "insert into table5(data) values ('seqtest');\n"
+	}
+	var psql = coordinator.createPsqlCommand('db1',sql);
+	psql.run();
+	coordinator.join(psql);
+	premable = get_slonik_preamble();
+	slonikScript = "EXECUTE SCRIPT(  SQL='alter table table1 drop column seqed;create trigger table5_trigger "
+		+ " before INSERT on public.table5 for each row execute procedure "
+		+ " insert_table1();'"
+		+ ' ,EVENT NODE=1 );';
+	run_slonik('add trigger ddl',coordinator,preamble,slonikScript);
+	slonikScript = "EXECUTE SCRIPT(  SQL='insert into table5(data) values (9);'"
+		+ ' ,EVENT NODE=1);';
+	run_slonik('add trigger ddl',coordinator,preamble,slonikScript);
+
+	launch_slon(coordinator);	
 	
 }
+
+
+function inline_ddl(coordinator) {
+	premable = get_slonik_preamble();
+	slonikScript = 'EXECUTE SCRIPT('
+	    + 'SQL=\'ALTER TABLE table1 ADD COLUMN processed timestamp with time zone;\''
+		+ ' ,EVENT NODE=1);\n';
+	slonikScript += 'EXECUTE SCRIPT('
+	    + 'SQL=\'UPDATE table1 SET processed = CURRENT_TIMESTAMP;\''
+		+ ' ,EVENT NODE=1);\n';
+	run_slonik('update ddl',coordinator,preamble,slonikScript);
+}
+
+
+function execute_on_subscriber(coordinator)
+{
+    /**
+     * Perform an EXECUTE SCRIPT with a subscriber (a non-provider)
+     * and verify that the DDL changes replicate to all other nodes.
+     */
+    var premable = get_slonik_preamble();
+    var slonikScript = 'EXECUTE SCRIPT('
+	+ 'SQL=\'CREATE TABLE test_on_subscriber(id serial, value text);\''
+	+ ' ,EVENT NODE=3);\n'
+        + 'sync(id=3);\n wait for event(origin=3, confirmed=all, wait on=3);\n';
+    
+    run_slonik('execute_on_subscriber.create',coordinator,preamble,slonikScript);
+    /**
+     * Now drop the table on nodes 1 and 2. 
+     * That will fail if the CREATE did not propogate
+     */
+    slonikScript = 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_on_subscriber;\''
+	+ ' ,EVENT NODE=2, EXECUTE ONLY ON=2);\n' 
+	+ 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_on_subscriber;\''
+	+ ' ,EVENT NODE=1, EXECUTE ONLY ON=1);\n' 
+            
+    run_slonik('execute_on_subscriber.drop',coordinator,preamble,slonikScript);
+    
+}
+
 function do_test(coordinator) {
 
 	var numrows = random_number(150,350);
@@ -117,11 +209,26 @@ function do_test(coordinator) {
 		individual_ddl(coordinator,idx);
 	}
 	wait_for_sync(coordinator);
+
 	sql = generate_data();
 	psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
-	
+	wait_for_sync(coordinator);
+
+	sql = generate_table5_transaction();
+	psql = coordinator.createPsqlCommand('db1',sql);
+	psql.run();
+	coordinator.join(psql);
+	wait_for_sync(coordinator);
+
+	inline_ddl(coordinator);
+	wait_for_sync(coordinator);
+
+
+	trigger_function(coordinator);
+	wait_for_sync(coordinator);
+	execute_on_subscriber(coordinator);
 }
 
 function get_compare_queries() {
@@ -131,5 +238,6 @@ function get_compare_queries() {
 	             'select col1,col2,col1::text||col2::text as id, data,newcol from table4 order by id'];
 	return queries;
 }
+
 
 run_test(coordinator,'testddl');

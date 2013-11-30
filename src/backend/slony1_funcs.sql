@@ -28,7 +28,7 @@ create or replace function @NAMESPACE@.createEvent(p_cluster_name name, p_event_
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -39,7 +39,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text) 
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -50,7 +50,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -61,7 +61,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -72,7 +72,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -83,7 +83,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -94,7 +94,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -105,7 +105,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -116,7 +116,7 @@ Create an sl_event entry';
 
 create or replace function @NAMESPACE@.createEvent (p_cluster_name name, p_event_type text, ev_data1 text, ev_data2 text, ev_data3 text, ev_data4 text, ev_data5 text, ev_data6 text, ev_data7 text, ev_data8 text)
 	returns bigint
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_createEvent'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_createEvent'
 	language C
 	called on null input;
 
@@ -133,7 +133,7 @@ Create an sl_event entry';
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.denyAccess ()
 	returns trigger
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_denyAccess'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_denyAccess'
 	language C
 	security definer;
 
@@ -151,7 +151,7 @@ grant execute on function @NAMESPACE@.denyAccess () to public;
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.lockedSet ()
 	returns trigger
-	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_lockedSet'
+	as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_lockedSet'
 	language C;
 
 comment on function @NAMESPACE@.lockedSet () is 
@@ -163,7 +163,7 @@ comment on function @NAMESPACE@.lockedSet () is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getLocalNodeId (p_cluster name) returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getLocalNodeId'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_getLocalNodeId'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getLocalNodeId (p_cluster name) to public;
@@ -178,7 +178,7 @@ comment on function @NAMESPACE@.getLocalNodeId (p_cluster name) is
 --	object.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.getModuleVersion () returns text
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_getModuleVersion'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_getModuleVersion'
 	language C
 	security definer;
 grant execute on function @NAMESPACE@.getModuleVersion () to public;
@@ -188,7 +188,7 @@ comment on function @NAMESPACE@.getModuleVersion () is
 
 
 create or replace function @NAMESPACE@.resetSession() returns text
-	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_resetSession'
+	   as '$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_@FUNCVERSION@_resetSession'
 	   language C;
 
 -- ----------------------------------------------------------------------
@@ -198,7 +198,7 @@ create or replace function @NAMESPACE@.resetSession() returns text
 --	does the actual work of updating the user tables.
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApply () returns trigger
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApply'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logApply'
 	language C
 	security definer;
 
@@ -210,7 +210,7 @@ create or replace function @NAMESPACE@.logApply () returns trigger
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApplySetCacheSize (p_size int4) 
 returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySetCacheSize'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logApplySetCacheSize'
 	language C;
 
 -- ----------------------------------------------------------------------
@@ -221,7 +221,7 @@ returns int4
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logApplySaveStats (p_cluster name, p_origin int4, p_duration interval) 
 returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logApplySaveStats'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logApplySaveStats'
 	language C;
 
 
@@ -245,7 +245,7 @@ schema/functions.';
 select @NAMESPACE@.checkmoduleversion();
 
 create or replace function @NAMESPACE@.decode_tgargs(bytea) returns text[] as 
-'$libdir/slony1_funcs.@MODULEVERSION@','_slon_decode_tgargs' language C security definer;
+'$libdir/slony1_funcs.@MODULEVERSION@','_Slony_I_@FUNCVERSION@_slon_decode_tgargs' language C security definer;
 
 comment on function @NAMESPACE@.decode_tgargs(bytea) is 
 'Translates the contents of pg_trigger.tgargs to an array of text arguments';
@@ -284,7 +284,7 @@ drop function @NAMESPACE@.check_namespace_validity();
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.logTrigger () returns trigger
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_logTrigger'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_logTrigger'
 	language C
 	security definer;
 
@@ -327,7 +327,7 @@ comment on function @NAMESPACE@.terminateNodeConnections (p_failed_node int4) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.killBackend (p_pid int4, p_signame text) returns int4
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_killBackend'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_killBackend'
 	language C;
 
 comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
@@ -339,7 +339,7 @@ comment on function @NAMESPACE@.killBackend(p_pid int4, p_signame text) is
 --	
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.seqtrack (p_seqid int4, p_seqval int8) returns int8
-    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_seqtrack'
+    as '$libdir/slony1_funcs.@MODULEVERSION@', '_Slony_I_@FUNCVERSION@_seqtrack'
 	strict language C;
 
 comment on function @NAMESPACE@.seqtrack(p_seqid int4, p_seqval int8) is
@@ -500,7 +500,7 @@ as $$
 begin
 	return @NAMESPACE@.slonyVersionMajor()::text || '.' || 
 	       @NAMESPACE@.slonyVersionMinor()::text || '.' || 
-	       @NAMESPACE@.slonyVersionPatchlevel()::text || '.b2'  ;
+	       @NAMESPACE@.slonyVersionPatchlevel()::text   ;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersion() is 
@@ -816,6 +816,11 @@ declare
 	v_old_row		record;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check if the node exists
 	-- ----
 	select * into v_old_row
@@ -862,6 +867,11 @@ declare
 	v_node_row		record;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check that we are the node to activate and that we are
 	-- currently disabled.
 	-- ----
@@ -904,6 +914,11 @@ declare
 	v_node_row		record;
 	v_sub_row		record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Check that the node is inactive
 	-- ----
@@ -1001,55 +1016,70 @@ NOTE: This is not yet implemented!';
 --
 --	Generate the DROP_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.dropNode (p_no_id int4)
+create or replace function @NAMESPACE@.dropNode (p_no_ids int4[])
 returns bigint
 as $$
 declare
 	v_node_row		record;
+	v_idx         integer;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Check that this got called on a different node
 	-- ----
-	if p_no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
+	if  @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') = ANY (p_no_ids) then
 		raise exception 'Slony-I: DROP_NODE cannot initiate on the dropped node';
 	end if;
 
-	select * into v_node_row from @NAMESPACE@.sl_node
-			where no_id = p_no_id
+	--
+	-- if any of the deleted nodes are receivers we drop the sl_subscribe line
+	--
+	delete from @NAMESPACE@.sl_subscribe where sub_receiver = ANY (p_no_ids);
+
+	v_idx:=1;
+	LOOP
+	  EXIT WHEN v_idx>array_upper(p_no_ids,1) ;
+	  select * into v_node_row from @NAMESPACE@.sl_node
+			where no_id = p_no_ids[v_idx]
 			for update;
-	if not found then
-		raise exception 'Slony-I: unknown node ID %', p_no_id;
-	end if;
-
-	-- ----
-	-- Make sure we do not break other nodes subscriptions with this
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_subscribe
-			where sub_provider = p_no_id)
-	then
+	  if not found then
+		 raise exception 'Slony-I: unknown node ID % %', p_no_ids[v_idx],v_idx;
+	  end if;
+	  -- ----
+	  -- Make sure we do not break other nodes subscriptions with this
+	  -- ----
+	  if exists (select true from @NAMESPACE@.sl_subscribe
+			where sub_provider = p_no_ids[v_idx])
+	  then
 		raise exception 'Slony-I: Node % is still configured as a data provider',
-				p_no_id;
-	end if;
+				p_no_ids[v_idx];
+	  end if;
 
-	-- ----
-	-- Make sure no set originates there any more
-	-- ----
-	if exists (select true from @NAMESPACE@.sl_set
-			where set_origin = p_no_id)
-	then
-		raise exception 'Slony-I: Node % is still origin of one or more sets',
-				p_no_id;
-	end if;
+	  -- ----
+	  -- Make sure no set originates there any more
+	  -- ----
+	  if exists (select true from @NAMESPACE@.sl_set
+			where set_origin = p_no_ids[v_idx])
+	  then
+	  	  raise exception 'Slony-I: Node % is still origin of one or more sets',
+				p_no_ids[v_idx];
+	  end if;
 
-	-- ----
-	-- Call the internal drop functionality and generate the event
-	-- ----
-	perform @NAMESPACE@.dropNode_int(p_no_id);
+	  -- ----
+	  -- Call the internal drop functionality and generate the event
+	  -- ----
+	  perform @NAMESPACE@.dropNode_int(p_no_ids[v_idx]);
+	  v_idx:=v_idx+1;
+	END LOOP;
 	return  @NAMESPACE@.createEvent('_@CLUSTERNAME@', 'DROP_NODE',
-									p_no_id::text);
+									array_to_string(p_no_ids,','));
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.dropNode(p_no_id int4) is
+comment on function @NAMESPACE@.dropNode(p_no_ids int4[]) is
 'generate DROP_NODE event to drop node node_id from replication';
 
 -- ----------------------------------------------------------------------
@@ -1063,6 +1093,11 @@ as $$
 declare
 	v_tab_row		record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- If the dropped node is a remote node, clean the configuration
 	-- from all traces for it.
@@ -1126,6 +1161,11 @@ declare
 	v_row2				record;
 	v_n					int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- All consistency checks first
 
@@ -1198,15 +1238,22 @@ and then restart of all node daemons.';
 --	Initiate a failover. This function must be called on all nodes
 --	and then waited for the restart of all node daemons.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4)
+create or replace function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4,p_failed_nodes integer[])
 returns int4
 as $$
 declare
 	v_row				record;
 	v_row2				record;
 	v_failed					boolean;
+    v_restart_required          boolean;
 begin
 	
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	v_restart_required:=false;
 	--
 	-- any nodes other than the backup receiving
 	-- ANY subscription from a failed node
@@ -1214,8 +1261,11 @@ begin
 	update @NAMESPACE@.sl_subscribe set 
 		   sub_provider=p_backup_node
 		   where sub_provider=p_failed_node
-		   and sub_receiver<>p_backup_node;
-
+		   and sub_receiver<>p_backup_node
+		   and sub_receiver <> ALL (p_failed_nodes);
+	if found then
+	   v_restart_required:=true;
+	end if;
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
@@ -1226,23 +1276,35 @@ begin
 	-- the failed node even if it *does* become accessible
 
 	update @NAMESPACE@.sl_path set pa_conninfo='<event pending>' WHERE
-	   		  pa_server=p_failed_node;
-	
+	   		  pa_server=p_failed_node
+			  and pa_conninfo<>'<event pending>';
+
+	if found then
+	   v_restart_required:=true;
+	end if;
+
 	v_failed := exists (select 1 from @NAMESPACE@.sl_node 
 		   where no_failed=true and no_id=p_failed_node);
 
-        if not v_failed then
+    if not v_failed then
 	   	
-		update @NAMESPACE@.sl_node set no_failed=true where no_id=p_failed_node
-		and no_failed=false;
-	   -- Rewrite sl_listen table
-	   perform @NAMESPACE@.RebuildListenEntries();	   
+		update @NAMESPACE@.sl_node set no_failed=true where no_id = ANY (p_failed_nodes)
+			   and no_failed=false;
+		if found then
+	   	   v_restart_required:=true;
+		end if;
+	end if;	
 
-	   -- ----
-	   -- Make sure the node daemon will restart
-	   -- ----
-	   notify "_@CLUSTERNAME@_Restart";
-	end if;
+	if v_restart_required then
+	  -- Rewrite sl_listen table
+	  perform @NAMESPACE@.RebuildListenEntries();	   
+	
+	  -- ----
+	  -- Make sure the node daemon will restart
+ 	  -- ----
+	  notify "_@CLUSTERNAME@_Restart";
+    end if;
+
 
 	-- ----
 	-- That is it - so far.
@@ -1250,7 +1312,7 @@ begin
 	return p_failed_node;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4) is
+comment on function @NAMESPACE@.failedNode(p_failed_node int4, p_backup_node int4,p_failed_nodes integer[]) is
 'Initiate failover from failed_node to backup_node.  This function must be called on all nodes, 
 and then waited for the restart of all node daemons.';
 
@@ -1262,13 +1324,18 @@ and then waited for the restart of all node daemons.';
 --	On the node that has the highest sequence number of the failed node,
 --	fake the FAILED_NODE event.
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8)
+create or replace function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8, p_failed_nodes integer[])
 returns bigint
 as $$
 declare
 	v_row				record;
 	v_new_event			bigint;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	select * into v_row
 			from @NAMESPACE@.sl_event
 			where ev_origin = p_failed_node
@@ -1278,8 +1345,8 @@ begin
 				p_failed_node, p_ev_seqno;
 	end if;
 
-	update @NAMESPACE@.sl_node set no_failed=true  where no_id=p_failed_node
-		and no_failed=false;
+	update @NAMESPACE@.sl_node set no_failed=true  where no_id = ANY 
+	(p_failed_nodes) and no_failed=false;
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 	-- ----
@@ -1290,7 +1357,8 @@ begin
 	notify "_@CLUSTERNAME@_Restart";
 
 	select @NAMESPACE@.createEvent('_@CLUSTERNAME@','FAILOVER_NODE',
-								p_failed_node::text,p_ev_seqno::text)
+								p_failed_node::text,p_ev_seqno::text,
+								array_to_string(p_failed_nodes,','))
 			into v_new_event;
 		
 
@@ -1298,8 +1366,8 @@ begin
 end;
 $$ language plpgsql;
 
-comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8) is
-'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake)
+comment on function @NAMESPACE@.failedNode2 (p_failed_node int4, p_backup_node int4, p_ev_seqno int8,p_failed_nodes integer[] ) is
+'FUNCTION failedNode2 (failed_node, backup_node, set_id, ev_seqno, ev_seqfake,p_failed_nodes)
 
 On the node that has the highest sequence number of the failed node,
 fake the FAILOVER_SET event.';
@@ -1310,8 +1378,13 @@ as $$
 declare
 
 begin
-		perform @NAMESPACE@.failoverSet_int(p_failed_node,
-			p_backup_node,p_seq_no);
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	perform @NAMESPACE@.failoverSet_int(p_failed_node,
+		p_backup_node,p_seq_no);
 
 	notify "_@CLUSTERNAME@_Restart";
     return 0;
@@ -1331,6 +1404,11 @@ declare
 	v_last_sync			int8;
 	v_set				int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	SELECT max(ev_seqno) into v_last_sync FROM @NAMESPACE@.sl_event where
 		   ev_origin=p_failed_node;
 	if v_last_sync > p_last_seqno then
@@ -1365,10 +1443,14 @@ begin
 					and sub_receiver = p_backup_node;
 			update @NAMESPACE@.sl_set
 				set set_origin = p_backup_node
-				where set_id = v_set;
+				where set_id = v_set;		
 			 update @NAMESPACE@.sl_subscribe
-				 		set sub_provider=p_backup_node
-					   where sub_set = v_set;
+						set sub_provider=p_backup_node
+					  	FROM @NAMESPACE@.sl_node receive_node
+					   where sub_set = v_set
+					   and sub_provider=p_failed_node
+					   and sub_receiver=receive_node.no_id
+					   and receive_node.no_failed=false;
 
 			for v_row in select * from @NAMESPACE@.sl_table
 				where tab_set = v_set
@@ -1383,9 +1465,15 @@ begin
 			delete from @NAMESPACE@.sl_subscribe
 					  where sub_set = v_set
 					  and sub_receiver = p_backup_node;
+		
 			update @NAMESPACE@.sl_subscribe
 				 		set sub_provider=p_backup_node
-					   where sub_set = v_set;
+						FROM @NAMESPACE@.sl_node receive_node
+					   where sub_set = v_set
+					    and sub_provider=p_failed_node
+						 and sub_provider=p_failed_node
+					   and sub_receiver=receive_node.no_id
+					   and receive_node.no_failed=false;
 			update @NAMESPACE@.sl_set
 					   set set_origin = p_backup_node
 				where set_id = v_set;
@@ -1495,23 +1583,44 @@ comment on function @NAMESPACE@.cloneNodePrepare(p_no_id int4, p_no_provider int
 create or replace function @NAMESPACE@.cloneNodePrepare_int (p_no_id int4, p_no_provider int4, p_no_comment text)
 returns int4
 as $$
+declare
+   v_dummy int4;
 begin
-	insert into @NAMESPACE@.sl_node
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	update @NAMESPACE@.sl_node set
+	       no_active = np.no_active,
+	       no_comment = np.no_comment,
+	       no_failed = np.no_failed
+	       from @NAMESPACE@.sl_node np
+	       where np.no_id = p_no_provider
+	       and sl_node.no_id = p_no_id;
+	if not found then
+	   insert into @NAMESPACE@.sl_node
 		(no_id, no_active, no_comment,no_failed)
-		select p_no_id, no_active, p_no_comment,no_failed
+		select p_no_id, no_active, p_no_comment, no_failed
 		from @NAMESPACE@.sl_node
 		where no_id = p_no_provider;
+	end if;
 
-	insert into @NAMESPACE@.sl_path
-		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select pa_server, p_no_id, 'Event pending', pa_connretry
-		from @NAMESPACE@.sl_path
-		where pa_client = p_no_provider;
-	insert into @NAMESPACE@.sl_path
-		(pa_server, pa_client, pa_conninfo, pa_connretry)
-		select p_no_id, pa_client, 'Event pending', pa_connretry
-		from @NAMESPACE@.sl_path
-		where pa_server = p_no_provider;
+       insert into @NAMESPACE@.sl_path
+	    (pa_server, pa_client, pa_conninfo, pa_connretry)
+	    select pa_server, p_no_id, '<event pending>', pa_connretry
+	    from @NAMESPACE@.sl_path
+	    where pa_client = p_no_provider
+	    and (pa_server, p_no_id) not in (select pa_server, pa_client
+	    	    from @NAMESPACE@.sl_path);
+
+       insert into @NAMESPACE@.sl_path
+	    (pa_server, pa_client, pa_conninfo, pa_connretry)
+	    select p_no_id, pa_client, '<event pending>', pa_connretry
+	    from @NAMESPACE@.sl_path
+	    where pa_server = p_no_provider
+	    and (p_no_id, pa_client) not in (select pa_server, pa_client
+	    	    from @NAMESPACE@.sl_path);
 
 	insert into @NAMESPACE@.sl_subscribe
 		(sub_set, sub_provider, sub_receiver, sub_forward, sub_active)
@@ -1545,6 +1654,11 @@ as $$
 declare
 	v_row			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	perform "pg_catalog".setval('@NAMESPACE@.sl_local_node_id', p_no_id);
 	perform @NAMESPACE@.resetSession();
 	for v_row in select sub_set from @NAMESPACE@.sl_subscribe
@@ -1611,6 +1725,11 @@ declare
 	v_dummy			int4;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check if the path already exists
 	-- ----
 	select 1 into v_dummy
@@ -1672,6 +1791,11 @@ declare
 	v_row			record;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- There should be no existing subscriptions. Auto unsubscribing
 	-- is considered too dangerous. 
 	-- ----
@@ -1722,6 +1846,11 @@ create or replace function @NAMESPACE@.dropPath_int (p_pa_server int4, p_pa_clie
 returns int4
 as $$
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Remove any dangling sl_listen entries with the server
 	-- as provider and the client as receiver. This must have
@@ -1786,6 +1915,11 @@ as $$
 declare
 	v_exists		int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	select 1 into v_exists
 			from @NAMESPACE@.sl_listen
 			where li_origin = p_li_origin
@@ -1858,6 +1992,11 @@ create or replace function @NAMESPACE@.dropListen_int (p_li_origin int4, p_li_pr
 returns int4
 as $$
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	delete from @NAMESPACE@.sl_listen
 			where li_origin = p_li_origin
 			and li_provider = p_li_provider
@@ -1887,6 +2026,11 @@ as $$
 declare
 	v_local_node_id		int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	v_local_node_id := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	insert into @NAMESPACE@.sl_set
@@ -1911,6 +2055,11 @@ as $$
 declare
 	v_dummy				int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	select 1 into v_dummy
 			from @NAMESPACE@.sl_set
 			where set_id = p_set_id
@@ -1956,6 +2105,11 @@ declare
 	v_set_row			record;
 	v_tab_row			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
@@ -2026,6 +2180,11 @@ declare
 	v_tab_row			record;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check that the set exists and that we are the origin
 	-- and that it is not already locked.
 	-- ----
@@ -2089,6 +2248,11 @@ declare
 	v_sync_seqno		int8;
 	v_lv_row			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Check that the set is locked and that this locking
 	-- happened long enough ago.
@@ -2181,6 +2345,11 @@ declare
 	v_sub_next			int4;
 	v_last_sync			int8;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Get our local node ID
 	-- ----
@@ -2355,6 +2524,11 @@ declare
 	v_origin			int4;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check that the set exists and originates here
 	-- ----
 	select set_origin into v_origin from @NAMESPACE@.sl_set
@@ -2389,6 +2563,11 @@ as $$
 declare
 	v_tab_row			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Restore all tables original triggers and rules and remove
 	-- our replication stuff.
@@ -2440,6 +2619,11 @@ declare
 	v_origin			int4;
 	in_progress			boolean;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Check that both sets exist and originate here
 	-- ----
@@ -2545,6 +2729,11 @@ create or replace function @NAMESPACE@.mergeSet_int (p_set_id int4, p_add_id int
 returns int4
 as $$
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	update @NAMESPACE@.sl_sequence
 			set seq_set = p_set_id
 			where seq_set = p_add_id;
@@ -2575,6 +2764,11 @@ as $$
 declare
 	v_set_origin		int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Check that we are the origin of the set
 	-- ----
@@ -2631,6 +2825,11 @@ declare
 	v_pkcand_nn		boolean;
 	v_prec			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the table because it might 
@@ -2739,6 +2938,11 @@ declare
 	v_set_id		int4;
 	v_set_origin		int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
     -- ----
 	-- Determine the set_id
     -- ----
@@ -2792,6 +2996,11 @@ declare
 	v_sub_provider		int4;
 	v_tab_reloid		oid;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
     -- ----
 	-- Determine the set_id
     -- ----
@@ -2852,6 +3061,11 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check that we are the origin of the set
 	-- ----
 	select set_origin into v_set_origin
@@ -2904,6 +3118,11 @@ declare
 	v_seq_nspname		name;
 	v_sync_row			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- For sets with a remote origin, check that we are subscribed 
 	-- to that set. Otherwise we ignore the sequence because it might 
@@ -2997,6 +3216,11 @@ declare
 	v_set_origin		int4;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Determine set id for this sequence
 	-- ----
 	select seq_set into v_set_id from @NAMESPACE@.sl_sequence where seq_id = p_seq_id;
@@ -3051,6 +3275,11 @@ declare
 	v_relkind			char;
 	v_sync_row			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Determine set id for this sequence
 	-- ----
@@ -3115,6 +3344,11 @@ declare
 	v_old_set_id		int4;
 	v_origin			int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Get the tables current set
 	-- ----
@@ -3199,6 +3433,11 @@ returns int4
 as $$
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Move the table to the new set
 	-- ----
 	update @NAMESPACE@.sl_table
@@ -3224,6 +3463,11 @@ declare
 	v_old_set_id		int4;
 	v_origin			int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- Get the sequences current set
 	-- ----
@@ -3307,6 +3551,11 @@ returns int4
 as $$
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Move the sequence to the new set
 	-- ----
 	update @NAMESPACE@.sl_sequence
@@ -3325,10 +3574,11 @@ set.';
 -- ----------------------------------------------------------------------
 -- FUNCTION sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
 -- ----------------------------------------------------------------------
-create or replace function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8) returns int4
+create or replace function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8,p_ignore_missing bool) returns int4
 as $$
 declare
 	v_fqname			text;
+	v_found                         integer;
 begin
 	-- ----
 	-- Get the sequences fully qualified name
@@ -3341,8 +3591,10 @@ begin
 			and SQ.seq_reloid = PGC.oid
 			and PGC.relnamespace = PGN.oid;
 	if not found then
-		--raise exception 'Slony-I: sequenceSetValue(): sequence % not found', p_seq_id;
-		return 0;
+	        if p_ignore_missing then
+                       return null;
+                end if;
+		raise exception 'Slony-I: sequenceSetValue(): sequence % not found', p_seq_id;
 	end if;
 
 	-- ----
@@ -3351,15 +3603,16 @@ begin
 	execute 'select setval(''' || v_fqname ||
 			''', ' || p_last_value::text || ')';
 
-	insert into @NAMESPACE@.sl_seqlog
+	if p_ev_seqno is not null then
+	   insert into @NAMESPACE@.sl_seqlog
 			(seql_seqid, seql_origin, seql_ev_seqno, seql_last_value)
 			values (p_seq_id, p_seq_origin, p_ev_seqno, p_last_value);
-
+	end if;
 	return p_seq_id;
 end;
 $$ language plpgsql;
-comment on function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8) is
-'sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value)
+comment on function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int4, p_ev_seqno int8, p_last_value int8,p_ignore_missing bool) is
+'sequenceSetValue (seq_id, seq_origin, ev_seqno, last_value,ignore_missing)
 Set sequence seq_id to have new value last_value.
 ';
 
@@ -3376,10 +3629,13 @@ declare
 	c_found_origin	boolean;
 	c_node			text;
 	c_cmdargs		text[];
+	c_nodeargs      text;
+	c_delim         text;
 begin
 	c_local_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 
 	c_cmdargs = array_append('{}'::text[], p_statement);
+	c_nodeargs = '';
 	if p_nodes is not null then
 		c_found_origin := 'f';
 		-- p_nodes list needs to consist of a list of nodes that exist
@@ -3396,8 +3652,11 @@ begin
 		   if c_local_node = (c_node::integer) then
 		   	  c_found_origin := 't';
 		   end if;
-
-		   c_cmdargs = array_append(c_cmdargs, c_node);
+		   if length(c_nodeargs)>0 then
+		   	  c_nodeargs = c_nodeargs ||','|| c_node;
+		   else
+				c_nodeargs=c_node;
+			end if;
 	   end loop;
 
 		if not c_found_origin then
@@ -3406,15 +3665,24 @@ begin
 				p_statement, p_nodes, c_local_node;
        end if;
     end if;
+	c_cmdargs = array_append(c_cmdargs,c_nodeargs);
+	c_delim=',';
+	c_cmdargs = array_append(c_cmdargs, 
 
-	execute p_statement;
-
+           (select @NAMESPACE@.string_agg( seq_id::text || c_delim
+		   || c_local_node ||
+		    c_delim || seq_last_value)
+		    FROM (
+		       select seq_id,
+           	   seq_last_value from @NAMESPACE@.sl_seqlastvalue
+           	   where seq_origin = c_local_node) as FOO
+			where NOT @NAMESPACE@.seqtrack(seq_id,seq_last_value) is NULL));
 	insert into @NAMESPACE@.sl_log_script
 			(log_origin, log_txid, log_actionseq, log_cmdtype, log_cmdargs)
 		values 
 			(c_local_node, pg_catalog.txid_current(), 
 			nextval('@NAMESPACE@.sl_action_seq'), 'S', c_cmdargs);
-
+	execute p_statement;
 	return currval('@NAMESPACE@.sl_action_seq');
 end;
 $$ language plpgsql;
@@ -3444,7 +3712,7 @@ begin
 	c_cmdargs = '{}'::text[];
 	if p_nodes is not null then
 		c_found_origin := 'f';
-		-- p_nodes list needs to consist of a list of nodes that exist
+		-- p_nodes list needs to consist o a list of nodes that exist
 		-- and that include the current node ID
 		for c_node in select trim(node) from
 				pg_catalog.regexp_split_to_table(p_nodes, ',') as node loop
@@ -3763,6 +4031,11 @@ declare
 	v_missing_sets text;
 	v_ev_seqno bigint;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	--
 	-- Check that the receiver exists
 	--
@@ -3853,6 +4126,11 @@ declare
 	v_ev_seqno2			int8;
 	v_rec			record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	--
 	-- Check that the receiver exists
 	--
@@ -3995,6 +4273,11 @@ declare
 	v_seq_id			bigint;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Lookup the set origin
 	-- ----
 	select set_origin into v_set_origin
@@ -4129,6 +4412,11 @@ declare
 	v_tab_row			record;
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- Check that this is called on the receiver node
 	-- ----
 	if p_sub_receiver != @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@') then
@@ -4222,6 +4510,11 @@ as $$
 declare
 begin
 	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
+	-- ----
 	-- All the real work is done before event generation on the
 	-- subscriber.
 	-- ----
@@ -4283,6 +4576,11 @@ as $$
 declare
 	v_n					int4;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- ----
 	-- The real work is done in the replication engine. All
 	-- we have to do here is remembering that it happened.
@@ -4688,6 +4986,11 @@ as $$
 declare
 	v_row	record;
 begin
+	-- ----
+	-- Grab the central configuration lock
+	-- ----
+	lock table @NAMESPACE@.sl_config_lock;
+
 	-- First remove the entire configuration
 	delete from @NAMESPACE@.sl_listen;
 
@@ -5332,6 +5635,10 @@ create table @NAMESPACE@.sl_components (
   	   execute v_query;
 	end if;
 
+	
+
+
+
 	if not exists (select 1 from information_schema.tables t where table_schema = '_@CLUSTERNAME@' and table_name = 'sl_event_lock') then
 	   v_query := 'create table @NAMESPACE@.sl_event_lock (dummy integer);';
 	   execute v_query;
@@ -5390,7 +5697,7 @@ create table @NAMESPACE@.sl_components (
 			log_actionseq       int8,
 			log_tablenspname    text,
 			log_tablerelname    text,
-			log_cmdtype         char,
+			log_cmdtype         "char",
 			log_cmdupdncols     int4,
 			log_cmdargs         text[]
 		) without oids;
@@ -5418,7 +5725,7 @@ create table @NAMESPACE@.sl_components (
 			log_actionseq       int8,
 			log_tablenspname    text,
 			log_tablerelname    text,
-			log_cmdtype         char,
+			log_cmdtype         "char",
 			log_cmdupdncols     int4,
 			log_cmdargs         text[]
 		) without oids;
@@ -5436,22 +5743,22 @@ create table @NAMESPACE@.sl_components (
 		comment on column @NAMESPACE@.sl_log_2.log_cmdupdncols is 'For cmdtype=U the number of updated columns in cmdargs';
 		comment on column @NAMESPACE@.sl_log_2.log_cmdargs is 'The data needed to perform the log action on the replica';
 
-        create table @NAMESPACE@.sl_log_script (
-        	log_origin			int4,
-        	log_txid			bigint,
-        	log_actionseq		int8,
-        	log_query			text,
-			log_only_on			text
-        ) WITHOUT OIDS;
-        create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
-        	(log_origin, log_txid, log_actionseq);
-        
-        comment on table @NAMESPACE@.sl_log_script is 'Captures DDL queries to be propagated to subscriber nodes';
-        comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
-        comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
-        comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
-        comment on column @NAMESPACE@.sl_log_script.log_query is 'The data needed to perform the log action on the replica.';
-		comment on column @NAMESPACE@.sl_log_script.log_only_on is 'Optional list of nodes on which scripts are to be executed';
+		create table @NAMESPACE@.sl_log_script (
+			log_origin			int4,
+			log_txid			bigint,
+			log_actionseq		int8,
+			log_cmdtype			"char",
+			log_cmdargs			text[]
+			) WITHOUT OIDS;
+		create index sl_log_script_idx1 on @NAMESPACE@.sl_log_script
+		(log_origin, log_txid, log_actionseq);
+
+		comment on table @NAMESPACE@.sl_log_script is 'Captures SQL script queries to be propagated to subscriber nodes';
+		comment on column @NAMESPACE@.sl_log_script.log_origin is 'Origin name from which the change came';
+		comment on column @NAMESPACE@.sl_log_script.log_txid is 'Transaction ID on the origin node';
+		comment on column @NAMESPACE@.sl_log_script.log_actionseq is 'The sequence number in which actions will be applied on replicas';
+		comment on column @NAMESPACE@.sl_log_2.log_cmdtype is 'Replication action to take. S = Script statement, s = Script complete';
+		comment on column @NAMESPACE@.sl_log_script.log_cmdargs is 'The DDL statement, optionally followed by selected nodes to execute it on.';
 
 		--
 		-- Put the log apply triggers back onto sl_log_1/2
@@ -5467,7 +5774,71 @@ create table @NAMESPACE@.sl_components (
 		alter table @NAMESPACE@.sl_log_2
 			enable replica trigger apply_trigger;
 	end if;
+	if not exists (select 1 from information_schema.routines where routine_schema = '_@CLUSTERNAME@' and routine_name = 'string_agg') then
+	       CREATE AGGREGATE @NAMESPACE@.string_agg(text) (
+	   	      SFUNC=@NAMESPACE@.agg_text_sum,
+		      STYPE=text,
+		      INITCOND=''
+		      );
+	end if;
+	if not exists (select 1 from information_schema.views where table_schema='_@CLUSTERNAME@' and table_name='sl_failover_targets') then
+	   create view @NAMESPACE@.sl_failover_targets as
+	   	  select  set_id,
+		  set_origin as set_origin,
+		  sub1.sub_receiver as backup_id
 
+		  FROM
+		  @NAMESPACE@.sl_subscribe sub1
+		  ,@NAMESPACE@.sl_set set1
+		  where
+ 		  sub1.sub_set=set_id
+		  and sub1.sub_forward=true
+		  --exclude candidates where the set_origin
+		  --has a path a node but the failover
+		  --candidate has no path to that node
+		  and sub1.sub_receiver not in
+	    	  (select p1.pa_client from
+	    	  @NAMESPACE@.sl_path p1 
+	    	  left outer join @NAMESPACE@.sl_path p2 on
+	    	  (p2.pa_client=p1.pa_client 
+	    	  and p2.pa_server=sub1.sub_receiver)
+	    	  where p2.pa_client is null
+	    	  and p1.pa_server=set_origin
+	    	  and p1.pa_client<>sub1.sub_receiver
+	    	  )
+		  and sub1.sub_provider=set_origin
+		  --exclude any subscribers that are not
+		  --direct subscribers of all sets on the
+		  --origin
+		  and sub1.sub_receiver not in
+		  (select direct_recv.sub_receiver
+		  from
+			
+			(--all direct receivers of the first set
+			select subs2.sub_receiver
+			from @NAMESPACE@.sl_subscribe subs2
+			where subs2.sub_provider=set1.set_origin
+		      	and subs2.sub_set=set1.set_id) as
+		      	direct_recv
+			inner join
+			(--all other sets from the origin
+			select set_id from @NAMESPACE@.sl_set set2
+			where set2.set_origin=set1.set_origin
+			and set2.set_id<>sub1.sub_set)
+			as othersets on(true)
+			left outer join @NAMESPACE@.sl_subscribe subs3
+			on(subs3.sub_set=othersets.set_id
+		   	and subs3.sub_forward=true
+		   	and subs3.sub_provider=set1.set_origin
+		   	and direct_recv.sub_receiver=subs3.sub_receiver)
+	    		where subs3.sub_receiver is null
+	    	);
+	end if;
+
+	if not @NAMESPACE@.check_table_field_exists('_@CLUSTERNAME@', 'sl_node', 'no_failed') then
+	   alter table @NAMESPACE@.sl_node add column no_failed bool;
+	   update @NAMESPACE@.sl_node set no_failed=false;
+	end if;
 	return p_old;
 end;
 $$ language plpgsql;
@@ -6046,7 +6417,8 @@ $$
 		end if;
 		return NULL;
     end
-$$ language plpgsql;
+$$ language plpgsql
+    security definer;
 
 comment on function @NAMESPACE@.log_truncate ()
 is 'trigger function run when a replicated table receives a TRUNCATE request';
@@ -6219,3 +6591,25 @@ begin
 	return v_seq_id;
 end
 $$ language plpgsql;
+
+
+
+--
+-- we create a function + aggregate for string_agg to aggregate strings
+-- some versions of PG (ie prior to 9.0) don't support this
+CREATE OR replace function @NAMESPACE@.agg_text_sum(txt_before TEXT, txt_new TEXT) RETURNS TEXT AS
+$BODY$
+DECLARE
+  c_delim text;
+BEGIN
+    c_delim = ',';
+	IF (txt_before IS NULL or txt_before='') THEN
+	   RETURN txt_new;
+	END IF;
+	RETURN txt_before || c_delim || txt_new;
+END;
+$BODY$
+LANGUAGE plpgsql;
+comment on function @NAMESPACE@.agg_text_sum(text,text) is 
+'An accumulator function used by the slony string_agg function to
+aggregate rows into a string';

@@ -280,7 +280,12 @@ begin
 
 		execute v_command;
 	end if;
+    if NEW.log_cmdtype = 'S' then
+          execute 'set session_replication_role to local;';
+          execute NEW.log_cmdargs[1];  
+          execute 'set session_replication_role to replica;';
 
+    end if;
 	if NEW.log_cmdtype = 'T' then
 		execute 'TRUNCATE TABLE ONLY ' ||
 			$clname.slon_quote_brute(NEW.log_tablenspname) || '.' ||

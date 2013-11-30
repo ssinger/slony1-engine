@@ -11,7 +11,7 @@
 # ----------
 m4_define([SLONREL_VERSION], esyscmd([echo "$Name:  $" | \
   sed -e 's/\:\ REL_//' -e 's/\$//g' -e 's/_/./g' -e 's/\./\_/3' \
-    -e 's/\ //g' -e s/\:/`echo 2.2.0.b2`/ | tr -d '\n']))
+    -e 's/\ //g' -e s/\:/`echo 2.2.0`/ | tr -d '\n']))
 
 m4_pattern_allow([^SLON_AC_])
 
@@ -212,6 +212,7 @@ AC_ARG_WITH(docs,		[  --with-docs=<yes|no>             Build the sgml documentat
 AC_ARG_WITH(docdir,		[  --with-docdir=<dir>              Location to install all the documentation. Default is $PREFIX/doc. ])
 AC_ARG_WITH(d2mdir,		[  --with-d2mdir=<dir>              Location of docbook2man-spec.pl (Manpages will be skipped if not specified)])
 AC_ARG_WITH(mandir,		[  --with-mandir=<dir>              Location to install the manpages. Default is $PREFIX/man.])
+AC_ARG_WITH(pgport,             [  --with-pgport=<yes|no>           Link with pgport [default=no]])
 
 SLON_AC_ARG_BOOL(enable, engine, yes,
               [  --disable-engine     Don't build slony1-engine source. (Used when building documentation only)])
@@ -250,6 +251,8 @@ AC_SUBST(SLONYPATH)
 AC_SUBST(HOST_OS,$host_os)
 AC_SUBST(PORTNAME,$template)
 
+AC_SUBST(HAVE_PGPORT,$HAVE_PGPORT)
+AC_SUBST(HAVE_PGCOMMON,$HAVE_PGCOMMON)
 if test "${SLON_BINDIR}" = ""; then
  if test ${prefix} = "NONE"; then
    SLON_BINDIR="${PG_BINDIR}"
@@ -308,7 +311,8 @@ if test x"$with_perlsharedir" = x""; then
 fi
 
 AC_SUBST(perlsharedir, $with_perlsharedir)
-
+AC_SUBST(CPPFLAGS_SERVER)
+AC_SUBST(CPPFLAGS_CLIENT)
 AC_CONFIG_FILES([
     Makefile.global GNUmakefile
 ])

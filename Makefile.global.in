@@ -45,7 +45,8 @@ FLEX=			@LEX@
 
 #build tool flags
 CFLAGS=			@CFLAGS@
-CPPFLAGS=              @CPPFLAGS@
+CPPFLAGS_CLIENT=              @CPPFLAGS_CLIENT@
+CPPFLAGS_SERVER=       @CPPFLAGS_SERVER@
 LDFLAGS=               @LDFLAGS@
 PTHREAD_CFLAGS=     @PTHREAD_CFLAGS@
 PTHREAD_LIBS=		@PTHREAD_LIBS@
@@ -55,6 +56,13 @@ enable_rpath=		@enable_rpath@
 
 #libs
 PTHREAD_LIBS=		@PTHREAD_LIBS@
+ifeq (@HAVE_PGPORT@,1)
+HAVE_PGPORT=           @HAVE_PGPORT@
+endif
+
+ifeq (@HAVE_PGCOMMON@,1)
+HAVE_PGCOMMON=           @HAVE_PGCOMMON@
+endif
 
 # Documentation
 JADE=			@JADE@

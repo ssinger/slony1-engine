@@ -6,8 +6,8 @@
 <para> &slony1; has the ability to serialize the updates to go out into log
 files that can be kept in a spool directory.</para>
 
-<para> The spool files could then be transferred via whatever means
-was desired to a <quote>slave system,</quote> whether that be via FTP,
+<para> The spool files can then be transferred via whatever means
+is desired to a <quote>slave system,</quote> whether that be via FTP,
 rsync, or perhaps even by pushing them onto a 1GB <quote>USB
 key</quote> to be sent to the destination by clipping it to the ankle
 of some sort of <quote>avian transport</quote> system.</para>
@@ -22,11 +22,7 @@ in this form, including:
 
   <listitem><para> Replicating to destinations where it is not
   possible to set up bidirection communications</para></listitem>
-
-  <listitem><para> Supporting a different form of <acronym>PITR</acronym>
-  (Point In Time Recovery) that filters out read-only transactions and
-  updates to tables that are not of interest.</para></listitem>
-
+ 
   <listitem><para> If some disaster strikes, you can look at the logs
   of queries in detail</para>
 
@@ -34,16 +30,12 @@ in this form, including:
   might not intend to actually create a log-shipped
   node.</para></listitem>
 
-  <listitem><para> This is a really slick scheme for building load for
-  doing tests</para></listitem>
-
-  <listitem><para> We have a data <quote>escrow</quote> system that
-  would become incredibly cheaper given log shipping</para></listitem>
+  <listitem><para> The .SQL log files could be used to generate write activity for
+  doing tests</para></listitem> 
 
   <listitem><para> You may apply triggers on the <quote>disconnected
-  node </quote> to do additional processing on the data</para>
-
-  <para> For instance, you might take a fairly <quote>stateful</quote>
+  node </quote> to do additional processing on the data. For instance, 
+  you might take a fairly <quote>stateful</quote>
   database and turn it into a <quote>temporal</quote> one by use of
   triggers that implement the techniques described in
   <citation>Developing Time-Oriented Database Applications in SQL
@@ -52,304 +44,113 @@ in this form, including:
 
 </itemizedlist></para>
 
-<qandaset>
-<qandaentry>
+<sect2>
+<title>Setting up Log Shipping</title>
 
-<question> <para> Where are the <quote>spool files</quote> for a
-subscription set generated?</para>
-</question>
+<para>
+Setting up log shipping requires that you already have a replication cluster
+setup with at least two nodes and that the tables and sequences that you want to
+ship data for are part of replication sets that the subscriber is subscribed to.
+</para>
 
-<answer> <para> Any <link linkend="slon"> slon </link> subscriber node
-can generate them by adding the <option>-a</option> option.</para>
-
-<note><para> Notice that this implies that in order to use log
-shipping, you must have at least one subscriber node. </para></note>
-</answer>
-
-</qandaentry>
-
-<qandaentry> <question> <para> What takes place when a <xref
-linkend="stmtfailover">/ <xref linkend="stmtmoveset"> takes
-place?</para></question>
-
-<answer><para> Nothing special.  So long as the archiving node remains
-a subscriber, it will continue to generate logs.</para></answer>
-
-<answer> <warning> <para>If the archiving node becomes the origin, on
-the other hand, it will continue to generate logs.</para> </warning></answer>
-</qandaentry>
-
-<qandaentry> <question> <para> What if we run out of <quote>spool
-space</quote>?  </para></question>
-
-<answer><para> The node will stop accepting <command>SYNC</command>s
-until this problem is alleviated.  The database being subscribed to
-will also fall behind.  </para></answer>
-</qandaentry>
-
-<qandaentry>
-<question> <para> How do we set up a subscription?  </para></question>
-
-<answer><para> The script in <filename>tools</filename> called
-<application>slony1_dump.sh</application> is a shell script that dumps
-the <quote>present</quote> state of the subscriber node.</para>
-
-<para> You need to start the <application><link linkend="slon"> slon
-</link></application> for the subscriber node with logging turned on.
-At any point after that, you can run
-<application>slony1_dump.sh</application>, which will pull the state
-of that subscriber as of some <command>SYNC</command> event.  Once the
-dump completes, all the <command>SYNC</command> logs generated from
-the time that dump <emphasis>started</emphasis> may be added to the
-dump in order to get a <quote>log shipping subscriber.</quote>
-</para></answer>
-</qandaentry>
-
-<qandaentry> <question><para> What are the limitations of log
-shipping? </para>
-</question>
-
-<answer><para> In the initial release, there are rather a lot of
-limitations.  As releases progress, hopefully some of these
-limitations may be alleviated/eliminated. </para> </answer>
-
-<answer><para> The log shipping functionality amounts to
-<quote>sniffing</quote> the data applied at a particular subscriber
-node.  As a result, you must have at least one <quote>regular</quote>
-node; you cannot have a cluster that consists solely of an origin and
-a set of <quote>log shipping nodes.</quote>. </para></answer>
-
-<answer><para> The <quote>log shipping node</quote> tracks the
-entirety of the traffic going to a subscriber.  You cannot separate
-things out if there are multiple replication sets.  </para></answer>
-
-<answer><para> The <quote>log shipping node</quote> presently only
-fully tracks <command>SYNC</command> events.  This should be
-sufficient to cope with <emphasis>some</emphasis> changes in cluster
-configuration, but not others.  </para>
-
-<para> A number of event types <emphasis> are </emphasis> handled in
-such a way that log shipping copes with them:
-
+<para>
 <itemizedlist>
-
-<listitem><para><command>SYNC </command> events are, of course,
-handled.</para></listitem>
-
-<listitem><para><command>DDL_SCRIPT</command> is handled.</para></listitem>
-
-<listitem><para><command> UNSUBSCRIBE_SET </command></para> 
-
-<para> This event, much like <command>SUBSCRIBE_SET</command> is not
-handled by the log shipping code.  But its effect is, namely that
-<command>SYNC</command> events on the subscriber node will no longer
-contain updates to the set.</para>
-
-<para> Similarly, <command>SET_DROP_TABLE</command>,
-<command>SET_DROP_SEQUENCE</command>,
-<command>SET_MOVE_TABLE</command>,
-<command>SET_MOVE_SEQUENCE</command>,
-<command>DROP_SET</command>,
-<command>MERGE_SET</command>,
-<command>SUBSCRIBE_SET</command> will be handled
-<quote>apropriately</quote>.</para></listitem>
-
-
-
-<listitem><para> The various events involved in node configuration are
-irrelevant to log shipping:
-
-<command>STORE_NODE</command>,
-<command>ENABLE_NODE</command>,
-<command>DROP_NODE</command>,
-<command>STORE_PATH</command>,
-<command>DROP_PATH</command>,
-<command>STORE_LISTEN</command>,
-<command>DROP_LISTEN</command></para></listitem>
-
-<listitem><para> Events involved in describing how particular sets are
-to be initially configured are similarly irrelevant:
-
-<command>STORE_SET</command>,
-<command>SET_ADD_TABLE</command>,
-<command>SET_ADD_SEQUENCE</command>,
-<command>STORE_TRIGGER</command>,
-<command>DROP_TRIGGER</command>,
+<listitem><para>Create your log shipping target database include your applications tables. This can be
+created from your applications DDL sources or with a pg_dump -s from a slave node. If you are 
+using a pg_dump from a slave then you need to exclude the slony log triggers from this dump and possibly
+some of your application triggers. The script tools/find-triggers-to-deactivate.sh  might help with this.
 </para></listitem>
+<listitem><para>Stop the slon daemon for the slave node that you want to generate the log shipping
+files from.  Log shipping files are generated by a slon daemon for a slave and include the changes
+that are applied to that slave for all sets that the slave is subscribed to</para>
+</listitem>
+<listitem><para>Run the script tools/slony1_dump.sh this script is a shell script that dumps
+the present state (data) of the subscriber node. The script requires psql to be in your PATH
+and that the PGHOST, PGDATABSE and PGPORT variables be set (if required) so that psql can connect
+to the database you are dumping from.  The name of your slony cluster should be passed as a
+argument to slony1_dump.sh</para></listitem>
+<listitem><para>The dump generated by slony1_dump.sh on standard-out should then be restored (via psql) 
+on the log shipping target node. This will also create a set of slony log shipping tracking tables
+that the log shipping daemon will use to track which events have been processed on the log shipping target
+node.</para></listitem>
+<listitem><para>Restart the slon daemon on the slave node and pass the <option>-a</option> option followed by 
+directory that the log shipping files should be placed in.   Alternatively you can specify a 
+<option>archive_dir</option> option in your slon.conf file.</para></listitem>
 
+</itemizedlist>
+<para>
+Slon will generate a file in the archive directory for each SYNC event that it processes.  These files will
+contain COPY statements that insert data into the sl_log_archive table.  A trigger, that was installed by slony1_dumps.sh 
+will intercept these inserts and make the approriate changes to your replicated tables</para>
+
+<para>Slon will generate log shipping files that contain data for all tables in any replication set that the node is subscribed for.
+There is no support in slon to only data for some of the replication sets in the log shipping files.  If slon is unable to create
+the log shipping files, for example because you run out of disk space, then slon will stop processing new SYNC events and replication for
+that subscriber will fall behind.</para>
+
+
+
+</sect2>
+
+<sect2>
+<title>Applying Log Files</title>
+<para>
+The .SQL files that slon places in the archive directory contain SQL commands that should be executed on the log shipping target.
+These files need to be applied in the proper order. The file name of the next SQL file to apply is  based on information contained 
+in the sl_archive_tracking table.  &lslonylogshipping; is a daemon will monitor an archive directory and apply the updates
+in the proper order. 
+</para>
+
+<para>
+Each .SQL file contains a a SQL COPY command that will copy the data into the sl_log_archive table where a trigger will
+instead perform the proper action on the target database.  The slony1_dump.sh script will create the sl_log_archive table
+and setup the trigger. 
+</para>
+</sect2>
+
+<sect2>
+<title>Converting SQL commands from COPY to INSERT/UPDATE/DELETE</title>
+
+<para>
+Prior to &slony1; 2.2 the SQL files generated for log shipping contained INSERT/UPDATE/DELETE
+statements.  As of &slony1; 2.2 the log shipping files contain COPY statements. The COPY statements
+should result in better performance.  If you need the old style of SQL files with INSERT/UPDATE/DELETE
+then the script tools/logshipping_toinsert.pl can be used to convert the COPY style log shipping files
+to INSERT/UPDATE/DELETE statements.  INSERT/UPDATE/DELETE statements should be easier to apply against
+databases other than PostgreSQL or in environments where you can't create the sl_log_archive table.
+</para>
+</sect2>
+
+<sect2>
+<title>Cluster Reconfiguration Events</title>
+<para>
+Most cluster reconfiguration events such as adding or dropping nodes or paths do not effect the nodes
+receiving the log files and are ignored by log shipping.  However the following clsuter configuration
+events are supported.
+
+<itemizedlist>
+<listitem><para>UNSUBSCRIBE_SET is supported such that when the subscriber node generated the .SQL files
+is unsubscribed to a particular set then any new SQL files generated will not contain updates
+to the tables in that set.SET_DROP_TABLE, SET_DROP_SEQUENCE are handled in a similar fashion.</para></listitem>
+<listitem><para> MOVE SET - I a sets origin is moved from another node to the node running generating the 
+SQL files then changes for those tables will no longer be included in the SQL files generated because
+slon only includes changes in the .SQL files that the node is a subscriber for. A MOVE_SET that makes
+the subscriber an origin means that the changes to those tables will no longer be included in the SQL files generated
+</para></listitem>
+<listitem><para>SUBSCRIBE_SET events are handled properly.  This means that when the node generating the SQL files
+subscribes to a new set the data in the tables in that set will be included as part of the SQL files with a COPY command.
+</para></listitem>
 </itemizedlist>
 </para>
-</answer>
-
-<answer><para> It would be nice to be able to turn a <quote>log
-shipped</quote> node into a fully communicating &slony1; node that you
-could failover to.  This would be quite useful if you were trying to
-construct a cluster of (say) 6 nodes; you could start by creating one
-subscriber, and then use log shipping to populate the other 4 in
-parallel.</para>
-
-<para> This usage is not supported, but presumably one could take
-an application outage and promote the log-shipping node to a normal
-slony node with the OMIT COPY option of SUBSCRIBE SET.
- </para></answer>
-</qandaentry>
-</qandaset>
-
-<sect2><title> Usage Hints </title>
-
-<note> <para> Here are some more-or-less disorganized notes about how
-you might want to use log shipping...</para> </note>
-
-<itemizedlist>
-
-<listitem><para> You <emphasis>don't</emphasis> want to blindly apply
-<command>SYNC</command> files because any given
-<command>SYNC</command> file may <emphasis>not</emphasis> be the right
-one.  If it's wrong, then the result will be that the call to
-<function> setsyncTracking_offline() </function> will fail, and your
-<application> psql</application> session will <command> ABORT
-</command>, and then run through the remainder of that
-<command>SYNC</command> file looking for a <command>COMMIT</command>
-or <command>ROLLBACK</command> so that it can try to move on to the
-next transaction.</para>
-
-<para> But we <emphasis> know </emphasis> that the entire remainder of
-the file will fail!  It is futile to go through the parsing effort of
-reading the remainder of the file.</para>
-
-<para> Better idea: 
-
-<itemizedlist>
-
-<listitem><para> The table, on the log shipped node, tracks which log
-it most recently applied in table
-<envar>sl_archive_tracking</envar>. </para>
-
-<para> Thus, you may predict the ID number of the next file by taking
-the latest counter from this table and adding 1.</para>
-</listitem>
-
-<listitem><para> There is still variation as to the filename,
-depending on what the overall set of nodes in the cluster are.  All
-nodes periodically generate <command>SYNC</command> events, even if
-they are not an origin node, and the log shipping system does generate
-logs for such events. </para>
-
-<para> As a result, when searching for the next file, it is necessary
-to search for files in a manner similar to the following:
-
-<programlisting>
-ARCHIVEDIR=/var/spool/slony/archivelogs/node4
-SLONYCLUSTER=mycluster
-PGDATABASE=logshipdb
-PGHOST=logshiphost
-NEXTQUERY="select at_counter+1 from \"_${SLONYCLUSTER}\".sl_archive_tracking;"
-nextseq=`psql -d ${PGDATABASE} -h ${PGHOST} -A -t -c "${NEXTQUERY}"
-filespec=`printf "slony1_log_*_%20d.sql"
-for file in `find $ARCHIVEDIR -name "${filespec}"; do
-   psql -d ${PGDATABASE} -h ${PGHOST} -f ${file}
-done
-</programlisting>
-</para>
-</listitem>
-
-</itemizedlist>
-</itemizedlist>
 
 </sect2>
 
-<sect2><title> <application> find-triggers-to-deactivate.sh
-</application> </title>
 
-<indexterm><primary> log shipping - trigger deactivation </primary> </indexterm>
 
-<para> It was once pointed out (<ulink
-url="http://www.slony.info/bugzilla/show_bug.cgi?id=19"> Bugzilla bug
-#19</ulink>) that the dump of a schema may include triggers and rules
-that you may not wish to have running on the log shipped node.</para>
-
-<para> The tool <filename> tools/find-triggers-to-deactivate.sh
-</filename> was created to assist with this task.  It may be run
-against the node that is to be used as a schema source, and it will
-list the rules and triggers present on that node that may, in turn
-need to be deactivated.</para>
-
-<para> It includes <function>logtrigger</function> and <function>denyaccess</function>
-triggers which will may be left out of the extracted schema, but it is
-still worth the Gentle Administrator verifying that such triggers are
-kept out of the log shipped replica.</para>
-
-</sect2>
-<sect2> <title> <application>slony_logshipper </application> Tool </title>
-
-<indexterm><primary>logshipping: slony_logshipper tool</primary></indexterm>
-
-<para> As of version 1.2.12, &slony1; has a tool designed to help
-apply logs, called <application>slony_logshipper</application>.  It is
-run with three sorts of parameters:</para>
-
-<itemizedlist>
-<listitem><para> Options, chosen from the following: </para> 
-<itemizedlist>
-<listitem><para><option>h</option> </para> <para>    display this help text and exit </para> </listitem>
-<listitem><para><option>v</option> </para> <para>    display program version and exit </para> </listitem>
-<listitem><para><option>q</option> </para> <para>    quiet mode </para> </listitem>
-<listitem><para><option>l</option> </para> <para>    cause running daemon to reopen its logfile </para> </listitem>
-<listitem><para><option>r</option> </para> <para>    cause running daemon to resume after error </para> </listitem>
-<listitem><para><option>t</option> </para> <para>    cause running daemon to enter smart shutdown mode </para> </listitem>
-<listitem><para><option>T</option> </para> <para>    cause running daemon to enter immediate shutdown mode </para> </listitem>
-<listitem><para><option>c</option> </para> <para>    destroy existing semaphore set and message queue            (use with caution) </para> </listitem>
-<listitem><para><option>f</option> </para> <para>    stay in foreground (don't daemonize) </para> </listitem>
-<listitem><para><option>w</option> </para> <para>    enter smart shutdown mode immediately </para> </listitem>
-</itemizedlist>
-</listitem>
-<listitem><para> A specified log shipper configuration file </para>
-<para> This configuration file consists of the following specifications:</para>
-<itemizedlist>
-<listitem><para> <command>logfile = './offline_logs/logshipper.log';</command></para> 
-<para> Where the log shipper will leave messages.</para> </listitem>
-<listitem><para> <command>cluster name = 'T1';</command></para> <para> Cluster name </para> </listitem>
-<listitem><para> <command>destination database	= 'dbname=slony_test3';</command></para> <para> Optional conninfo for the destination database.  If given, the log shipper will connect to this database, and apply logs to it. </para> </listitem>
-<listitem><para> <command>archive dir = './offline_logs';</command></para> <para>The archive directory is required when running in <quote>database-connected</quote> mode to have a place to scan for missing (unapplied) archives. </para> </listitem>
-<listitem><para> <command>destination dir = './offline_result';</command></para> <para> If specified, the log shipper will write the results of data massaging into result logfiles in this directory.</para> </listitem>
-<listitem><para> <command>max archives = 3600;</command></para> <para> This fights eventual resource leakage; the daemon will enter <quote>smart shutdown</quote> mode automatically after processing this many archives. </para> </listitem>
-<listitem><para> <command>ignore table "public"."history";</command></para> <para> One may filter out single tables  from log shipped replication </para> </listitem>
-<listitem><para> <command>ignore namespace "public";</command></para> <para> One may filter out entire namespaces  from log shipped replication </para> </listitem>
-<listitem><para> <command>rename namespace "public"."history" to "site_001"."history";</command></para> <para> One may rename specific tables.</para> </listitem>
-<listitem><para> <command>rename namespace "public" to "site_001";</command></para> <para> One may rename entire namespaces.</para> </listitem>
-<listitem><para> <command>post processing command = 'gzip -9 $inarchive';</command></para> <para> Pre- and post-processing commands are executed via <function>system(3)</function>. </para> </listitem>
-</itemizedlist>
-
-<para> An <quote>@</quote> as the first character causes the exit code to be ignored.  Otherwise, a nonzero exit code is treated as an error and causes processing to abort. </para>
-
-<para> Pre- and post-processing commands have two further special variables defined: </para>
-<itemizedlist>
-<listitem><para> <envar>$inarchive</envar>  - indicating incoming archive filename </para> </listitem>
-<listitem><para> <envar>$outnarchive</envar>  - indicating outgoing archive filename </para> </listitem>
-</itemizedlist>
-</listitem>
-
-<listitem><para> <command>error command = ' ( echo
-"archive=$inarchive" echo "error messages:" echo "$errortext" ) | mail
--s "Slony log shipping failed" postgres@localhost ';</command></para>
-
-<para>  The error command indicates a command to execute upon encountering an error.  All logging since the last successful completion of an archive is available in the <envar>$errortext</envar> variable. </para> 
-
-<para> In the example shown, this sends an email to the DBAs upon
-encountering an error.</para> </listitem>
-
-<listitem><para> Archive File Names</para>
-
-<para> Each filename is added to the SystemV Message queue for
-processing by a <application>slony_logshipper</application>
-process. </para>
-
-</listitem>
-
-</itemizedlist>
-
-</sect2>
 </sect1>
+
+
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode:sgml

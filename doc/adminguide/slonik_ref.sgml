@@ -89,8 +89,8 @@
      following slonik code:</para>
      <programlisting>
      try {
-         execute script (set id = 1, filename = '/tmp/script1.sql', event node=1);
-         execute script (set id = 1, filename = '/tmp/script2.sql', event node=1);
+         execute script ( filename = '/tmp/script1.sql', event node=1);
+         execute script ( filename = '/tmp/script2.sql', event node=1);
      }
      </programlisting>
 
@@ -2683,6 +2683,12 @@ MOVE SET (
 	  <literal>NODE=(ID=val,BACKUP NODE=val), NODE=(ID=val2, BACKUP NODE=val2)</literal> to FAILOVER.
 	</para>
 
+
+	<para>
+	  Nodes that are  forwarding providers can also be passed to the failover command as a failed
+      node.  The failover process will redirect the subscriptions from these nodes to the backup node. 
+	</para>
+
     <variablelist>
      <varlistentry><term><literal> ID = ival </literal></term>
       <listitem><para> ID of the failed node</para></listitem>
@@ -2772,23 +2778,16 @@ FAILOVER(
      all nodes that are subscribed to a set at a common controlled
      point within the replication transaction stream.</para>
     
-    <para> The specified event origin must be the origin of the set.
+    <para> The specified event origin must be an origin of a set.
     The script file must not contain any <command>START</command> or
-    <command>COMMIT TRANSACTION</command> calls.  (This changes
-    somewhat in &postgres; 8.0 once nested transactions, aka
-    savepoints, are supported) In addition, non-deterministic DML
+    <command>COMMIT TRANSACTION</command> calls but SAVEPOINTS are allowed.
+    In addition, non-deterministic DML
     statements (like updating a field with
-    <function>CURRENT_TIMESTAMP</function>) must be avoided, since the
-    data changes done by the script are explicitly not
-    replicated. </para>
+    <function>CURRENT_TIMESTAMP</function>) should be avoided, since the
+    data changes done by the script will be different on each node. </para>
 
     <variablelist>
-     <varlistentry><term><literal> SET ID = ival </literal></term>
 
-      <listitem><para> The unique numeric ID number of the set
-      affected by the script</para></listitem>
-      
-     </varlistentry>
      <varlistentry><term><literal> FILENAME = '/path/to/file' </literal></term>
       
       <listitem><para> The name of the file containing the SQL script to
@@ -2797,9 +2796,16 @@ FAILOVER(
 	an absolute path on the system where <application>slonik</application> is to run.</para>
        
        <para> The <emphasis>contents</emphasis> of the file are propagated as part of
-	the event, so the file does not need to be accessible on any of the
+	the replication data stream, so the file does not need to be accessible on any of the
 	nodes.</para></listitem>
       
+     </varlistentry>
+     <varlistentry><term><literal> SQL = 'sql-string-to-execute' </literal></term>
+      
+      <listitem><para> Instead of a filename the SQL statements to
+	  	execute can be specified as a string literal in single quotes.
+		</para></listitem>
+
      </varlistentry>
      <varlistentry><term><literal> EVENT NODE = ival </literal></term>
       <listitem><para> (Mandatory unless EXECUTE ONLY ON is given) The ID 
@@ -2836,7 +2842,6 @@ FAILOVER(
    <refsect1><title>Example</title>
     <programlisting>
 EXECUTE SCRIPT (
-   SET ID = 1,
    FILENAME = '/tmp/changes_2008-04-01.sql',
    EVENT NODE = 1
 );
@@ -2849,9 +2854,7 @@ EXECUTE SCRIPT (
     replication triggers; after the DDL script completes, those locks
     will be cleared. In the 2.0 branch this is no longer the case.
     EXECUTE SCRIPT won't obtain any locks on your application tables
-    though the script that you executing probably will. Due to bug #137
-    you should avoid concurrent writes to the tables being
-    modified by the script while the script is running.  </para>
+    though the script that you executing probably will.   </para>
 
     <para> After the DDL script has run on the origin node, it will
     then run on subscriber nodes, where replicated tables will be
@@ -2911,6 +2914,8 @@ EXECUTE SCRIPT (
      <function>repair_log_triggers(only_locked boolean)</function>
    may be used manually to correct the triggers on those
    tables.</para>
+   <para> As of version 2.2 the DDL performed by an EXECUTE SCRIPT is stored in 
+   the sl_log_script table instead of sl_event.</para>
 
    </refsect1>
   </refentry>

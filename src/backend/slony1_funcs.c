@@ -42,6 +42,7 @@
 #include "utils/memutils.h"
 #include "utils/hsearch.h"
 #include "utils/timestamp.h"
+#include "utils/int8.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
@@ -62,40 +63,48 @@
 PG_MODULE_MAGIC;
 #endif
 
-PG_FUNCTION_INFO_V1(_Slony_I_createEvent);
-PG_FUNCTION_INFO_V1(_Slony_I_getLocalNodeId);
-PG_FUNCTION_INFO_V1(_Slony_I_getModuleVersion);
+#define FOO 1
 
-PG_FUNCTION_INFO_V1(_Slony_I_logTrigger);
-PG_FUNCTION_INFO_V1(_Slony_I_denyAccess);
-PG_FUNCTION_INFO_V1(_Slony_I_logApply);
-PG_FUNCTION_INFO_V1(_Slony_I_logApplySetCacheSize);
-PG_FUNCTION_INFO_V1(_Slony_I_logApplySaveStats);
-PG_FUNCTION_INFO_V1(_Slony_I_lockedSet);
-PG_FUNCTION_INFO_V1(_Slony_I_killBackend);
-PG_FUNCTION_INFO_V1(_Slony_I_seqtrack);
+#define versionFunc3(funcName,version) _Slony_I_## version##_##funcName
+#define versionFunc2(funcName,version) versionFunc3(funcName,version)
+#define versionFunc(funcName) versionFunc2(funcName,SLONY_I_FUNC_VERSION_STRING)
 
-PG_FUNCTION_INFO_V1(_slon_quote_ident);
-PG_FUNCTION_INFO_V1(_Slony_I_resetSession);
-PG_FUNCTION_INFO_V1(_slon_decode_tgargs);
+PG_FUNCTION_INFO_V1(versionFunc(createEvent));
+PG_FUNCTION_INFO_V1(versionFunc(getLocalNodeId));
+PG_FUNCTION_INFO_V1(versionFunc(getModuleVersion));
 
-Datum		_Slony_I_createEvent(PG_FUNCTION_ARGS);
-Datum		_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS);
-Datum		_Slony_I_getModuleVersion(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(versionFunc(logTrigger));
+PG_FUNCTION_INFO_V1(versionFunc(denyAccess));
+PG_FUNCTION_INFO_V1(versionFunc(logApply));
+PG_FUNCTION_INFO_V1(versionFunc(logApplySetCacheSize));
+PG_FUNCTION_INFO_V1(versionFunc(logApplySaveStats));
+PG_FUNCTION_INFO_V1(versionFunc(lockedSet));
+PG_FUNCTION_INFO_V1(versionFunc(killBackend));
+PG_FUNCTION_INFO_V1(versionFunc(seqtrack));
 
-Datum		_Slony_I_logTrigger(PG_FUNCTION_ARGS);
-Datum		_Slony_I_denyAccess(PG_FUNCTION_ARGS);
-Datum		_Slony_I_logApply(PG_FUNCTION_ARGS);
-Datum		_Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS);
-Datum		_Slony_I_logApplySaveStats(PG_FUNCTION_ARGS);
-Datum		_Slony_I_lockedSet(PG_FUNCTION_ARGS);
-Datum		_Slony_I_killBackend(PG_FUNCTION_ARGS);
-Datum		_Slony_I_seqtrack(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(versionFunc(slon_quote_ident));
+PG_FUNCTION_INFO_V1(versionFunc(resetSession));
+PG_FUNCTION_INFO_V1(versionFunc(slon_decode_tgargs));
 
-Datum		_slon_quote_ident(PG_FUNCTION_ARGS);
-Datum		_slon_decode_tgargs(PG_FUNCTION_ARGS);
 
-Datum		_Slony_I_resetSession(PG_FUNCTION_ARGS);
+
+Datum		versionFunc(createEvent)(PG_FUNCTION_ARGS);
+Datum		versionFunc(getLocalNodeId)(PG_FUNCTION_ARGS);
+Datum		versionFunc(getModuleVersion)(PG_FUNCTION_ARGS);
+
+Datum		versionFunc(logTrigger)(PG_FUNCTION_ARGS);
+Datum		versionFunc(denyAccess)(PG_FUNCTION_ARGS);
+Datum		versionFunc(logApply)(PG_FUNCTION_ARGS);
+Datum		versionFunc(logApplySetCacheSize)(PG_FUNCTION_ARGS);
+Datum		versionFunc(logApplySaveStats)(PG_FUNCTION_ARGS);
+Datum		versionFunc(lockedSet)(PG_FUNCTION_ARGS);
+Datum		versionFunc(killBackend)(PG_FUNCTION_ARGS);
+Datum		versionFunc(seqtrack)(PG_FUNCTION_ARGS);
+
+Datum	        versionFunc(slon_quote_ident)(PG_FUNCTION_ARGS);
+Datum		versionFunc(slon_decode_tgargs)(PG_FUNCTION_ARGS);
+
+Datum		versionFunc(resetSession)(PG_FUNCTION_ARGS);
 
 #ifdef CYGWIN
 extern DLLIMPORT Node *newNodeMacroHolder;
@@ -165,6 +174,10 @@ typedef struct apply_cache_entry
 	struct apply_cache_entry *prev;
 	struct apply_cache_entry *next;
 
+	FmgrInfo   *finfo_input;
+	Oid		   *typioparam;
+	int32	   *typmod;
+
 #ifdef APPLY_CACHE_VERIFY
 	char	   *verifyKey;
 	int			evicted;
@@ -201,15 +214,14 @@ static int64 apply_num_evict;
 
 /*@null@*/
 static Slony_I_ClusterStatus *clusterStatusList = NULL;
-static Slony_I_ClusterStatus *
-getClusterStatus(Name cluster_name,
+static Slony_I_ClusterStatus * getClusterStatus(Name cluster_name,
 				 int need_plan_mask);
-static const char *slon_quote_identifier(const char *ident);
-static int prepareLogPlan(Slony_I_ClusterStatus * cs,
+static const char * slon_quote_identifier(const char *ident);
+static int  prepareLogPlan(Slony_I_ClusterStatus * cs,
 			   int log_status);
 
 Datum
-_Slony_I_createEvent(PG_FUNCTION_ARGS)
+versionFunc(createEvent)(PG_FUNCTION_ARGS)
 {
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
@@ -307,7 +319,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
 
 
 /*
- * _Slony_I_getLocalNodeId -
+ * versionFunc(getLocalNodeId) -
  *
  *	  SQL callable wrapper for calling getLocalNodeId() in order
  *	  to get the current setting of sequence sl_local_node_id with
@@ -315,7 +327,7 @@ _Slony_I_createEvent(PG_FUNCTION_ARGS)
  *
  */
 Datum
-_Slony_I_getLocalNodeId(PG_FUNCTION_ARGS)
+versionFunc(getLocalNodeId)(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
 	int			rc;
@@ -332,14 +344,14 @@ _Slony_I_getLocalNodeId(PG_FUNCTION_ARGS)
 
 
 /*
- * _Slony_I_getModuleVersion -
+ * versionFunc(getModuleVersion) -
  *
  *	  SQL callable function to determine the version number
  *	  of this shared object during the startup checks.
  *
  */
 Datum
-_Slony_I_getModuleVersion(PG_FUNCTION_ARGS)
+versionFunc(getModuleVersion)(PG_FUNCTION_ARGS)
 {
 	text	   *retval;
 	int			len;
@@ -355,7 +367,7 @@ _Slony_I_getModuleVersion(PG_FUNCTION_ARGS)
 
 
 Datum
-_Slony_I_logTrigger(PG_FUNCTION_ARGS)
+versionFunc(logTrigger)(PG_FUNCTION_ARGS)
 {
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
@@ -773,7 +785,7 @@ _Slony_I_logTrigger(PG_FUNCTION_ARGS)
 
 
 Datum
-_Slony_I_denyAccess(PG_FUNCTION_ARGS)
+versionFunc(denyAccess)(PG_FUNCTION_ARGS)
 {
 	TriggerData *tg;
 
@@ -820,7 +832,7 @@ _Slony_I_denyAccess(PG_FUNCTION_ARGS)
 
 
 Datum
-_Slony_I_logApply(PG_FUNCTION_ARGS)
+versionFunc(logApply)(PG_FUNCTION_ARGS)
 {
 	TransactionId newXid = GetTopTransactionId();
 	Slony_I_ClusterStatus *cs;
@@ -978,9 +990,18 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		char	   *ddl_script;
 		bool		localNodeFound = true;
 		Datum		script_insert_args[5];
+		Datum	   *nodeargs;
+		bool	   *nodeargsnulls;
+		int			nodeargsn;
+		Datum	   *seqargs;
+		bool	   *seqargsnulls;
+		int			seqargsn;
+		Datum  array_holder;
+		Datum delim_text;
 
 		apply_num_script++;
 
+	
 		/*
 		 * Turn the log_cmdargs into a plain array of Text Datums.
 		 */
@@ -988,29 +1009,64 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 							SPI_fnumber(tupdesc, "log_cmdargs"), &isnull);
 		if (isnull)
 			elog(ERROR, "Slony-I: log_cmdargs is NULL");
-
 		deconstruct_array(DatumGetArrayTypeP(dat),
 						  TEXTOID, -1, false, 'i',
-						  &cmdargs, &cmdargsnulls, &cmdargsn);
-
+						  &cmdargs, &cmdargsnulls, &cmdargsn);		
+		
+		nodeargs=NULL;
+		nodeargsn=0;
+		seqargs=NULL;
+		seqargsn=0;
+		if( cmdargsn >= 2 )
+		{
+			delim_text=DirectFunctionCall1(textin,CStringGetDatum(","));
+			if ( (! cmdargsnulls[1])  )
+			{			
+				char * astr=DatumGetCString(DirectFunctionCall1(textout,
+																cmdargs[1]));
+				
+				if ( strcmp(astr,""))
+				{
+					array_holder = DirectFunctionCall2(text_to_array,cmdargs[1],
+													   delim_text);
+					deconstruct_array(DatumGetArrayTypeP(array_holder),
+									  TEXTOID, -1, false, 'i',
+									  &nodeargs, &nodeargsnulls, &nodeargsn);
+				}
+			}
+		}
+		if(cmdargsn >= 3)
+		{ 
+			if ( (! cmdargsnulls[2])  ) 
+			{
+				char * astr=DatumGetCString(DirectFunctionCall1(textout,
+																cmdargs[2]));	
+				if(  strcmp(astr,"") )
+				{
+					array_holder = DirectFunctionCall2(text_to_array,cmdargs[2],
+													   delim_text);
+					deconstruct_array(DatumGetArrayTypeP(array_holder),
+									  TEXTOID, -1, false, 'i',
+									  &seqargs, &seqargsnulls, &seqargsn);
+				}
+			}
+		}		
 		/*
 		 * The first element is the DDL statement itself.
 		 */
 		ddl_script = DatumGetCString(DirectFunctionCall1(
 													   textout, cmdargs[0]));
-
 		/*
 		 * If there is an optional node ID list, check that we are in it.
 		 */
-		if (cmdargsn > 1)
+		if (nodeargsn > 0)
 		{
 			localNodeFound = false;
-			for (i = 1; i < cmdargsn; i++)
+			for (i = 0; i < nodeargsn; i++)
 			{
 				int32		nodeId = DatumGetInt32(
 												   DirectFunctionCall1(int4in,
-								  DirectFunctionCall1(textout, cmdargs[i])));
-
+								  DirectFunctionCall1(textout, nodeargs[i])));
 				if (nodeId == cs->localNodeId)
 				{
 					localNodeFound = true;
@@ -1025,10 +1081,74 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		 */
 		if (localNodeFound)
 		{
+
+			char query[1024];
+			Oid argtypes[3];
+			void * plan=NULL;
+
+			argtypes[0] = INT4OID;
+			argtypes[1] = INT4OID;
+			argtypes[2] = INT8OID;
+
+			snprintf(query,1023,"select %s.sequenceSetValue($1,"	\
+					 "$2,NULL,$3,true); ",tg->tg_trigger->tgargs[0]);			
+			plan = SPI_prepare(query,3,argtypes);
+			if ( plan == NULL )
+			{
+
+				elog(ERROR,"could not prepare plan to call sequenceSetValue");
+			}
+			/**
+			 * before we execute the DDL we need to update the sequences.
+			 */
+			if ( seqargsn > 0 )
+			{
+				
+				for( i = 0; (i+2) < seqargsn; i=i+3 )
+				{
+					Datum		call_args[3];
+					bool	    call_nulls[3];
+					call_args[0] = DirectFunctionCall1(int4in,
+													   DirectFunctionCall1(textout,seqargs[i]));
+					call_args[1] = DirectFunctionCall1(int4in,
+													   DirectFunctionCall1(textout,seqargs[i+1]));
+					call_args[2] = DirectFunctionCall1(int8in,
+													   DirectFunctionCall1(textout,seqargs[i+2]));
+
+					call_nulls[0]=0;
+					call_nulls[1]=0;
+					call_nulls[2]=0;
+
+					if ( SPI_execp(plan,call_args,call_nulls,0) < 0 )
+					{
+						elog(ERROR,"error executing sequenceSetValue plan");
+
+					}
+					
+				}
+
+				
+			}
+
+			sprintf(query,"set session_replication_role to local;");
+			if(SPI_exec(query,0) < 0)
+			{
+				elog(ERROR, "SPI_exec() failed for statement '%s'",
+					 query);
+			}
+
+
 			if (SPI_exec(ddl_script, 0) < 0)
 			{
 				elog(ERROR, "SPI_exec() failed for DDL statement '%s'",
 					 ddl_script);
+			}
+
+			sprintf(query,"set session_replication_role to replica;");
+			if(SPI_exec(query,0) < 0)
+			{
+					elog(ERROR, "SPI_exec() failed for statement '%s'",
+					 query);
 			}
 
 			/*
@@ -1119,6 +1239,7 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 				elog(ERROR, "SPI_exec() failed for statement '%s'",
 					 query);
 			}
+		
 
 			/*
 			 * Set the currentXid to invalid to flush the apply query cache.
@@ -1289,6 +1410,20 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 
 		/* elog(NOTICE, "cache entry for %s NOT found", cacheKey); */
 
+		/*
+		 * Allocate memory for the function call info to cast
+		 * all datums from TEXT to the required Datum type.
+		 */
+		oldContext = MemoryContextSwitchTo(applyCacheContext);
+		cacheEnt->finfo_input = (FmgrInfo *)palloc(sizeof(FmgrInfo) * (cmdargsn / 2));
+		cacheEnt->typioparam = (Oid *)palloc(sizeof(Oid) * (cmdargsn / 2));
+		cacheEnt->typmod = (int32 *)palloc(sizeof(int32) * (cmdargsn / 2));
+		MemoryContextSwitchTo(oldContext);
+
+		if (cacheEnt->finfo_input == NULL || cacheEnt->typioparam == NULL ||
+				cacheEnt->typmod == NULL)
+			elog(ERROR, "Slony-I: out of memory in logApply()");
+
 #ifdef APPLY_CACHE_VERIFY
 
 		/*
@@ -1304,12 +1439,18 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 		 * Find the target relation in the system cache. We need this to find
 		 * the data types of the target columns for casting.
 		 */
+#ifdef HAS_LOOKUPEXPLICITNAMESPACE_2	       
 		target_rel = RelationIdGetRelation(
-										   get_relname_relid(relname, LookupExplicitNamespace(nspname,false)));
+			get_relname_relid(relname,
+							  LookupExplicitNamespace(nspname,false)));
+#else
+		target_rel = RelationIdGetRelation(
+			get_relname_relid(relname, LookupExplicitNamespace(nspname)));
+#endif
 		if (target_rel == NULL)
 			elog(ERROR, "Slony-I: cannot find table %s.%s in logApply()",
-				 slon_quote_identifier(nspname),
-				 slon_quote_identifier(relname));
+			     slon_quote_identifier(nspname),
+			     slon_quote_identifier(relname));
 
 		/*
 		 * Create the saved SPI plan for this query
@@ -1370,27 +1511,38 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 				 */
 				for (i = 0; i < cmdargsn; i += 2)
 				{
-					char	   *coltype;
+					int	colnum;
+					Oid	coltype;
+					Oid	typinput;
 
 					applyQueryIncrease();
 
 					/*
-					 * Lookup the column data type in the target relation.
+					 * Lookup the column data type in the target relation and
+					 * remember everything we need to know later to
+					 * cast TEXT to the correct column Datum.
 					 */
-					coltype = SPI_gettype(target_rel->rd_att,
-					  SPI_fnumber(target_rel->rd_att, querycolnames[i / 2]));
-					if (coltype == NULL)
+					colnum = SPI_fnumber(target_rel->rd_att, querycolnames[i / 2]);
+					coltype = SPI_gettypeid(target_rel->rd_att, colnum);
+					if (coltype == InvalidOid)
 						elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
 							 querycolnames[i / 2]);
+					getTypeInputInfo(coltype, &typinput,
+							&(cacheEnt->typioparam[i / 2]));
+					oldContext = MemoryContextSwitchTo(applyCacheContext);
+					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
+					MemoryContextSwitchTo(oldContext);
+					cacheEnt->typmod[i / 2] =
+						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
 
 					/*
 					 * Add the parameter to the query string
 					 */
-					sprintf(applyQueryPos, "%s$%d::%s", (i == 0) ? "" : ", ",
-							i / 2 + 1, coltype);
+					sprintf(applyQueryPos, "%s$%d", (i == 0) ? "" : ", ",
+							i / 2 + 1);
 					applyQueryPos += strlen(applyQueryPos);
 
-					querytypes[i / 2] = TEXTOID;
+					querytypes[i / 2] = coltype;
 				}
 
 				/*
@@ -1423,28 +1575,38 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 				for (i = 0; i < cmdargsn; i += 2)
 				{
 					char	   *colname;
-					char	   *coltype;
+					int			colnum;
+					Oid			coltype;
+					Oid			typinput;
 
 					applyQueryIncrease();
 
 					/*
-					 * Get the column name and data type.
+					 * Get the column name and data type as well as everything
+					 * needed later to cast TEXT to the correct input Datum.
 					 */
 					if (cmdargsnulls[i])
 						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
 					colname = DatumGetCString(DirectFunctionCall1(
 													   textout, cmdargs[i]));
-					coltype = SPI_gettype(target_rel->rd_att,
-								   SPI_fnumber(target_rel->rd_att, colname));
-					if (coltype == NULL)
+					colnum = SPI_fnumber(target_rel->rd_att, colname);
+					coltype = SPI_gettypeid(target_rel->rd_att, colnum);
+					if (coltype == InvalidOid)
 						elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
 							 colname);
+					getTypeInputInfo(coltype, &typinput,
+							&(cacheEnt->typioparam[i / 2]));
+					oldContext = MemoryContextSwitchTo(applyCacheContext);
+					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
+					MemoryContextSwitchTo(oldContext);
+					cacheEnt->typmod[i / 2] =
+						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
 
 					/*
 					 * Special case if there were no columns updated. We tell
 					 * it to set the first PK column to itself.
 					 */
-					if (cmdupdncols == 0)
+					if (cmdupdncols == 0 && i == 0)
 					{
 						sprintf(applyQueryPos, "%s = %s",
 								slon_quote_identifier(colname),
@@ -1468,10 +1630,10 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 						 * This is inside the SET clause. Add the <colname> =
 						 * $n::<coltype> separated by comma.
 						 */
-						sprintf(applyQueryPos, "%s%s = $%d::%s",
+						sprintf(applyQueryPos, "%s%s = $%d",
 								(i > 0) ? ", " : "",
 								slon_quote_identifier(colname),
-								i / 2 + 1, coltype);
+								i / 2 + 1);
 					}
 					else
 					{
@@ -1479,14 +1641,14 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 						 * This is in the WHERE clause. Same as above but
 						 * separated by AND.
 						 */
-						sprintf(applyQueryPos, "%s%s = $%d::%s",
+						sprintf(applyQueryPos, "%s%s = $%d",
 								(i > cmdupdncols * 2) ? " AND " : "",
 								slon_quote_identifier(colname),
-								i / 2 + 1, coltype);
+								i / 2 + 1);
 					}
 					applyQueryPos += strlen(applyQueryPos);
 
-					querytypes[i / 2] = TEXTOID;
+					querytypes[i / 2] = coltype;
 				}
 
 				strcpy(applyQueryPos, ";");
@@ -1510,31 +1672,40 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 
 				for (i = 0; i < cmdargsn; i += 2)
 				{
+					int			colnum;
 					char	   *colname;
-					char	   *coltype;
+					Oid			coltype;
+					Oid			typinput;
 
 					applyQueryIncrease();
 
 					/*
-					 * Add <colname> = $n::<coltype> separated by comma.
+					 * Add <colname> = $n separated by comma.
 					 */
 					if (cmdargsnulls[i])
 						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
 					colname = DatumGetCString(DirectFunctionCall1(
 													   textout, cmdargs[i]));
-					coltype = SPI_gettype(target_rel->rd_att,
-								   SPI_fnumber(target_rel->rd_att, colname));
-					if (coltype == NULL)
+					colnum = SPI_fnumber(target_rel->rd_att, colname);
+					coltype = SPI_gettypeid(target_rel->rd_att, colnum);
+					if (coltype == InvalidOid)
 						elog(ERROR, "Slony-I: type lookup for column %s failed in logApply()",
 							 colname);
-					sprintf(applyQueryPos, "%s%s = $%d::%s",
+					getTypeInputInfo(coltype, &typinput,
+							&(cacheEnt->typioparam[i / 2]));
+					oldContext = MemoryContextSwitchTo(applyCacheContext);
+					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
+					MemoryContextSwitchTo(oldContext);
+					cacheEnt->typmod[i / 2] =
+						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
+					sprintf(applyQueryPos, "%s%s = $%d",
 							(i > 0) ? " AND " : "",
 							slon_quote_identifier(colname),
-							i / 2 + 1, coltype);
+							i / 2 + 1);
 
 					applyQueryPos += strlen(applyQueryPos);
 
-					querytypes[i / 2] = TEXTOID;
+					querytypes[i / 2] = coltype;
 				}
 
 				strcpy(applyQueryPos, ";");
@@ -1610,6 +1781,11 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 			apply_num_evict++;
 
 			SPI_freeplan(evict->plan);
+			oldContext = MemoryContextSwitchTo(applyCacheContext);
+			pfree(cacheEnt->finfo_input);
+			pfree(cacheEnt->typioparam);
+			pfree(cacheEnt->typmod);
+			MemoryContextSwitchTo(oldContext);
 			evict->plan = NULL;
 #ifdef APPLY_CACHE_VERIFY
 			evict->evicted = 1;
@@ -1678,11 +1854,25 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 
 			for (i = 0; i < cmdargsn; i += 2)
 			{
-				queryvals[i / 2] = cmdargs[i + 1];
+				char *tmpval;
+
 				if (cmdargsnulls[i + 1])
+				{
+					queryvals[i / 2] = (Datum)0;
 					querynulls[i / 2] = 'n';
+				}
 				else
+				{
+					tmpval = DatumGetCString(DirectFunctionCall1(textout, 
+							cmdargs[i + 1]));
+					queryvals[i / 2] = InputFunctionCall(
+							&(cacheEnt->finfo_input[i / 2]),
+							tmpval,
+							cacheEnt->typioparam[i / 2],
+							cacheEnt->typmod[i / 2]);
+					pfree(tmpval);
 					querynulls[i / 2] = ' ';
+				}
 			}
 			querynulls[cmdargsn / 2] = '\0';
 
@@ -1744,13 +1934,13 @@ _Slony_I_logApply(PG_FUNCTION_ARGS)
 
 
 /*
- * _Slony_I_logApplySetCacheSize()
+ * versionFunc(logApplySetCacheSize)()
  *
  *	Called by slon during startup to set the size of the log apply
  *	query cache according to the config parameter apply_cache_size.
  */
 Datum
-_Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS)
+versionFunc(logApplySetCacheSize)(PG_FUNCTION_ARGS)
 {
 	int32		newSize;
 	int32		oldSize = applyCacheSize;
@@ -1772,12 +1962,12 @@ _Slony_I_logApplySetCacheSize(PG_FUNCTION_ARGS)
 
 
 /*
- * _Slony_I_logApplySaveStats()
+ * versionFunc(logApplySaveStats)()
  *
  *	Save statistics at the end of SYNC processing.
  */
 Datum
-_Slony_I_logApplySaveStats(PG_FUNCTION_ARGS)
+versionFunc(logApplySaveStats)(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
 	Datum		params[11];
@@ -1908,7 +2098,7 @@ applyQueryIncrease(void)
 
 
 Datum
-_Slony_I_lockedSet(PG_FUNCTION_ARGS)
+versionFunc(lockedSet)(PG_FUNCTION_ARGS)
 {
 	TriggerData *tg;
 
@@ -1939,7 +2129,7 @@ _Slony_I_lockedSet(PG_FUNCTION_ARGS)
 
 
 Datum
-_Slony_I_killBackend(PG_FUNCTION_ARGS)
+versionFunc(killBackend)(PG_FUNCTION_ARGS)
 {
 	int32		pid;
 	int32		signo;
@@ -1993,7 +2183,7 @@ seqtrack_free(void *seq)
 }
 
 Datum
-_Slony_I_seqtrack(PG_FUNCTION_ARGS)
+versionFunc(seqtrack)(PG_FUNCTION_ARGS)
 {
 	static AVLtree seqmem = AVL_INITIALIZER(seqtrack_cmp, seqtrack_free);
 	AVLnode    *node;
@@ -2136,7 +2326,7 @@ slon_quote_identifier(const char *ident)
  * Version: pgsql/src/backend/utils/adt/quote.c,v 1.14.4.1 2005/03/21 16:29:31
  */
 Datum
-_slon_quote_ident(PG_FUNCTION_ARGS)
+versionFunc(slon_quote_ident)(PG_FUNCTION_ARGS)
 {
 	text	   *t = PG_GETARG_TEXT_P(0);
 	text	   *result;
@@ -2539,7 +2729,7 @@ prepareLogPlan(Slony_I_ClusterStatus * cs,
  * value.
  */
 Datum
-_Slony_I_resetSession(PG_FUNCTION_ARGS)
+versionFunc(resetSession)(PG_FUNCTION_ARGS)
 {
 	Slony_I_ClusterStatus *cs;
 
@@ -2582,7 +2772,7 @@ _Slony_I_resetSession(PG_FUNCTION_ARGS)
  * argument.
  */
 Datum
-_slon_decode_tgargs(PG_FUNCTION_ARGS)
+versionFunc(slon_decode_tgargs)(PG_FUNCTION_ARGS)
 {
 	const char *arg;
 	size_t		elem_size = 0;

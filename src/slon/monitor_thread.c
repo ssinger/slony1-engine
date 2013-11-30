@@ -28,8 +28,10 @@
 
 static void stack_init(void);
 static bool stack_pop(SlonState * current);
+#ifdef UNUSED
 static void stack_dump();
 static void entry_dump(int i, SlonState * tos);
+#endif
 static int	initial_stack_size = 6;
 
 /* ----------
@@ -427,6 +429,7 @@ stack_pop( /* @out@ */ SlonState * qentry)
 	}
 }
 
+#ifdef UNUSED
 static void
 stack_dump()
 {
@@ -457,3 +460,4 @@ entry_dump(int i, SlonState * tos)
 	slon_log(SLON_DEBUG2, "actor[%s] activity[%s] event_type[%s]\n",
 			 tos->actor, tos->activity, tos->event_type);
 }
+#endif /* UNUSED */

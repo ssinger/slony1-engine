@@ -283,7 +283,9 @@ static int	archive_append_data(SlonNode * node, const char *s, int len);
 
 static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_subquery);
 
+#ifdef UNUSED
 static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
+#endif
 
 static void lock_workercon(SlonNode * node);
 
@@ -806,44 +808,49 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "DROP_NODE") == 0)
 			{
-				int			no_id = (int) strtol(event->ev_data1, NULL, 10);
+				char *      node_list = event->ev_data1;
+				char * saveptr=NULL;
+				char * node_id=NULL;
 
-				if (no_id != rtcfg_nodeid)
-					rtcfg_disableNode(no_id);
-
-				slon_appendquery(&query1,
+				while((node_id=strtok_r(node_id==NULL ? node_list : NULL ,",",&saveptr))!=NULL)					
+				{
+					int			no_id = (int) strtol(node_id, NULL, 10);
+					if (no_id != rtcfg_nodeid)
+						rtcfg_disableNode(no_id);				
+					slon_appendquery(&query1,
 								 "lock table %s.sl_config_lock;"
 								 "select %s.dropNode_int(%d); ",
 								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 no_id);
 
-				/*
-				 * If this is our own nodeid, then calling disableNode_int()
-				 * will destroy the whole configuration including the entire
-				 * schema. Make sure we call just that and get out of here
-				 * ASAP!
-				 */
-				if (no_id == rtcfg_nodeid)
-				{
-					slon_log(SLON_WARN, "remoteWorkerThread_%d: "
-							 "got DROP NODE for local node ID\n",
-							 node->no_id);
-
-					slon_appendquery(&query1, "commit transaction; ");
-					if (query_execute(node, node->worker_dbconn, &query1) < 0)
+					/*
+					 * If this is our own nodeid, then calling disableNode_int()
+					 * will destroy the whole configuration including the entire
+					 * schema. Make sure we call just that and get out of here
+					 * ASAP!
+					 */
+					if (no_id == rtcfg_nodeid)
+					{
+						slon_log(SLON_WARN, "remoteWorkerThread_%d: "
+								 "got DROP NODE for local node ID\n",
+								 node->no_id);
+					
+						slon_appendquery(&query1, "commit transaction; ");
+						if (query_execute(node, local_dbconn, &query1) < 0)
 						slon_retry();
 
-					(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
-										rtcfg_namespace);
-					if (query_execute(node, node->worker_dbconn, &query1) < 0)
+						(void) slon_mkquery(&query1, "select %s.uninstallNode(); ",
+											rtcfg_namespace);
+						if (query_execute(node, local_dbconn, &query1) < 0)
+							slon_retry();
+						
+						(void) slon_mkquery(&query1, "drop schema %s cascade; ",
+											rtcfg_namespace);
+						query_execute(node, local_dbconn, &query1);
+						
 						slon_retry();
-
-					(void) slon_mkquery(&query1, "drop schema %s cascade; ",
-										rtcfg_namespace);
-					query_execute(node, node->worker_dbconn, &query1);
-
-					slon_retry();
+					}
 				}
 
 				/*
@@ -1244,6 +1251,8 @@ remoteWorkerThread_main(void *cdata)
 			{
 				int			failed_node = (int) strtol(event->ev_data1, NULL, 10);
 				char	   *seq_no_c = event->ev_data2;
+				char       *failed_node_list  = event->ev_data3;
+
 				PGresult   *res;
 
 				/**
@@ -1255,9 +1264,9 @@ remoteWorkerThread_main(void *cdata)
 				 * The most-ahead failover canidate is the node that
 				 * created the FAILOVER_NODE event (node->id)
 				 */
-				slon_mkquery(&query2, "select %s.failedNode(%d,%d);"
+				slon_mkquery(&query2, "select %s.failedNode(%d,%d,ARRAY[%s]);"
 							 ,rtcfg_namespace,
-							 failed_node, node->no_id);
+							 failed_node, node->no_id,failed_node_list);
 
 				res = PQexec(node->worker_dbconn, dstring_data(&query2));
 				if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -1734,8 +1743,14 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	 * Step 3.
 	 *
 	 * Remove all providers that we don't need any more.
+	 * we only do this if event_provider is -1
+	 * which means that this function was called in response
+	 * to a reconfiguration event.  If the event_provider just
+	 * isn't in the provider list we don't want to drop other
+	 * providers because they might be needed in the near future.
 	 */
-	for (provider = wd->provider_head; provider; provider = provnext)
+	for (provider = wd->provider_head; provider && 
+			 event_provider==-1 ; provider = provnext)
 	{
 		SlonNode   *rtcfg_node;
 
@@ -1745,7 +1760,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 		 * If the list of currently replicated sets we receive from this
 		 * provider is empty, we don't need to maintain a connection to it.
 		 */
-		if (provider->set_head == NULL && provider->no_id != event_provider)
+		if (provider->set_head == NULL)
 		{
 			/*
 			 * Tell this helper thread to exit, join him and destroy thread
@@ -1811,49 +1826,45 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	/*
 	 * Step 4.
 	 *
-	 * Make sure the event provider is in the list of providers.
+	 * make sure that the node we got this message from
+	 * is in the provider list
 	 */
-	if (event_provider >= 0)
+	for(provider = wd->provider_head ; event_provider > 0 &&
+			provider != NULL; provider = provider->next)
 	{
-		for (provider = wd->provider_head; provider;
-			 provider = provider->next)
-		{
-			if (provider->no_id == event_provider)
-				break;
-		}
-		if (provider == NULL)
-		{
-			/*
-			 * No provider entry found. Create a new one.
-			 */
-			provider = (ProviderInfo *)
-				malloc(sizeof(ProviderInfo));
-			memset(provider, 0, sizeof(ProviderInfo));
-			provider->no_id = event_provider;
-			provider->wd = wd;
-			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: adding event provider %d to provider list\n",
-					 node->no_id, event_provider);
-			dstring_init(&provider->helper_query);
+		if (provider->no_id == event_provider)
+			break;
+	}
+	if (event_provider >= 0 && provider == NULL)
+	{
+		/*
+		 * No provider entry found. Create a new one.
+		 */
+		provider = (ProviderInfo *)
+			malloc(sizeof(ProviderInfo));
+		memset(provider, 0, sizeof(ProviderInfo));
+		provider->no_id = event_provider;
+		provider->wd = wd;
 
-			/*
-			 * Add the provider to our work group
-			 */
-			DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
-							provider);
+		dstring_init(&provider->helper_query);
 
-			/*
-			 * Copy the runtime configurations conninfo into the provider
-			 * info.
-			 */
-			rtcfg_node = rtcfg_findNode(provider->no_id);
-			if (rtcfg_node != NULL)
-			{
-				provider->pa_connretry = rtcfg_node->pa_connretry;
-				if (rtcfg_node->pa_conninfo != NULL)
-					provider->pa_conninfo =
-						strdup(rtcfg_node->pa_conninfo);
-				provider->pa_walsender = rtcfg_node->pa_walsender;
-			}
+		/*
+		 * Add the provider to our work group
+		 */
+		DLLIST_ADD_TAIL(wd->provider_head, wd->provider_tail,
+						provider);
+
+		/*
+		 * Copy the runtime configurations conninfo into the provider
+		 * info.
+		 */
+		rtcfg_node = rtcfg_findNode(provider->no_id);
+		if (rtcfg_node != NULL)
+		{
+			provider->pa_connretry = rtcfg_node->pa_connretry;
+			if (rtcfg_node->pa_conninfo != NULL)
+				provider->pa_conninfo =
+					strdup(rtcfg_node->pa_conninfo);
 		}
 	}
 }
@@ -2110,8 +2121,8 @@ remoteWorker_wakeup(int no_id)
 	msg->msg_type = WMSG_WAKEUP;
 
 	pthread_mutex_lock(&(node->message_lock));
-	DLLIST_ADD_TAIL(node->message_head, node->message_tail, msg);
-	pthread_cond_broadcast(&(node->message_cond));
+	DLLIST_ADD_HEAD(node->message_head, node->message_tail, msg);
+	pthread_cond_signal(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
 
@@ -3768,7 +3779,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				archive_terminate(node);
 				return 10;
 			}
-			sprintf(conn_symname, "subscriber_%d_provider_%d",
+			sprintf(conn_symname, "origin_%d_provider_%d",
 					node->no_id, provider->no_id);
 
 			provider->conn = slon_connectdb(provider->pa_conninfo,
@@ -3822,10 +3833,14 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 
 		/*
 		 * We only need to explicitly check this if the data provider is
-		 * neither the set origin, nor the node we received this event from.
+		 * neither the set origin, nor the node we received this event from
+		 * and we receive data from this provider.
+		 *
+		 *
 		 */
 		if (event->ev_origin != provider->no_id &&
-			event->event_provider != provider->no_id)
+			event->event_provider != provider->no_id &&
+			provider->set_head != NULL )
 		{
 			int64		prov_seqno;
 
@@ -3864,7 +3879,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	}
 
 
-
 	min_ssy_seqno = -1;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -3878,6 +3892,21 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			need_union;
 		int			sl_log_no;
 
+		/**
+		 * ONLY use the event_provider.
+		 * If this provider has a set then that should be the
+		 * only provider anyway. 
+		 *
+		 * If the provider doesn't then we get the DDL from the event_provider.
+		 */
+		if(provider->no_id != event->event_provider && provider->set_head == NULL)
+		{
+			slon_log(SLON_DEBUG2,
+					 "remoteWorkerThread_%d: skipping provider %d we want %d\n",
+					 node->no_id, provider->no_id,event->event_provider);
+
+			continue;
+		}
 		slon_log(SLON_DEBUG2,
 			  "remoteWorkerThread_%d: creating log select for provider %d\n",
 				 node->no_id, provider->no_id);
@@ -3998,7 +4027,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				slon_appendquery(&query, "%s%d",
 								 (pset->prev == NULL) ? "" : ",",
 								 pset->set_id);
-			slon_appendquery(&query, "); ");
+			slon_appendquery(&query, ") and SSY.ssy_origin=%d; ",node->no_id);
 
 			start_monitored_event(&pm);
 			res1 = PQexec(local_dbconn, dstring_data(&query));
@@ -4058,6 +4087,19 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				char	   *ssy_snapshot = PQgetvalue(res1, tupno1, 3);
 				char	   *ssy_action_list = PQgetvalue(res1, tupno1, 4);
 				int64		ssy_seqno;
+
+				if (strcmp(ssy_snapshot,"1:1:")==0 &&
+					ssy_seqno==0)
+				{
+					/**
+					 * we don't yet have a row in setsync with real data
+					 * this means the ACCEPT_SET has not yet come in.
+					 * ignore this set.
+					 */
+					slon_log(SLON_WARN, "remoteWorkerThread_%d: skipping set %d ACCEPT_SET not yet received\n",
+							 node->no_id, sub_set);
+					continue;
+				}
 
 				slon_scanint64(PQgetvalue(res1, tupno1, 1), &ssy_seqno);
 				if (min_ssy_seqno < 0 || ssy_seqno < min_ssy_seqno)
@@ -4285,14 +4327,32 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
-	rc = get_active_log_table(node,local_dbconn);
-	if(rc < 0)
+	/*
+	 * Get the current sl_log_status
+	 */
+	(void) slon_mkquery(&query, "select last_value from %s.sl_log_status",
+						rtcfg_namespace);
+	start_monitored_event(&pm);
+	res1 = PQexec(local_dbconn, dstring_data(&query));
+	monitor_subscriber_query(&pm);
+
+	if (PQresultStatus(res1) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s\n",
+				 node->no_id, dstring_data(&query),
+				 PQresultErrorMessage(res1));
+		PQclear(res1);
+		dstring_free(&query);
+		dstring_free(&lsquery);
+		archive_terminate(node);
+		return 20;
+	}
+	ntuples1 = PQntuples(res1);
+	if (ntuples1 != 1)
 	{
 		dstring_free(&query);
 		dstring_free(&lsquery);
 		archive_terminate(node);
-		slon_disconnectdb(provider->conn);
-		provider->conn = NULL;
 		return 20;
 	}
 	wd->active_log_table = rc;
@@ -4353,8 +4413,6 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		return 10;
 	}
 
-
-/** END OF sl_log_1 and sl_log_2 stuff */
 
 	/*
 	 * Get all sequence updates
@@ -4418,7 +4476,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			char	   *seq_relname = PQgetvalue(res1, tupno1, 3);
 
 			(void) slon_mkquery(&query,
-							 "select %s.sequenceSetValue(%s,%d,'%s','%s'); ",
+							 "select %s.sequenceSetValue(%s,%d,'%s','%s',false); ",
 								rtcfg_namespace,
 						   seql_seqid, node->no_id, seqbuf, seql_last_value);
 			start_monitored_event(&pm);
@@ -4457,9 +4515,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 						"update %s.sl_setsync set "
 						"    ssy_seqno = '%s', ssy_snapshot = '%s', "
 						"    ssy_action_list = '' "
-						"where ssy_setid in (",
+						"where ssy_origin=%d and  ssy_setid in (",
 						rtcfg_namespace,
-						seqbuf, event->ev_snapshot_c);
+						seqbuf, event->ev_snapshot_c,node->no_id);
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -4590,7 +4648,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	if (query_execute(node, dbconn, &query) < 0)
 	{
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	monitor_subscriber_query(&pm);
@@ -4615,7 +4673,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 PQresultErrorMessage(res2));
 		PQclear(res2);
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	if (PQntuples(res2) != 1)
@@ -4626,7 +4684,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 PQresStatus(rc), PQntuples(res2));
 		PQclear(res2);
 		errors++;
-		dstring_terminate(&query);
+		dstring_free(&query);
 		return errors;
 	}
 	log_status = strtol(PQgetvalue(res2, 0, 0), NULL, 10);
@@ -4634,7 +4692,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	slon_log(SLON_DEBUG2,
 			 "remoteWorkerThread_%d_%d: current remote log_status = %d\n",
 			 node->no_id, provider->no_id, log_status);
-	dstring_terminate(&query);
+	dstring_free(&query);
 
 	/*
 	 * See if we have to run the query through EXPLAIN first
@@ -4705,6 +4763,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 node->no_id, provider->no_id,
 				 dstring_data(&provider->helper_query),
 				 PQresultErrorMessage(res));
+		PQclear(res);
 		return errors;
 	}
 	monitor_provider_query(&pm);
@@ -4746,7 +4805,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 					 "log_cmdargs) FROM STDIN;",
 					 rtcfg_namespace);
 		archive_append_ds(node, &log_copy);
-		dstring_terminate(&log_copy);
+		dstring_free(&log_copy);
 
 
 	}
@@ -4821,7 +4880,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	}
 
 	res = PQgetResult(dbconn);
-	if (PQresultStatus(res) < 0)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY OUT: %s",
 				 node->no_id, provider->no_id,
@@ -4831,7 +4890,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	PQclear(res);
 
 	res = PQgetResult(local_conn);
-	if (PQresultStatus(res) < 0)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY IN: %s",
 				 node->no_id, provider->no_id,
@@ -4846,7 +4905,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 				 "remoteWorkerThread_%d_%d: failed SYNC's log selection query was '%s'\n",
 				 node->no_id, provider->no_id,
 				 dstring_data(&(provider->helper_query)));
-
+	dstring_free(&query);
 	dstring_init(&query);
 	(void) slon_mkquery(&query, "rollback transaction; "
 						"set enable_seqscan = default; "
@@ -4874,6 +4933,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 	slon_log(SLON_DEBUG4,
 			 "remoteWorkerThread_%d_%d: sync_helper done\n",
 			 node->no_id, provider->no_id);
+	dstring_free(&query);
 	return errors;
 }
 
@@ -5507,6 +5567,7 @@ compress_actionseq(const char *ssy_actionlist, SlonDString * action_subquery)
 	slon_log(SLON_DEBUG4, " compressed actionseq subquery... %s\n", dstring_data(action_subquery));
 }
 
+#ifdef UNUSED
 /**
  * Checks to see if the node specified is a member of the set.
  *
@@ -5538,6 +5599,7 @@ check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn)
 	PQclear(res);
 	return 1;
 }
+#endif /* UNUSED */
 
 static void
 init_perfmon(PerfMon * perf_info)

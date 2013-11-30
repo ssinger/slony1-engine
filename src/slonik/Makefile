@@ -10,6 +10,7 @@ slony_subdir = src/slonik
 slony_top_builddir = ../..
 SLFILEDESC="Slony command interpreter"
 include $(slony_top_builddir)/Makefile.global
+CPPFLAGS:=$(CPPFLAGS_CLIENT)
 
 ifeq ($(PORTNAME), aix)
   CFLAGS += -D_LARGE_FILES
@@ -26,6 +27,11 @@ endif
 ifeq ($(PORTNAME), win32)
 PROG            = slonik.exe
 LDFLAGS += -lpgport
+else ifdef HAVE_PGPORT
+LDFLAGS += -lpgport
+ifdef HAVE_PGCOMMON
+LDFLAGS += -lpgcommon
+endif
 endif
 
 OBJS		= 			\
