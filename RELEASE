@@ -1,4 +1,8 @@
 #+OPTIONS: ^:{}
+* 2.2.2
+
+ - Include server include paths on --with-pgport builds  for slonik
+
 * 2.2.1
   - Bug 315 :: Fixes to compile time include directories
 
