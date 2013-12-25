@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2008 Summerault, LLC
@@ -11,11 +11,12 @@ $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE
+);
 
-my $USAGE =
-"Usage: slonik_drop_sequence [--config file] sequence_id set
+my $USAGE = "Usage: slonik_drop_sequence [--config file] sequence_id set
 
     sequence_id  The ID of the sequence to be dropped from replication
     set  The name or ID of the set to drop the sequence from
@@ -36,9 +37,9 @@ if ($SHOW_USAGE) {
 require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-my ($SEQ_ID,$set) = @ARGV;
+my ( $SEQ_ID, $set ) = @ARGV;
 $SET_ID = get_set($set);
-unless ($SEQ_ID && $SET_ID) {
+unless ( $SEQ_ID && $SET_ID ) {
     die $USAGE;
 }
 
@@ -56,5 +57,5 @@ $slonik .= "    echo 'Could not drop sequence $SEQ_ID for $CLUSTER_NAME!';\n";
 $slonik .= "    exit 1;\n";
 $slonik .= "  }\n";
 
-run_slonik_script($slonik, 'DROP SEQUENCE');
+run_slonik_script( $slonik, 'DROP SEQUENCE' );
 

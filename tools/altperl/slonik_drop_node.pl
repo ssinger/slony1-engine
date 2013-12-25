@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -10,11 +10,12 @@ $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE
+);
 
-my $USAGE =
-"Usage: drop_node [--config file] node# event_node#
+my $USAGE = "Usage: drop_node [--config file] node# event_node#
 
     Drops a node.
 
@@ -39,25 +40,27 @@ you from errors.
 ";
 
 if ($SHOW_USAGE) {
-  print $USAGE;
-  exit 0;
+    print $USAGE;
+    exit 0;
 }
 
 require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-my ($node, $event_node) = @ARGV;
-if ($node =~ /^(?:node)?(\d+)$/) {
-  $node = $1;
-} else {
-  die $USAGE;
+my ( $node, $event_node ) = @ARGV;
+if ( $node =~ /^(?:node)?(\d+)$/ ) {
+    $node = $1;
+}
+else {
+    die $USAGE;
 }
 
-if ($event_node =~ /^(?:node)?(\d+)$/) {
-  $event_node = $1;
-} else {
-  print "Need to specify event node!\n";
-  die $USAGE;
+if ( $event_node =~ /^(?:node)?(\d+)$/ ) {
+    $event_node = $1;
+}
+else {
+    print "Need to specify event node!\n";
+    die $USAGE;
 }
 
 my $slonik = '';
@@ -66,4 +69,4 @@ $slonik .= genheader();
 $slonik .= "  drop node (id = $node, event node = $event_node);\n";
 $slonik .= "  echo 'dropped node $node cluster';\n";
 
-run_slonik_script($slonik, 'DROP NODE');
+run_slonik_script( $slonik, 'DROP NODE' );
