@@ -66,7 +66,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state,SlonNode * node);
 
 
 static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
-						  int origin_id, char * row, char * xid);
+						  int origin_id, int set_id,char * row, char * xid);
 
 static void 
 parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,XlogRecPtr walptr);
@@ -86,24 +86,18 @@ static int extract_row_metadata(SlonNode * node,
 								char * schema_name,
 								char * table_name,
 	                            char * xid_str,
-								int * origin_id,								
+								int * origin_id,
+								int * set_id,								
 								char * operation,
 								char ** cmdargs,
 	                            char * row);
 
-
-static bool xid_in_snapshot(SlonNode * node,
-							char * xid_c,
-							char * snapshot_p);
 
 
 static char * 
 parse_csv_token(char * str,  char  delim, char ** storage);
 
 
-static void drain_worker_queue(SlonNode * workerNode,SlonNode * listening_node,SlonWALState * state);
-static void push_seqlog_row(SlonNode * listening_node, SlonWALState * state, int origin_id,
-							char * cmdargs,XlogRecPtr walptr);
 /**
  * connect to the walsender and INIT a logical WAL slot
  *
@@ -348,11 +342,11 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 	/**
 	 * variables we lookup on the local node
 	 */
-	int origin_id;
-	
+	int origin_id=0;
+	int set_id=0;
 	char operation[2];
 	
-	char * cmdargs;
+	char * cmdargs=NULL;
 
 	/**
 	 * working variables;
@@ -361,7 +355,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 	char * tmp;
 
 	tmp = operation;
-	rc = extract_row_metadata(node,schema_name,table_name,xid_str,&origin_id,
+	rc = extract_row_metadata(node,schema_name,table_name,xid_str,&origin_id,&set_id,
 							  tmp,&cmdargs,row);
 	if( rc < 0 )
 	{
@@ -433,7 +427,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 *    and push this row onto it
 		 * 2. Release the connection back to the remoteWorker
 		 */		
-		push_copy_row(node,state,origin_id,row,xid_str);
+		push_copy_row(node,state,origin_id,set_id,row,xid_str);
 	}
 	return 0;
 		
@@ -464,8 +458,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 	int ev_origin=0;
 	SlonListen	* listenPtr=NULL;
 
-	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: inside of parseEvent %s\n",
-			 node->no_id,cmdargs+1);
+	
 	column=parse_csv_token(cmdargs+1,',',&saveptr);
 	do
 		 
@@ -723,7 +716,8 @@ static int extract_row_metadata(SlonNode * node,
 								char * schema_name,
 								char * table_name,
 	                            char * xid_str,
-								int * origin_id,								
+								int * origin_id,
+								int * set_id,
 								char * operation,
 								char ** cmdargs,
 	                            char * row)
@@ -733,7 +727,7 @@ static int extract_row_metadata(SlonNode * node,
 	 */
 	char * curptr;
 	char * prev_start;
-	bool start=true;
+    int column=0;
 	char table_id[64];
 	char action_seq[64];
 	char cmdncols[64];
@@ -755,7 +749,7 @@ static int extract_row_metadata(SlonNode * node,
 	{
 		if(*curptr == '\t')
 		{
-			if(start)
+			if(column==0)
 			{
 				/**
 				 * origin_id is the first column.
@@ -766,7 +760,20 @@ static int extract_row_metadata(SlonNode * node,
 				tmp_buf[curptr-prev_start]='\0';
 				*origin_id = strtol(tmp_buf,NULL, 10 );				
 				free(tmp_buf);
-				start=false;
+				column++;
+			}
+			else if(column == 1)
+			{
+				/**
+				 * set_id is the second column
+				 */
+				char * tmp_buf = malloc(curptr - prev_start );
+				memset(tmp_buf,0,curptr - prev_start );
+				strncpy(tmp_buf,prev_start, curptr-prev_start);
+				tmp_buf[curptr-prev_start]='\0';
+				*set_id = strtol(tmp_buf,NULL, 10 );				
+				free(tmp_buf);
+				column++;
 			}
 			else
 			{
@@ -776,6 +783,7 @@ static int extract_row_metadata(SlonNode * node,
 				strncpy(field_array[field_idx],prev_start,curptr - prev_start);
 				field_array[field_idx][curptr-prev_start]='\0';
 				field_idx++;		
+				column++;
 			}
 			prev_start = curptr+1;
 			
@@ -797,16 +805,12 @@ static int extract_row_metadata(SlonNode * node,
 }
 
 
-static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int origin_id, char * row,
+static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int origin_id, int set_id,char * row,
 						  char * xid)
 {
 	SlonNode * workerNode;
-	int active_log_table;
-	SlonDString copy_in;
-	PGresult * res1;
-	size_t rowlen;
+	SlonWALRecord * record;
 
-	int rc;
 	rtcfg_lock();
 	workerNode = rtcfg_findNode(origin_id);
 	if (workerNode == NULL)
@@ -826,109 +830,16 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 				 listening_node->no_id, origin_id);
 		return;
 	}
-
-	drain_worker_queue(workerNode,listening_node,state);
-
-	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: the message queue is empty\n",listening_node->no_id);
-	/**
-	 * at this stage the workerNode message queue is empty.
-	 * Check to see if the XID for this row has already been processed
-	 */
-
-	if(  xid_in_snapshot(listening_node,xid,workerNode->last_snapshot))
-	{
-		/**
-		 *
-		 * This row has already been committed. We can ignore it
-		 */
-		 
-		slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: ignoring row - already applied\n",
-				 listening_node->no_id);
-		pthread_mutex_unlock(&(workerNode->message_lock));
-		return;
-	}
-	pthread_mutex_unlock(&(workerNode->message_lock));
+	record = malloc(sizeof(SlonWALRecord));
+	memset(&record,0,sizeof(SlonWALRecord));
+	record->xid = xid;
+	record->row=row;
+	record->provider=listening_node->no_id;
+	record->set_id = set_id;
 	
-
-	/**
-	 * the problem we have is what if obtaining the mutex will 
-	 * require blocking.  We don't want to be blocking for this lock
-	 * so long that we don't send feedback to the WAL sender.
-	 * This can happen if the remoteWorkerThread is in a copy.
-	 * 
-	 */
-	while( pthread_mutex_trylock(&workerNode->worker_con_lock) != 0)
-	{
-
-		/**
-		 * we could not get the lock.
-		 * sendFeedback, sleep and try again.
-		 */
-		int64 now;
-		struct timeval tp;		
-		gettimeofday(&tp,NULL);
-		now  = (int64) (tp.tv_sec -
-						((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
-						* USECS_PER_SEC) + tp.tv_usec;
-		slon_log(SLON_INFO,"remoteWALListenerThread_%d: sending feedback while waiting on lock\n",
-				 listening_node->no_id);
-		sendFeedback(listening_node,state,state->last_committed_pos , now,false);
-		sleep( 1 );
-		
-	}
-
-	switch(workerNode->worker_con_status)
-	{
-
-	case SLON_WCON_IDLE:
-	case SLON_WCON_INTXN:
-		dstring_init(&copy_in);
-		slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d_%d: starting COPY\n",listening_node->no_id,workerNode->no_id);
-		active_log_table = get_active_log_table(workerNode,
-											workerNode->worker_dbconn);
-		slon_mkquery(&copy_in, "COPY %s.\"sl_log_%d\" ( log_origin, "	\
-				 "log_txid,log_tableid,log_actionseq,log_tablenspname, " \
-				 "log_tablerelname, log_cmdtype, log_cmdupdncols," \
-				 "log_cmdargs) FROM STDIN",
-				 rtcfg_namespace, active_log_table);
-		res1 = PQexec(workerNode->worker_dbconn,dstring_data(&copy_in));
-		if(PQresultStatus(res1) != PGRES_COPY_IN)
-		{
-			slon_log(SLON_ERROR,"remoteWALListenerThread_%d_%d: error " \
-					 "executing COPY IN:%s\n",listening_node->no_id,
-					 origin_id, PQresultErrorMessage(res1 ));
-			dstring_free(&copy_in);
-			PQclear(res1);
-			slon_retry();
-		}
-		PQclear(res1);
-		dstring_free(&copy_in);
-		workerNode->worker_con_status = SLON_WCON_INCOPY;
-	case SLON_WCON_INCOPY:
-		slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d: COPY IN ROW: %s",listening_node->no_id,row);
-		/**
-		 * replace the NULL at the end of row (PQgetCopyData promises this to be true) 
-		 * with a \n to mark the end of the row. 
-		 */
-		rowlen = strlen(row);
-		row[rowlen] = '\n';
-		rc = PQputCopyData(workerNode->worker_dbconn, row, rowlen+1);
-		if (rc != 1)
-		{
-			/**
-			 * deal with the error
-			 */
-			slon_log(SLON_ERROR,"remoteWALListenerThread_%d_%d: error writing"\
-					 " to sl_log:%s\n",listening_node->no_id, origin_id,
-					 PQerrorMessage(workerNode->worker_dbconn));
-			
-			slon_retry();
-		}
-		break;
-		
-
-	}				   
-	pthread_mutex_unlock(&(workerNode->worker_con_lock));
+	remoteWorker_wal_append(origin_id,record);
+	
+	
 	
 	
 }
@@ -1172,99 +1083,6 @@ void remote_wal_processed(XlogRecPtr confirmed, int no_id)
 	pthread_mutex_unlock(&state_list_lock);
 }
 
-/**
- * is the XID committed at the time of the snaphsot.
- * 
- *  snapshot is of the form   minxip:maxxipactive_xips
- *  
- *  If xid < minxip the transaction is committed
- *  If xid > maxip The transaction is not committed
- *  If xid is listed in the active list then it is not commited
- *  else it is committed
- */
-static bool xid_in_snapshot(SlonNode * node,
-							char * xid_c,
-							char * snapshot_p)
-{
-	char * state;
-	char * minxid_c;
-	char * ip_list;
-	char * maxxid_c;
-	char * elem;
-	int64 xid;
-	int64 minxid;
-	int64 maxxid;
-	char * snapshot;
-
-	/**
-	 * copy snapshot so strtok doesn't change it
-	 */
-	snapshot = malloc(strlen(snapshot_p)+1);
-	strcpy(snapshot,snapshot_p);
-#if 0 
-	slon_log(SLON_DEBUG2,"remoteWALListener_%d: comparing %s and %s\n",
-			 node->no_id, xid_c,snapshot_p);
-#endif
-	minxid_c = strtok_r(snapshot,":",&state);
-	if ( minxid_c == NULL)
-	{
-		/**
-		 * parse error
-		 */
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
-		slon_retry();
-	}
-	
-	xid = strtoll(xid_c,NULL,10);
-	minxid = strtoll(minxid_c,NULL,10);
-	if ( xid < minxid )
-	{
-		free(snapshot);
-		return true;
-	}
-
-	maxxid_c = strtok_r(NULL,":", &state);
-	if (maxxid_c == NULL)
-	{
-		/**
-		 * parse error
-		 */
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
-		slon_retry();
-	}
-	maxxid = strtoll(maxxid_c,NULL,10);
-	if ( xid > maxxid ) {
-		free(snapshot);
-		return false;
-	}
-	
-
-	ip_list = strtok_r(NULL,":",&state);
-	
-	if ( ip_list == NULL) 
-	{
-		/**
-		 * parse error
-		 */
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
-		slon_retry();
-	}
-
-	for( elem = strtok_r(ip_list,",",&state); elem != NULL; elem = strtok_r(NULL,",",&state))
-	{
-		if (strcmp(elem,xid_c)==0)
-		{
-			/**
-			 * this transaction is in progress.
-			 */
-			free(snapshot);
-			return false;
-		}
-		
-	}
-	free(snapshot);
-	return true;
-}
 
 static char * 
 parse_csv_token(char * str,  char  delim, char ** storage)
@@ -1323,149 +1141,4 @@ parse_csv_token(char * str,  char  delim, char ** storage)
 	}
 	
 	return NULL;
-}
-
-
-static void push_seqlog_row(SlonNode * listening_node, SlonWALState * state, int origin_id,
-							char * cmdargs,XlogRecPtr walptr)
-{
-
-	char * column;
-	char * value;
-	char * saveptr;
-	char * seqid=NULL;
-	char * seqno=NULL;
-	char * last_value=NULL;
-	SlonDString query;
-	SlonNode * workerNode;
-	PGresult * res;
-	int value_len;
-
-	column = parse_csv_token(cmdargs+1,',',&saveptr);
-	dstring_init(&query);
-	/**
-	 * 
-	 */
-	do 
-	{
-		value = parse_csv_token(NULL,',',&saveptr);
-		value_len = strlen(value);
-		if(value[value_len-1]=='}')
-		{
-			value[value_len-1]='\0';
-		}		
-		if ( strcmp(column, "seql_seqid") == 0 )
-		{
-			seqid = value;
-		}
-		else if (strcmp(column,"seql_ev_seqno") == 0)
-		{
-			seqno = value;
-		}
-		else if (strcmp(column,"seql_last_value") == 0)
-		{
-			last_value = value;
-		}
-		
-	} while ( (column = parse_csv_token(NULL,',',&saveptr)) != NULL );
-	
-	slon_mkquery(&query,
-				 "select %s.sequenceSetValue(%s,%d,'%s','%s');",
-				 rtcfg_namespace,seqid, origin_id,seqno,last_value);
-	rtcfg_lock();
-	workerNode = rtcfg_findNode(origin_id);
-	if (workerNode == NULL)
-	{
-		rtcfg_unlock();
-		slon_log(SLON_WARN,
-				 "remoteWALListenerThread_%d: unknown origin %d\n",
-				 listening_node->no_id, origin_id);
-
-		return;
-	}
-	rtcfg_unlock();
-	if (!listening_node->no_active)
-	{
-		slon_log(SLON_WARN,
-				 "remoteWALListenerThread_%d: worker  %d is not active\n",
-				 listening_node->no_id, origin_id);
-		return;
-	}
-	drain_worker_queue(workerNode,listening_node,state);	
-	pthread_mutex_lock(&workerNode->worker_con_lock);
-	switch(workerNode->worker_con_status)
-	{
-		
-		case SLON_WCON_IDLE:
-			PQexec(workerNode->worker_dbconn,"start transaction;");
-			workerNode->worker_con_status = SLON_WCON_INTXN;
-			break;
-		case SLON_WCON_INCOPY:
-			if ( PQputCopyEnd(workerNode->worker_dbconn,NULL) != 1 )
-			{
-				slon_log(SLON_ERROR,"remoteWALListener_%d_%d error ending COPY:\n",listening_node->no_id,
-					workerNode->no_id);
-				slon_retry();			 
-			}
-			res = PQgetResult(workerNode->worker_dbconn);
-			if ( PQresultStatus(res) != PGRES_COMMAND_OK )
-			{
-				slon_log(SLON_ERROR,"remoteWALListenerThread_%d error in COPY:%s\n",listening_node->no_id,
-						 PQresultErrorMessage(res));
-				slon_retry();
-			}
-			PQclear(res);
-			workerNode->worker_con_status = SLON_WCON_INTXN;
-			break;
-		case SLON_WCON_INTXN:
-			break;
-	}
-	res = PQexec(workerNode->worker_dbconn,dstring_data(&query));
-	if ( PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		slon_log(SLON_ERROR,"remoteWALListenerThread_%d : error setting sequences: %s",
-				 listening_node->no_id,PQresultErrorMessage(res));
-		slon_retry();
-	}
-	PQclear(res);
-	pthread_mutex_unlock(&(workerNode->worker_con_lock));
-	pthread_mutex_unlock(&(workerNode->message_lock));
-	dstring_terminate(&query);
-	
-}
-
-static void drain_worker_queue(SlonNode * workerNode,SlonNode * listening_node,SlonWALState * state)
-{
-	/**
-	 * Wait until the message queue is empty.
-	 * We do this so we can get a good guess at 
-	 * the sl_setsync value to compare this row against
-	 * to figure out if it has already been applied.
-	 */
-	pthread_mutex_lock(&(workerNode->message_lock));
-
-	while ( workerNode->message_head != NULL)
-	{
-		struct timespec timeval;
-		int64 now;
-		struct timeval tp;		
-
-		timeval.tv_sec = 5;
-		timeval.tv_nsec = 0;
-		pthread_cond_timedwait(&(workerNode->message_cond),&(workerNode->message_lock),&timeval);
-	
-		gettimeofday(&tp,NULL);
-		now  = (int64) (tp.tv_sec -
-						((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
-						* USECS_PER_SEC) + tp.tv_usec;
-		/** 
-		 * have the lock.
-		 * release it , send feedback and re-aquire it.
-		 * we don't want to hold the lock while we send a network message
-		 */
-		pthread_mutex_unlock(&(workerNode->message_lock));
-		sendFeedback(listening_node,state,state->last_committed_pos , now,false);
-		pthread_mutex_lock(&(workerNode->message_lock));
-		
-	}
 }

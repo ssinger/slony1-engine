@@ -65,7 +65,7 @@ var tests =
      //,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
 
-tests=[new LogicalRepTest(coordinator,results)];
+//tests=[new LogicalRepTest(coordinator,results)];
 
 //tests=[new Failover(coordinator,results),
 //	   new MultinodeFailover(coordinator,results)

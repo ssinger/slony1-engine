@@ -60,7 +60,7 @@ char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx);
 
 static int 
 lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx,
-				int * origin_id, int * table_id);
+				int * origin_id, int * table_id,int * set_id);
 
 
 unsigned int local_id=0;
@@ -213,6 +213,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	const char * namespace;
 	int origin_id=0;
 	int table_id=0;
+	int set_id=0;
 
 	old = MemoryContextSwitchTo(context);
 	ctx->prepare_write(ctx,txn->final_lsn,txn->xid);
@@ -221,7 +222,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 
 	namespace=quote_identifier(get_namespace_name(class_form->relnamespace));
 	table_name=quote_identifier(NameStr(class_form->relname));
-	lookupSlonyInfo(relation->rd_id,ctx, &origin_id,&table_id);
+	lookupSlonyInfo(relation->rd_id,ctx, &origin_id,&table_id,&set_id);
 	if( origin_id <= 0 ) 
 	{
 
@@ -504,8 +505,9 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
 	ReleaseSysCache(array_type_tuple);
-	appendStringInfo(ctx->out,"%d\t%u\t%d\t%u\t%s\t%s\t%c\t%d\t%s"
+	appendStringInfo(ctx->out,"%d\t%d\t%u\t%d\t%u\t%s\t%s\t%c\t%d\t%s"
 					 ,origin_id
+					 ,set_id
 					 ,txn->xid
 					 ,table_id
 					 ,0 /*actionseq*/
@@ -588,7 +590,7 @@ bool is_replicated(const char * namespace,const char * table)
 
 static int 
 lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
-	int * table_id)
+				int * table_id,int * set_id)
 {
   Oid sltable_oid;
   Oid slony_namespace;
@@ -694,7 +696,7 @@ lookupSlonyInfo(Oid tableOid,LogicalDecodingContext * ctx, int * origin_id,
 		  if ( isnull )
 			  elog(ERROR,"tab_set is null for table with oid %d",
 				  tableOid);
-
+		  *set_id = retval;
 		  /**
 		   * Now find the current origin for that table
 		   * in sl_set

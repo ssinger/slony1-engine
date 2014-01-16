@@ -128,6 +128,25 @@ struct SlonState_s
 	char	   *event_type;
 };
 
+/**
+ * SlonWALRecord 
+ **/
+
+struct SlonWALRecord_s
+{
+	bool is_sync;
+	char * xid;
+	char * row;
+	char * event;
+	int provider;
+	int set_id;
+	struct SlonWALRecord_s * next;
+	struct SlonWALRecord_s * prev;
+};
+
+typedef struct SlonWALRecord_s SlonWALRecord;
+
+
 /* ----------
  * SlonNode
  * ----------
@@ -162,8 +181,12 @@ struct SlonNode_s
 
 	SlonWorkerConnectionStatus worker_con_status;  /* The status of the worker*/
 	pthread_mutex_t worker_con_lock;  /* mutex for th worker_dbcon */
-	PGconn  * worker_dbconn;
+	PGconn  * worker_dbconn; 
 
+	SlonWALRecord * wal_queue;   /* the list of WAL records to process */
+	SlonWALRecord * wal_queue_tail; 
+	pthread_mutex_t wal_queue_lock;  /*mutex protecting the WAL queue */
+	pthread_cond_t wal_queue_cond;
 
 	char	   *archive_name;
 	char	   *archive_temp;
@@ -227,6 +250,8 @@ struct SlonConn_s
 	SlonConn   *prev;
 	SlonConn   *next;
 };
+
+
 
 /* ----------
  * SlonDString
@@ -632,6 +657,7 @@ extern void remoteWorker_confirm(int no_id,
 					 char *con_origin_c, char *con_received_c,
 					 char *con_seqno_c, char *con_timestamp_c);
 
+extern void remoteWorker_wal_append(int ev_origin,SlonWALRecord * new_record);
 
 int get_active_log_table(SlonNode * node,
 					 PGconn* local_dbconn);

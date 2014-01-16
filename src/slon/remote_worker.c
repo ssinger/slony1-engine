@@ -269,6 +269,8 @@ static int copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 static int sync_event(SlonNode * node, SlonConn * local_conn,
 		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 static int	sync_helper(void *cdata, PGconn *local_dbconn);
+static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync_event_no,
+						   PGconn * local_conn,char * sync_snapshot);
 
 int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
 						   char * seqbuf,ProviderInfo * provider,PerfMon * pm,
@@ -293,7 +295,9 @@ static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
 #endif
 
 static void lock_workercon(SlonNode * node);
-
+static bool xid_in_snapshot(SlonNode * node,
+							char * xid_c,
+							char * snapshot_p);
 
 /* ----------
  * slon_remoteWorkerThread
@@ -363,6 +367,10 @@ remoteWorkerThread_main(void *cdata)
 	pthread_mutex_lock(&(node->worker_con_lock));
 	node->worker_dbconn = local_conn->dbconn;
 	node->worker_con_status=SLON_WCON_IDLE;
+
+	node->wal_queue = NULL;
+	pthread_mutex_init(&(node->wal_queue_lock),0);
+	pthread_cond_init(&(node->wal_queue_cond),0);
 
 	monitor_state(conn_symname, node->no_id, local_conn->conn_pid, "thread main loop", 0, "n/a");
 
@@ -4008,7 +4016,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 * Only go through the trouble of looking up the setsync and tables if
 		 * we actually use this provider for data.
 		 */
-		if (provider->set_head != NULL)
+		if (provider->set_head != NULL && provider->pa_walsender==false)
 		{
 			rc = construct_sl_log_query(node,local_conn,seqbuf,provider,
 										&pm,event,&min_ssy_seqno,
@@ -4022,6 +4030,15 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			}
 			else if (rc < 0 )
 				continue;
+		}
+		else if (provider->set_head != NULL)
+		{
+
+			/**
+			 * walsender provider.
+			 * configured the provider so it knows what snapshot to read ???
+			 * 
+			 */
 		}
 
 		/*
@@ -4120,7 +4137,16 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
 		 */
-		num_errors += sync_helper((void *) provider, local_dbconn);
+		if ( provider->pa_walsender)
+		{
+			num_errors += sync_helper((void *) provider, local_dbconn);
+		}
+		else
+		{
+			num_errors += sync_wal_helper(node,provider /*sync_event_no*/
+										  ,seqbuf
+										  ,local_dbconn,event->ev_snapshot_c);
+		}
 	}
 
 
@@ -5853,4 +5879,510 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 	PQclear(res1);
 	dstring_terminate(&query);
 	return 0;
+}
+
+
+/**
+ * a logical WAL replication verison of sync_helper
+ *
+ *
+ */
+static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync_event_no,
+						   PGconn * local_conn,char * sync_snapshot)
+{
+	SlonWALRecord * iterator;
+	SlonWALRecord * prev_record;
+
+	SlonDString copy_in;
+	SlonDString query;
+	WorkerGroupData *wd = provider->wd;	
+	PGresult   *res = NULL;
+	PGresult   *res2=NULL;
+	int errors;
+	int rc;
+	int rc2;
+	int retcode = 0;
+	int subscribed_sets=0;
+	int tupno;
+	char ** last_snapshots=NULL;
+	int * snapshot_sets=NULL;
+	int idx;
+
+	
+	dstring_init(&query);
+	slon_mkquery(&query,"select SSY.ssy_setid,SSY.ssy_snapsot "
+				 " from %s.sl_setsync SSY "
+				 " where SSY.ssy_origin=%d"
+				 , rtcfg_namespace,node->no_id);
+	res = PQexec(local_conn,dstring_data(&query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: \"%s\" %s",
+				 node->no_id, dstring_data(&query),
+				 PQresultErrorMessage(res));
+		PQclear(res);
+		dstring_free(&query);	   
+		return 60;
+	}
+	subscribed_sets = PQntuples(res);
+	if ( subscribed_sets == 0)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d: no sets in sl_setsync",
+				 node->no_id);
+			PQclear(res);
+		dstring_free(&query);	   
+		return 60;
+	}
+	
+	snapshot_sets = malloc(sizeof(int) * subscribed_sets);
+	last_snapshots = malloc(sizeof(char*) * subscribed_sets);
+	for(tupno = 0 ; tupno < subscribed_sets; tupno++)
+	{
+		last_snapshots[tupno] = PQgetvalue(res,tupno,0);
+		snapshot_sets[tupno] = atoi(PQgetvalue(res,tupno,1));
+	}
+	
+	/**
+	 * execute the COPY on the local node to write the log data.
+	 *
+	 */
+	dstring_init(&copy_in);
+	slon_mkquery(&copy_in, "COPY %s.\"sl_log_%d\" ( log_origin, " \
+				 "log_txid,log_tableid,log_actionseq,log_tablenspname, " \
+				 "log_tablerelname, log_cmdtype, log_cmdupdncols," \
+				 "log_cmdargs) FROM STDIN",
+				 rtcfg_namespace, wd->active_log_table);
+
+	res = PQexec(local_conn, dstring_data(&copy_in));
+	
+	if (PQresultStatus(res) != PGRES_COPY_IN)
+	{
+
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error executing COPY IN: \"%s\" %s",
+				 node->no_id, provider->no_id,
+				 dstring_data(&copy_in),
+				 PQresultErrorMessage(res2));
+		errors++;
+		dstring_free(&copy_in);
+		PQclear(res);
+		res = NULL;
+		retcode = 60;
+		goto cleanup;
+
+	}
+	if (archive_dir)
+	{
+		SlonDString log_copy;
+
+		dstring_init(&log_copy);
+		slon_mkquery(&log_copy, "COPY %s.\"sl_log_archive\" ( log_origin, " \
+					 "log_txid,log_tableid,log_actionseq,log_tablenspname, " \
+					 "log_tablerelname, log_cmdtype, log_cmdupdncols," \
+					 "log_cmdargs) FROM STDIN;",
+					 rtcfg_namespace);
+		archive_append_ds(node, &log_copy);
+		dstring_free(&log_copy);
+
+
+	}
+	dstring_free(&copy_in);
+	tupno = 0;
+	PQclear(res);
+	res=NULL;
+
+	/**
+	 * Get the next row-record from the remote_wal_listener queue of the provider
+	 * FOR this origin.
+	 *
+	 *
+	 * If the row-record is for 'this SYNC' we stop processing.
+	 * Otherwise   If the record isn't part of this SYNC we skip past it
+	 * otherwise we remove it and apply it
+	 */
+	
+	pthread_mutex_lock(&(node->wal_queue_lock));
+	iterator = node->wal_queue;
+	while(true)
+	{
+		/**
+		 * loop until we find the SYNC record indicating this SYNC is finished
+		 */
+
+		if(iterator == NULL)
+		{
+			/**
+			 * no more records left in the queue.
+			 * block until signalled that more exist.
+			 */
+			pthread_cond_wait(&(node->wal_queue_cond),&(node->wal_queue_lock));
+			iterator=node->wal_queue;
+			continue;
+		}
+	
+		if(iterator->is_sync && strcmp(iterator->event,sync_event_no) ==0 )
+		{
+			/**
+			 * If this is a SYNC, is it the SYNC we are processing to.
+			 * If so this tells us that we can stop and commit the SYNC
+			 * as soon as the XID changes?
+			 */
+			break;
+		}
+		else if (iterator->is_sync)
+		{
+			iterator = iterator->next;
+			continue;
+		}
+		
+		/**
+		 * Is this row part of the snapshot of the current SYNC?
+		 * (was it committed at the time of the current SYNC)
+		 * 
+		 * Issue: If provider is not the origin then sl_event contains
+		 *        a ssy_snapshot using the origin xid space
+		 *
+		 *  Lemma 1: A non-origin provider will never commit a transaction 
+		 *           from the
+		 *           set origin in a transaction earlier than the 
+		 *           SYNC for which ssy_snapshot says it should be
+		 *           applied
+		 *  Proof:		          
+		 *           If the provider is pulling from a wal source
+		 *           that is not the origin then this will be true
+		 *           by induction(lemma 1)
+		 *        
+		 *           If the provider is pulling from a non-origin
+		 *           trigger based provider, then it will only pull
+		 *           rows from sl_log_1/2 with xid values
+		 *           dicated by the snapshot. This is the
+		 *           sl_log_1 and sl_log_2 selects work.
+		 *
+		 *           If the provider is pulling from a wal origin
+		 *           then the provider will apply the data rows
+		 *           and the SYNC for those rows in a single transaction
+		 *           that transaction will be passed to the decoder
+		 *           plugin as a single transaction not interleaved
+		 *           with any other transactions. 
+		 *
+		 *  Because of Lemma 1 we will never see rows from a non-origin 
+		 *  earlier than the transaction SYNC that includes them.
+		 */
+		if(iterator->provider == node->no_id)
+		{
+			/**
+			 * The provider is the set origin.  Consider the
+			 * following order of events
+			 * T1 - Begin
+			 * T1 - insert some data rows
+			 * T2 -BEGIN
+			 * T2 - gets it snapshot id() for a SYNC 1234 in sl_event
+			 * T1 - COMMIT
+			 * T2 - COMMIT
+			 * 
+			 * The wal decoder will get T1 before T2 but T1 actually isn't
+			 * part of the SYNC 1234 because it is still_in_progress according
+			 * to the snapshot attached with SYNC 1234.
+			 * 
+			 * Check of this condition, if the records xid is not part of the current
+			 * snapshot we skip this row.
+			 */
+			
+			/**
+			 * release the lock on the queue while we communicate with the databsae
+			 */
+			pthread_mutex_unlock(&(node->wal_queue_lock));
+
+
+			if(!xid_in_snapshot(node,iterator->xid,sync_snapshot))
+			{
+				/**
+				 * skip this record. The transaction has not yet committed in this SYNC.
+				 */
+				pthread_mutex_lock(&(node->wal_queue_lock));
+				iterator=iterator->next;
+				continue;
+			}
+			
+			/**
+			 * is this row part of a transaction that we have already applied
+			 * We need to this xid against the ssy_snapshot we last used.?
+			 *
+			 * 
+			 */
+			
+			for(idx  = 0; idx < subscribed_sets; idx++)
+			{
+				if ( snapshot_sets[idx] == iterator->set_id)
+					break;
+			}
+			if ( idx == subscribed_sets)
+			{
+				slon_log(SLON_ERROR,"remoteWorkerThread_%d: set %d not found in list from sl_setsync"
+						 , node->no_id, iterator->set_id);
+				retcode = 60;
+				goto cleanup;
+				
+			}
+			
+			if(xid_in_snapshot(node,iterator->xid,last_snapshots[idx]))
+			{
+				/**
+				 * we have already applied this transaction.
+				 */
+				pthread_mutex_lock(&(node->wal_queue_lock));
+				iterator=iterator->next;
+				continue;
+				
+			}
+			
+			
+			/**
+			 * apply the row.
+			 */
+			rc = PQputCopyData(local_conn, iterator->row, strlen(iterator->row));
+			if (rc < 0)
+			{
+				slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error writing" \
+						 " to sl_log: %s\n",
+						 node->no_id, provider->no_id,
+						 PQerrorMessage(local_conn));
+				errors++;
+				break;
+				
+			}
+
+			pthread_mutex_lock(&(node->wal_queue_lock));
+			if(iterator->prev == NULL)
+			{
+				node->wal_queue = NULL;
+			}
+			else
+			{
+				iterator->prev->next = iterator->next;
+			}
+			if( iterator == node->wal_queue_tail)
+			{
+				node->wal_queue_tail = iterator->prev;
+			}
+			prev_record = iterator;
+			iterator = iterator->next;
+			
+			free(prev_record->row);
+			free(prev_record);
+		}
+		else
+		{
+			/**
+			 * this row is was received from a forwarder
+			 *
+			 * This means that the XID in row does not match
+			 * the XID space of the SYNC.
+			 *
+			 * Lemma (1) from above means that we don't see this row too early
+			 * but it is possible that this row has already been processed.
+			 *
+			 * Consider a resubscribe set
+			 * where before  1---->2
+			 *                \3
+			 * is changed to 1--->2-->3
+			 * 
+			 * It is possible that at the resubcribe point
+			 * 
+			 *      2 has just commited a SYNC group with 1,1001,1002
+			 *      3 has SYNC 1,1001 but not 1,1002
+			 *      
+			 *   This means we need some of the rows in the transaction we see from 2's WAL stream
+			 *   but not others.
+			 *   
+			 */
+			slon_log(SLON_ERROR,"remoteWorkerThread_%d: cascading from a logical replica not yet supported\n",
+					 node->no_id);
+			
+		}
+	}
+		
+	rc = PQputCopyEnd(local_conn, NULL);
+	if (rc < 0)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error ending copy"
+				 " to sl_log:%s\n",
+				 node->no_id, provider->no_id,
+				 PQerrorMessage(local_conn));
+		errors++;
+	}
+
+	if (archive_dir)
+	{
+		archive_append_str(node, "\\.");
+	
+	}
+	if (res != NULL)
+	{
+		PQclear(res);
+		res = NULL;
+	}
+	res = PQgetResult(local_conn);
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error at end of COPY OUT: %s",
+				 node->no_id, provider->no_id,
+				 PQresultErrorMessage(res));
+		errors++;
+	}
+cleanup:
+	for(tupno = 0; tupno < subscribed_sets; tupno++)
+	{
+		PQfreemem(last_snapshots[tupno]);
+	}
+	if ( last_snapshots != NULL)
+		free(last_snapshots);
+	if(snapshot_sets != NULL)
+		free(snapshot_sets);
+	return retcode;
+
+}
+
+void remoteWorker_wal_append(int ev_origin,SlonWALRecord * new_record)
+{
+	SlonNode * node;
+	/*
+	 * Find the node, make sure it is active
+	 */
+	rtcfg_lock();
+	node = rtcfg_findNode(ev_origin);
+	if (node == NULL)
+	{
+		rtcfg_unlock();
+		slon_log(SLON_WARN,
+				 "remoteWorker_wal_append: %d "
+				 " ignored - unknown origin\n",
+				 ev_origin);
+		return;
+	}
+	if (!node->no_active)
+	{
+		rtcfg_unlock();
+		slon_log(SLON_WARN,
+				 "remoteWorker_wal_append: event %d," 
+				 " ignored - origin inactive\n",
+				 ev_origin);
+		return;
+	}
+	rtcfg_unlock();
+
+	pthread_mutex_lock(&(node->wal_queue_lock));
+	if( node->wal_queue == NULL && node->wal_queue_tail == NULL)
+	{
+
+		node->wal_queue = new_record;
+		node->wal_queue_tail = node->wal_queue;
+
+	}
+	else
+	{
+		new_record->prev = node->wal_queue_tail;
+		node->wal_queue_tail = new_record;
+		if(new_record->prev != NULL)
+		{
+			new_record->prev->next = new_record;
+		}
+	}
+	pthread_cond_signal(&(node->wal_queue_cond));
+	pthread_mutex_unlock(&(node->wal_queue_lock));
+
+}
+
+
+/**
+ * is the XID committed at the time of the snaphsot.
+ * 
+ *  snapshot is of the form   minxip:maxxipactive_xips
+ *  
+ *  If xid < minxip the transaction is committed
+ *  If xid > maxip The transaction is not committed
+ *  If xid is listed in the active list then it is not commited
+ *  else it is committed
+ */
+static bool xid_in_snapshot(SlonNode * node,
+							char * xid_c,
+							char * snapshot_p)
+{
+	char * state;
+	char * minxid_c;
+	char * ip_list;
+	char * maxxid_c;
+	char * elem;
+	int64 xid;
+	int64 minxid;
+	int64 maxxid;
+	char * snapshot;
+
+	/**
+	 * copy snapshot so strtok doesn't change it
+	 */
+	snapshot = malloc(strlen(snapshot_p)+1);
+	strcpy(snapshot,snapshot_p);
+#if 0 
+	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: comparing %s and %s\n",
+			 node->no_id, xid_c,snapshot_p);
+#endif
+	minxid_c = strtok_r(snapshot,":",&state);
+	if ( minxid_c == NULL)
+	{
+		/**
+		 * parse error
+		 */
+		slon_log(SLON_ERROR,"remoteWorkerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_retry();
+	}
+	
+	xid = strtoll(xid_c,NULL,10);
+	minxid = strtoll(minxid_c,NULL,10);
+	if ( xid < minxid )
+	{
+		free(snapshot);
+		return true;
+	}
+
+	maxxid_c = strtok_r(NULL,":", &state);
+	if (maxxid_c == NULL)
+	{
+		/**
+		 * parse error
+		 */
+		slon_log(SLON_ERROR,"remoteWorkerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_retry();
+	}
+	maxxid = strtoll(maxxid_c,NULL,10);
+	if ( xid > maxxid ) {
+		free(snapshot);
+		return false;
+	}
+	
+
+	ip_list = strtok_r(NULL,":",&state);
+	
+	if ( ip_list == NULL) 
+	{
+		/**
+		 * parse error
+		 */
+		slon_log(SLON_ERROR,"remoteWorkerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_retry();
+	}
+
+	for( elem = strtok_r(ip_list,",",&state); elem != NULL; elem = strtok_r(NULL,",",&state))
+	{
+		if (strcmp(elem,xid_c)==0)
+		{
+			/**
+			 * this transaction is in progress.
+			 */
+			free(snapshot);
+			return false;
+		}
+		
+	}
+	free(snapshot);
+	return true;
 }
