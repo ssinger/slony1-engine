@@ -41,8 +41,6 @@
 #if 0 
 PG_MODULE_MAGIC;
 #endif
-void _PG_init(void);
-
 
 extern void pg_decode_init(LogicalDecodingContext * ctx, bool is_init);
 
@@ -55,6 +53,9 @@ extern void pg_decode_change(LogicalDecodingContext * ctx,
 							 Relation relation, ReorderBufferChange *change);
 
 extern bool pg_decode_clean(LogicalDecodingContext * ctx);
+extern void
+_PG_output_plugin_init(OutputPluginCallbacks * cb);
+extern void pg_decode_shutdown(LogicalDecodingContext * ctx);
 
 char * columnAsText(TupleDesc tupdesc, HeapTuple tuple,int idx);
 
@@ -96,10 +97,22 @@ static int lookup_origin(const char * namespace, const char * table);
 #endif
 
 void
-_PG_init(void)
+_PG_output_plugin_init(OutputPluginCallbacks * cb)
 {
+	cb->startup_cb = pg_decode_init;
+	cb->begin_cb = pg_decode_begin_txn;
+	cb->commit_cb = pg_decode_commit_txn;
+	cb->change_cb = pg_decode_change;
+	cb->shutdown_cb = pg_decode_shutdown;
 }
 
+
+void pg_decode_shutdown(LogicalDecodingContext * ctx)
+{
+	/**
+	 * free  /ctx->output_plugin_private
+	 */
+}
 
 
 
@@ -116,7 +129,7 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 									 ALLOCSET_DEFAULT_MAXSIZE);
 
 
-	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeInitCB);
+	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeStartupCB);
 	MemoryContext context = (MemoryContext)ctx->output_plugin_private;
 	MemoryContext old = MemoryContextSwitchTo(context);
 											
@@ -216,8 +229,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	int set_id=0;
 
 	old = MemoryContextSwitchTo(context);
-	ctx->prepare_write(ctx,txn->final_lsn,txn->xid);
-
+	OutputPluginPrepareWrite(ctx,true);
 	
 
 	namespace=quote_identifier(get_namespace_name(class_form->relnamespace));
@@ -522,7 +534,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	
 	
 	MemoryContextSwitchTo(old);
-	ctx->write(ctx,txn->final_lsn,txn->xid);
+	OutputPluginWrite(ctx,true);
 }
 
 

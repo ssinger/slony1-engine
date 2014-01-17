@@ -5910,7 +5910,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 
 	
 	dstring_init(&query);
-	slon_mkquery(&query,"select SSY.ssy_setid,SSY.ssy_snapsot "
+	slon_mkquery(&query,"select SSY.ssy_setid,SSY.ssy_snapshot "
 				 " from %s.sl_setsync SSY "
 				 " where SSY.ssy_origin=%d"
 				 , rtcfg_namespace,node->no_id);
@@ -5927,11 +5927,11 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 	subscribed_sets = PQntuples(res);
 	if ( subscribed_sets == 0)
 	{
-		slon_log(SLON_ERROR, "remoteWorkerThread_%d: no sets in sl_setsync",
+		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: no sets in sl_setsync",
 				 node->no_id);
 			PQclear(res);
 		dstring_free(&query);	   
-		return 60;
+		return 0;
 	}
 	
 	snapshot_sets = malloc(sizeof(int) * subscribed_sets);
