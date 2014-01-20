@@ -137,7 +137,7 @@ struct SlonWALRecord_s
 	bool is_sync;
 	char * xid;
 	char * row;
-	char * event;
+	int64 event;
 	int provider;
 	int set_id;
 	struct SlonWALRecord_s * next;

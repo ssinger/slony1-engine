@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #endif
-
+#include <assert.h>
 
 #include "slon.h"
 #include "../parsestatements/scanner.h"
@@ -269,7 +269,8 @@ static int copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 static int sync_event(SlonNode * node, SlonConn * local_conn,
 		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 static int	sync_helper(void *cdata, PGconn *local_dbconn);
-static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync_event_no,
+static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, 
+						   int64 sync_event_no,
 						   PGconn * local_conn,char * sync_snapshot);
 
 int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
@@ -298,7 +299,8 @@ static void lock_workercon(SlonNode * node);
 static bool xid_in_snapshot(SlonNode * node,
 							char * xid_c,
 							char * snapshot_p);
-
+static SlonWALRecord * 
+remoteWorker_wal_remove(SlonNode * node, SlonWALRecord * record);
 /* ----------
  * slon_remoteWorkerThread
  *
@@ -4137,14 +4139,14 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
 		 */
-		if ( provider->pa_walsender)
+		if ( ! provider->pa_walsender)
 		{
 			num_errors += sync_helper((void *) provider, local_dbconn);
 		}
 		else
 		{
 			num_errors += sync_wal_helper(node,provider /*sync_event_no*/
-										  ,seqbuf
+										  ,event->ev_seqno
 										  ,local_dbconn,event->ev_snapshot_c);
 		}
 	}
@@ -4528,7 +4530,8 @@ sync_helper(void *cdata, PGconn *local_conn)
 	 */
 	dstring_init(&copy_in);
 	slon_mkquery(&copy_in, "COPY %s.\"sl_log_%d\" ( log_origin, " \
-				 "log_txid,log_tableid,log_actionseq,log_tablenspname, " \
+				 "log_txid,log_tableid,log_actionseq," \
+				 "log_tablenspname, " \
 				 "log_tablerelname, log_cmdtype, log_cmdupdncols," \
 				 "log_cmdargs) FROM STDIN",
 				 rtcfg_namespace, wd->active_log_table);
@@ -5887,7 +5890,8 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
  *
  *
  */
-static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync_event_no,
+static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, 
+						   int64 sync_event_no,
 						   PGconn * local_conn,char * sync_snapshot)
 {
 	SlonWALRecord * iterator;
@@ -5908,7 +5912,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 	int * snapshot_sets=NULL;
 	int idx;
 
-	
+	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d in sync_wal_helper\n",
+			 node->no_id);
 	dstring_init(&query);
 	slon_mkquery(&query,"select SSY.ssy_setid,SSY.ssy_snapshot "
 				 " from %s.sl_setsync SSY "
@@ -5938,10 +5943,10 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 	last_snapshots = malloc(sizeof(char*) * subscribed_sets);
 	for(tupno = 0 ; tupno < subscribed_sets; tupno++)
 	{
-		last_snapshots[tupno] = PQgetvalue(res,tupno,0);
-		snapshot_sets[tupno] = atoi(PQgetvalue(res,tupno,1));
+		snapshot_sets[tupno] = atoi(PQgetvalue(res,tupno,0));
+		last_snapshots[tupno] = strdup(PQgetvalue(res,tupno,1));
 	}
-	
+	PQclear(res);
 	/**
 	 * execute the COPY on the local node to write the log data.
 	 *
@@ -6014,23 +6019,37 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 			 * no more records left in the queue.
 			 * block until signalled that more exist.
 			 */
+			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: waiting for more\n"
+					 ,node->no_id);
 			pthread_cond_wait(&(node->wal_queue_cond),&(node->wal_queue_lock));
+			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: condition signaled with more\n"
+					 ,node->no_id);
 			iterator=node->wal_queue;
 			continue;
 		}
 	
-		if(iterator->is_sync && strcmp(iterator->event,sync_event_no) ==0 )
+		if(iterator->is_sync && iterator->event >= sync_event_no)
 		{
 			/**
 			 * If this is a SYNC, is it the SYNC we are processing to.
 			 * If so this tells us that we can stop and commit the SYNC
 			 * as soon as the XID changes?
 			 */
+			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: we have received " \
+					 "SYNC %lld\n",node->no_id, sync_event_no);
 			break;
 		}
 		else if (iterator->is_sync)
 		{
-			iterator = iterator->next;
+			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: skipping SYNC %lld" \
+					 " while looking for %lld\n"
+					 , node->no_id, iterator->event,sync_event_no);
+			/**
+			 * assume we have already processed this SYNC?
+			 * TODO: is this safe or do we need to make sure it is is
+			 * smaller.
+			 */
+			iterator=remoteWorker_wal_remove(node,iterator);
 			continue;
 		}
 		
@@ -6096,79 +6115,63 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 			if(!xid_in_snapshot(node,iterator->xid,sync_snapshot))
 			{
 				/**
-				 * skip this record. The transaction has not yet committed in this SYNC.
+				 * skip this record. The transaction has not yet committed
+				 * in this SYNC.
+				 *
+				 * This means we move to the next record but do not 
+				 * delete/remove the record from the linked list.
 				 */
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid is not" \
+						 " in snapshot %s\n",sync_snapshot);
 				pthread_mutex_lock(&(node->wal_queue_lock));
-				iterator=iterator->next;
-				continue;
-			}
-			
-			/**
-			 * is this row part of a transaction that we have already applied
-			 * We need to this xid against the ssy_snapshot we last used.?
-			 *
-			 * 
-			 */
-			
-			for(idx  = 0; idx < subscribed_sets; idx++)
-			{
-				if ( snapshot_sets[idx] == iterator->set_id)
-					break;
-			}
-			if ( idx == subscribed_sets)
-			{
-				slon_log(SLON_ERROR,"remoteWorkerThread_%d: set %d not found in list from sl_setsync"
-						 , node->no_id, iterator->set_id);
-				retcode = 60;
-				goto cleanup;
-				
-			}
-			
-			if(xid_in_snapshot(node,iterator->xid,last_snapshots[idx]))
-			{
-				/**
-				 * we have already applied this transaction.
-				 */
-				pthread_mutex_lock(&(node->wal_queue_lock));
-				iterator=iterator->next;
-				continue;
-				
-			}
-			
-			
-			/**
-			 * apply the row.
-			 */
-			rc = PQputCopyData(local_conn, iterator->row, strlen(iterator->row));
-			if (rc < 0)
-			{
-				slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error writing" \
-						 " to sl_log: %s\n",
-						 node->no_id, provider->no_id,
-						 PQerrorMessage(local_conn));
-				errors++;
 				break;
 				
 			}
-
-			pthread_mutex_lock(&(node->wal_queue_lock));
-			if(iterator->prev == NULL)
-			{
-				node->wal_queue = NULL;
-			}
-			else
-			{
-				iterator->prev->next = iterator->next;
-			}
-			if( iterator == node->wal_queue_tail)
-			{
-				node->wal_queue_tail = iterator->prev;
-			}
-			prev_record = iterator;
-			iterator = iterator->next;
 			
-			free(prev_record->row);
-			free(prev_record);
+			/**
+			 * todo: what if multiple sets are on different snapshots
+			 * per sl_setsync
+			 */
+			if(xid_in_snapshot(node,iterator->xid,last_snapshots[0]))
+			{
+				/**
+				 * we have already applied this transaction.
+				 * don't apply it but remove it from the list.
+				 */
+				pthread_mutex_lock(&(node->wal_queue_lock));
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid was applied"\
+						 " in the previous transaction\n",node->no_id);			
+				
+			}
+			else 
+			{
+			
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: applying row\n"
+						 ,node->no_id);
+				/**
+				 * apply the row.
+				 */
+				rc = PQputCopyData(local_conn, iterator->row, 
+								   strlen(iterator->row));
+				if (rc < 0)
+				{
+					slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error " \
+							 "writing to sl_log: %s\n",
+							 node->no_id, provider->no_id,
+							 PQerrorMessage(local_conn));
+					errors++;
+					pthread_mutex_lock(&(node->wal_queue_lock));
+					break;
+					
+				}
+
+				pthread_mutex_lock(&(node->wal_queue_lock));
+			}				
+			/**
+			 * The record at iterator has been processed.
+			 * Remove it from the list queue and deallocate it
+			 */
+			 iterator = remoteWorker_wal_remove(node,iterator);
 		}
 		else
 		{
@@ -6200,7 +6203,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 			
 		}
 	}
-		
+	pthread_mutex_unlock(&(node->wal_queue_lock));		
 	rc = PQputCopyEnd(local_conn, NULL);
 	if (rc < 0)
 	{
@@ -6229,10 +6232,11 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, char * sync
 				 PQresultErrorMessage(res));
 		errors++;
 	}
-cleanup:
+cleanup:	
+
 	for(tupno = 0; tupno < subscribed_sets; tupno++)
 	{
-		PQfreemem(last_snapshots[tupno]);
+		free(last_snapshots[tupno]);
 	}
 	if ( last_snapshots != NULL)
 		free(last_snapshots);
@@ -6271,6 +6275,7 @@ void remoteWorker_wal_append(int ev_origin,SlonWALRecord * new_record)
 	rtcfg_unlock();
 
 	pthread_mutex_lock(&(node->wal_queue_lock));
+	assert(new_record->next == NULL);
 	if( node->wal_queue == NULL && node->wal_queue_tail == NULL)
 	{
 
@@ -6385,4 +6390,57 @@ static bool xid_in_snapshot(SlonNode * node,
 	}
 	free(snapshot);
 	return true;
+}
+
+/**
+ * removes a wal record from the WAL queue in node.
+ * 
+ * This function also deallocates the record.
+ *
+ * Returns the next record in the list.
+ */
+static SlonWALRecord * 
+remoteWorker_wal_remove(SlonNode * node, SlonWALRecord * record)
+{
+	SlonWALRecord * prev_record=NULL;
+	/**
+	 * The record at iterator has been processed.
+	 * Remove it from the list queue and deallocate it
+	 */
+	if(record->prev == NULL)
+	{
+		node->wal_queue = NULL;
+	}
+	else
+	{
+		assert(record->prev != record);
+		record->prev->next = record->next;
+		node->wal_queue = record->prev;
+	}
+	if( record == node->wal_queue_tail)
+	{
+		/**
+		 * if this is the last record then the next
+		 * record better be NULL.
+		 */
+		assert(record->next == NULL);
+		node->wal_queue_tail = record->prev;
+		node->wal_queue = record->prev;
+	}
+	prev_record = record;
+	record = record->next;
+	if(record != NULL)
+		record->prev = prev_record->prev;
+
+	if(prev_record != NULL)
+	{
+		if(prev_record->prev != NULL)
+			prev_record->prev->next=record;
+		free(prev_record->xid);
+		free(prev_record->row);
+		memset(prev_record,0,sizeof(SlonWALRecord));
+		free(prev_record);
+	}
+	assert(record == NULL || record != record->next );
+	return record;
 }

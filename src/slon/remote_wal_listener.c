@@ -1,5 +1,5 @@
 
-
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,10 +66,12 @@ static XlogRecPtr init_wal_slot(SlonWALState * state,SlonNode * node);
 
 
 static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
-						  int origin_id, int set_id,char * row, char * xid);
+						  int origin_id, int set_id,char * row, 
+						  char * xid,bool is_sync,int64 ev_seqno);
 
 static void 
-parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,XlogRecPtr walptr);
+parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
+		   XlogRecPtr walptr, int64 * ev_seqno);
 
 static void sendint64(int64 i, char *buf);
 static int64 recvint64(char *buf);
@@ -409,7 +411,9 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 * we we can tell the remoteWorker to stop waiting for
 		 * more data for that SYNC.
 		 */
-		parseEvent(node,cmdargs,state,walptr);
+		int64 ev_seqno=0;
+		parseEvent(node,cmdargs,state,walptr,&ev_seqno);
+		push_copy_row(node,state,origin_id,set_id,row,xid_str,true,ev_seqno);
 	}	
 	else
 	{
@@ -426,8 +430,8 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 * 1. Get the remoteWorker COPY connection
 		 *    and push this row onto it
 		 * 2. Release the connection back to the remoteWorker
-		 */		
-		push_copy_row(node,state,origin_id,set_id,row,xid_str);
+		 */				
+		push_copy_row(node,state,origin_id,set_id,row,xid_str,false,0);
 	}
 	return 0;
 		
@@ -435,13 +439,12 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 
 static void 
 parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
-		   XlogRecPtr walptr)
+		   XlogRecPtr walptr,int64 * ev_seqno)
 {
 	char * saveptr;
 	char * column;
 	char * value;
 	size_t value_len;
-	int64 ev_seqno=0;
 	char *ev_timestamp=NULL;
 	char *ev_snapshot=NULL;
 	char *ev_mintxid=NULL;
@@ -489,8 +492,8 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		}
 		else if (strcmp(column,"ev_seqno")==0)
 		{
-			ev_seqno=strtoll(value,NULL,10);
-			if(ev_seqno == 0) 
+			*ev_seqno=strtoll(value,NULL,10);
+			if(*ev_seqno == 0) 
 				slon_log(SLON_ERROR,"error parsing sequence number\n");
 		}
 		else if (strcmp(column,"ev_timestamp")==0)
@@ -604,7 +607,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		
 	}while ( (column = parse_csv_token(NULL,',',&saveptr)) != NULL);
 	
-	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: adding event %lld %d to queue snapshot %s \n", node->no_id,ev_seqno,ev_origin,ev_snapshot);
+	slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: adding event %lld %d to queue snapshot %s \n", node->no_id,*ev_seqno,ev_origin,ev_snapshot);
 
 	/**
 	 * do we listen for events from this origin via the provider?
@@ -613,8 +616,7 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 	{
 		if (listenPtr->li_origin == ev_origin)
 		{
-			bool wal_established=false;
-
+			bool wal_established=false;		 
 			/**
 			 * make sure this is not the first event from the provider for the origin.
 			 */
@@ -667,14 +669,15 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 				list.li_origin=ev_origin;
 				snprintf(conn_string,32,"remote_wal_listener_%d.seed",node->no_id);
 				conn = slon_connectdb(node->pa_conninfo,conn_string);
-				remoteListen_receive_events(node, conn, &list,ev_seqno);
+				remoteListen_receive_events(node, conn, &list,*ev_seqno);
 				slon_disconnectdb(conn);
 			}
 
-			remoteWorker_event(node->no_id,ev_origin,ev_seqno,
+			remoteWorker_event(node->no_id,ev_origin,*ev_seqno,
 							   ev_timestamp,ev_snapshot,ev_mintxid,ev_maxtxid,
 							   ev_type,ev_data1,ev_data2,ev_data3,ev_data4
-							   ,ev_data5,ev_data6,ev_data7,ev_data8,true,walptr);
+							   ,ev_data5,ev_data6,ev_data7,ev_data8,
+							   true,walptr);		
 			break;
 		}
 	}
@@ -754,27 +757,29 @@ static int extract_row_metadata(SlonNode * node,
 				/**
 				 * origin_id is the first column.
 				 */
-				char * tmp_buf = malloc(curptr - prev_start );
-				memset(tmp_buf,0,curptr - prev_start );
+				char * tmp_buf = malloc(curptr - prev_start +1 );
+				memset(tmp_buf,0,curptr - prev_start +1 );
 				strncpy(tmp_buf,prev_start, curptr-prev_start);
 				tmp_buf[curptr-prev_start]='\0';
 				*origin_id = strtol(tmp_buf,NULL, 10 );				
 				free(tmp_buf);
 				column++;
 			}
+#if 0 
 			else if(column == 1)
 			{
 				/**
 				 * set_id is the second column
 				 */
-				char * tmp_buf = malloc(curptr - prev_start );
-				memset(tmp_buf,0,curptr - prev_start );
+				char * tmp_buf = malloc(curptr - prev_start +1 );
+				memset(tmp_buf,0,curptr - prev_start +1 );
 				strncpy(tmp_buf,prev_start, curptr-prev_start);
 				tmp_buf[curptr-prev_start]='\0';
 				*set_id = strtol(tmp_buf,NULL, 10 );				
 				free(tmp_buf);
 				column++;
 			}
+#endif
 			else
 			{
 				/**
@@ -805,8 +810,9 @@ static int extract_row_metadata(SlonNode * node,
 }
 
 
-static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int origin_id, int set_id,char * row,
-						  char * xid)
+static void push_copy_row(SlonNode * listening_node, SlonWALState * state, 
+						  int origin_id, int set_id,char * row,
+						  char * xid_str,bool is_sync,int64 ev_seqno)
 {
 	SlonNode * workerNode;
 	SlonWALRecord * record;
@@ -831,12 +837,14 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state, int o
 		return;
 	}
 	record = malloc(sizeof(SlonWALRecord));
-	memset(&record,0,sizeof(SlonWALRecord));
-	record->xid = xid;
-	record->row=row;
-	record->provider=listening_node->no_id;
+	memset(record,0,sizeof(SlonWALRecord));
+	record->xid = strdup(xid_str);
+	record->row = strdup(row);
+	record->provider = listening_node->no_id;
 	record->set_id = set_id;
-	
+	record->is_sync=is_sync;
+	record->event  = ev_seqno;
+	assert(strcmp(row,"")!=0 || is_sync==true);
 	remoteWorker_wal_append(origin_id,record);
 	
 	
@@ -996,7 +1004,7 @@ sendFeedback(SlonNode * node,
 	if (blockpos == state->startpos)
 		return true;
 #endif
-	slon_log(SLON_DEBUG2, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
+	slon_log(SLON_DEBUG4, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
 			 ((uint32)(blockpos>>32)),(uint32)blockpos);
 	replybuf[len] = 'r';
 	len += 1;
@@ -1076,7 +1084,7 @@ void remote_wal_processed(XlogRecPtr confirmed, int no_id)
 		slon_log(SLON_ERROR,"remoteWALListener_%d thread was not found",no_id);
 		slon_retry();
 	}
-	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
+	slon_log(SLON_DEBUG2,"remoteWALListener_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
 	pthread_mutex_lock(&statePtr->state->position_lock);
 	statePtr->state->last_committed_pos=confirmed;
 	pthread_mutex_unlock(&statePtr->state->position_lock);
