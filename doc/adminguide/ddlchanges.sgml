@@ -40,6 +40,10 @@ though nested transactions are allowed as long are processed
 within the scope of a single transaction whose <command>BEGIN</command> 
 and <command>END</command> you do not control.</para></listitem>
 
+<listitem><para>Every object in the script must be fully qualified or 
+have the right <command>search_path</command> set. This will avoid any
+namespace confusion during replication.</para></listitem>
+
 <listitem><para>If there is <emphasis>anything</emphasis> broken about
 the script, or about how it executes on a particular node (other than
 the event node), this will
