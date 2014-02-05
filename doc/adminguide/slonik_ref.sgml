@@ -347,7 +347,7 @@ echo 'But @sakaiMovies will display as a string, and is not expanded';
  
 <!-- **************************************** -->
  <reference id="cmds">
-  <title>Configuration and Action commmands</title>
+  <title>Configuration and Action commands</title>
 <!-- **************************************** -->
   
   <refentry id ="stmtecho"><refmeta><refentrytitle>SLONIK ECHO</refentrytitle>
