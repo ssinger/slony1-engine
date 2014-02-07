@@ -3,6 +3,8 @@
 
  - Include server include paths on --with-pgport builds  for slonik
 
+ - Bug 327 - Fix invalid free() in the logApply trigger
+
 * 2.2.1
   - Bug 315 :: Fixes to compile time include directories
 
