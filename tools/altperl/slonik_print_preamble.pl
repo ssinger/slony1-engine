@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
@@ -11,11 +11,12 @@ $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE
+);
 
-my $USAGE =
-"Usage: slonik_print_preamble [--config file]
+my $USAGE = "Usage: slonik_print_preamble [--config file]
 
     print the preamble required by all slonik scripts, using the
     details from the config file
@@ -35,4 +36,4 @@ require $CONFIG_FILE;
 my $slonik = '';
 $slonik .= genheader();
 
-run_slonik_script($slonik, 'PRINT PREAMBLE');
+run_slonik_script( $slonik, 'PRINT PREAMBLE' );

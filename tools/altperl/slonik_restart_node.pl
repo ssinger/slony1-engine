@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# 
+#
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -11,20 +11,21 @@ $SHOW_USAGE  = 0;
 $ALL_NODES   = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE,
-	   "all"      => \$ALL_NODES);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE,
+    "all"      => \$ALL_NODES
+);
 
-my $USAGE =
-"Usage: restart_node [--config file] [--all] [node# ...]
+my $USAGE = "Usage: restart_node [--config file] [--all] [node# ...]
 
     Restart one or more nodes
 
 ";
 
 if ($SHOW_USAGE) {
-  print $USAGE;
-  exit 0;
+    print $USAGE;
+    exit 0;
 }
 
 require '@@PERLSHAREDIR@@/slon-tools.pm';
@@ -36,12 +37,12 @@ if ($ALL_NODES) {
 }
 else {
     foreach my $node (@ARGV) {
-	if ($node =~ /^(?:node)?(\d+)$/) {
-	    push @nodes, ($1);
-	}
-	else {
-	    die $USAGE;
-	}
+        if ( $node =~ /^(?:node)?(\d+)$/ ) {
+            push @nodes, ($1);
+        }
+        else {
+            die $USAGE;
+        }
     }
 }
 
@@ -53,4 +54,4 @@ foreach my $node (@nodes) {
     $slonik .= "  restart node $node;\n";
 }
 
-run_slonik_script($slonik, 'RESTART NODE');
+run_slonik_script( $slonik, 'RESTART NODE' );

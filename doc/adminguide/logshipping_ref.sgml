@@ -1,7 +1,7 @@
 <refentry id="slony-logshipping">
 <refmeta>
 <refentrytitle id="app-logshipping-title"><application>slony_logshipping</application></refentrytitle>
-<manvolnum><1</manvolnum>
+<manvolnum>1</manvolnum>
 </refmeta>
 <refnamediv>
 <refname><application>slony_logshipping</application></refname>
