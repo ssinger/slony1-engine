@@ -133,28 +133,24 @@ begin
 		,'disable','enable') 
 		        from @NAMESPACE@.sl_table
                 where tab_set not in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
-                      and exists (select 1 from  pg_catalog.pg_trigger, pg_catalog.pg_class, pg_catalog.pg_namespace 
+                      and exists (select 1 from  pg_catalog.pg_trigger
                                            where pg_trigger.tgname like '_@CLUSTERNAME@_truncatetrigger' and pg_trigger.tgenabled = 'O'
-                                                 and pg_trigger.tgrelid=pg_class.oid and pg_class.relnamespace=pg_namespace.oid 
-                                                 and pg_namespace.nspname = tab_nspname and pg_class.relname = tab_relname) 
-                      and  exists (select 1 from  pg_catalog.pg_trigger, pg_catalog.pg_class,pg_catalog.pg_namespace
+                                                 and pg_trigger.tgrelid=tab_reloid ) 
+                      and  exists (select 1 from  pg_catalog.pg_trigger
                                             where pg_trigger.tgname like '_@CLUSTERNAME@_truncatedeny' and pg_trigger.tgenabled = 'D' 
-                                                  and pg_trigger.tgrelid=pg_class.oid and  pg_class.relnamespace=pg_namespace.oid 
-                                                  and pg_namespace.nspname = tab_nspname and pg_class.relname = tab_relname);
+                                                  and pg_trigger.tgrelid=tab_reloid);
 
 		-- Activate truncate triggers for origin
 		perform @NAMESPACE@.alterTableConfigureTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname)
 		,'enable','disable') 
 		        from @NAMESPACE@.sl_table
                 where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
-                      and exists (select 1 from  pg_catalog.pg_trigger, pg_catalog.pg_class, pg_catalog.pg_namespace
+                      and exists (select 1 from  pg_catalog.pg_trigger
                                            where pg_trigger.tgname like '_@CLUSTERNAME@_truncatetrigger' and pg_trigger.tgenabled = 'D'
-                                                 and pg_trigger.tgrelid=pg_class.oid and pg_class.relnamespace=pg_namespace.oid 
-                                                 and pg_namespace.nspname = tab_nspname and pg_class.relname = tab_relname)
-                      and  exists (select 1 from  pg_catalog.pg_trigger, pg_catalog.pg_class,pg_catalog.pg_namespace
+                                                 and pg_trigger.tgrelid=tab_reloid )                                                    
+                      and  exists (select 1 from  pg_catalog.pg_trigger
                                             where pg_trigger.tgname like '_@CLUSTERNAME@_truncatedeny' and pg_trigger.tgenabled = 'O'
-                                                  and pg_trigger.tgrelid=pg_class.oid and  pg_class.relnamespace=pg_namespace.oid 
-                                                  and pg_namespace.nspname = tab_nspname and pg_class.relname = tab_relname);
+                                                  and pg_trigger.tgrelid=tab_reloid);
 
 		return 1;
 end
