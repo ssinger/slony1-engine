@@ -1,13 +1,4 @@
-<<<<<<< HEAD
 RELEASE 2.0.0
-=======
-#+OPTIONS: ^:{}
-* Slony-I Release Notes
-** 2.1.5
-- Bug 315 :: Fixes to the compile time include directories
-
-** 2.1.4 
->>>>>>> 99d855d... Only include the libpq header directory OR the server header directory but not both
 
 The first release of version 2.0. See RELEASE-2.0 to see changes leading
 from version 1.2 to 2.0.
