@@ -42,7 +42,7 @@
 PG_MODULE_MAGIC;
 #endif
 
-extern void pg_decode_init(LogicalDecodingContext * ctx, bool is_init);
+extern void pg_decode_init(LogicalDecodingContext * ctx, OutputPluginOptions * options, bool is_init);
 
 extern void pg_decode_begin_txn(LogicalDecodingContext * ctx, 
 								ReorderBufferTXN* txn);
@@ -117,7 +117,7 @@ void pg_decode_shutdown(LogicalDecodingContext * ctx)
 
 
 void
-pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
+pg_decode_init(LogicalDecodingContext * ctx,OutputPluginOptions *options, bool is_init)
 {	
 	ListCell * option;
 	elog(NOTICE,"is_init is %d",is_init==1);
@@ -129,7 +129,7 @@ pg_decode_init(LogicalDecodingContext * ctx, bool is_init)
 									 ALLOCSET_DEFAULT_MAXSIZE);
 
 
-	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeStartupCB);
+       	AssertVariableIsOfType(&pg_decode_init, LogicalDecodeStartupCB);
 	MemoryContext context = (MemoryContext)ctx->output_plugin_private;
 	MemoryContext old = MemoryContextSwitchTo(context);
 											
@@ -294,7 +294,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		if(origin_attnum != InvalidAttrNumber)
 		{
 			bool isnull;
-			Datum storedValue = fastgetattr(&change->tp.newtuple->tuple,
+			Datum storedValue = fastgetattr(&change->data.tp.newtuple->tuple,
 											origin_attnum,tupdesc,&isnull);
 			if( ! isnull )
 				origin_id  = DatumGetInt32(storedValue);
@@ -312,7 +312,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 		/**
 		 * convert all columns to a pair of arrays (columns and values)
 		 */
-		tuple=&change->tp.newtuple->tuple;
+		tuple=&change->data.tp.newtuple->tuple;
 		action='I';
 		cmdargs = cmdargselem = palloc( (relation->rd_att->natts * 2 +2) 
 										* sizeof(Datum)  );
@@ -381,7 +381,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 			column= NameStr(tupdesc->attrs[i]->attname);
 
 			
-			value_new = columnAsText(tupdesc,&change->tp.newtuple->tuple,i);		
+			value_new = columnAsText(tupdesc,&change->data.tp.newtuple->tuple,i);		
 			*cmdargselem++=PointerGetDatum(cstring_to_text(column));
 			*cmdnullselem++=false;
 			
@@ -398,7 +398,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 			cmdnupdates++;					
 		}
 		
-		if(change->tp.oldtuple == NULL)
+		if(change->data.tp.oldtuple == NULL)
 		{
 			/**
 			 * If oldtuple is NULL then no columns
@@ -416,7 +416,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 				if( bms_is_member(i-FirstLowInvalidHeapAttributeNumber+1,id_attrs))
 				{
 					column= NameStr(tupdesc->attrs[i]->attname);
-					value = columnAsText(tupdesc,&change->tp.newtuple->tuple,i);		
+					value = columnAsText(tupdesc,&change->data.tp.newtuple->tuple,i);		
 					if (value == NULL) 
 					{
 						continue;
@@ -447,7 +447,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 					continue;
 				column= NameStr(tupdesc->attrs[i]->attname);
 				
-				value_old = columnAsText(tupdesc,&change->tp.oldtuple->tuple,i);		
+				value_old = columnAsText(tupdesc,&change->data.tp.oldtuple->tuple,i);		
 				if (value_old == NULL) 
 				{
 					continue;
@@ -470,7 +470,7 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	   * convert the key columns to a pair of arrays.
 	   */
 	  action='D';
-	  tuple=&change->tp.oldtuple->tuple;
+	  tuple=&change->data.tp.oldtuple->tuple;
 	  
 	  
 
