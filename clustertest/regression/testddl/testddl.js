@@ -192,6 +192,38 @@ function execute_on_subscriber(coordinator)
     
 }
 
+
+function execute_only_on_list(coordinator)
+{
+    /**
+     * Perform an EXECUTE SCRIPT with a subscriber (a non-provider)
+     * and verify that the DDL changes replicate to all other nodes.
+     */
+    var premable = get_slonik_preamble();
+    var slonikScript = 'EXECUTE SCRIPT('
+	+ 'SQL=\'CREATE TABLE test_only_on(id serial, value text);\''
+	+ ' ,EVENT NODE=3,execute only on=\'1,2,3\');\n'
+        + 'sync(id=3);\n wait for event(origin=3, confirmed=all, wait on=3);\n';
+    
+    run_slonik('execute_on_subscriber.create',coordinator,preamble,slonikScript);
+    /**
+     * Now drop the table on nodes 1 and 2. 
+     * That will fail if the CREATE did not propogate
+     */
+    slonikScript = 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_only_on;\''
+	+ ' ,EVENT NODE=2, EXECUTE ONLY ON=2);\n' 
+	+ 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_only_on;\''
+	+ ' ,EVENT NODE=1, EXECUTE ONLY ON=1);\n' 
+	+ 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_only_on;\''
+	+ ' ,EVENT NODE=3, EXECUTE ONLY ON=3);\n' ;
+            
+    run_slonik('execute_on_subscriber.drop',coordinator,preamble,slonikScript);
+    
+}
+
 function do_test(coordinator) {
 
 	var numrows = random_number(150,350);
@@ -229,6 +261,8 @@ function do_test(coordinator) {
 	trigger_function(coordinator);
 	wait_for_sync(coordinator);
 	execute_on_subscriber(coordinator);
+        wait_for_sync(coordinator);
+        execute_only_on_list(coordinator);
 }
 
 function get_compare_queries() {
