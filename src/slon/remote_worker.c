@@ -6140,8 +6140,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 				 * don't apply it but remove it from the list.
 				 */
 				pthread_mutex_lock(&(node->wal_queue_lock));
-				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid was applied"\
-						 " in the previous transaction\n",node->no_id);			
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied"\
+						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[0]);			
 				
 			}
 			else 
@@ -6307,7 +6307,7 @@ void remoteWorker_wal_append(int ev_origin,SlonWALRecord * new_record)
  *  snapshot is of the form   minxip:maxxipactive_xips
  *  
  *  If xid < minxip the transaction is committed
- *  If xid > maxip The transaction is not committed
+ *  If xid >= maxip The transaction is not committed
  *  If xid is listed in the active list then it is not commited
  *  else it is committed
  */
@@ -6362,7 +6362,7 @@ static bool xid_in_snapshot(SlonNode * node,
 		slon_retry();
 	}
 	maxxid = strtoll(maxxid_c,NULL,10);
-	if ( xid > maxxid ) {
+	if ( xid >= maxxid ) {
 		free(snapshot);
 		return false;
 	}
