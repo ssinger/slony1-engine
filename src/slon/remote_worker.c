@@ -371,6 +371,7 @@ remoteWorkerThread_main(void *cdata)
 	node->worker_con_status=SLON_WCON_IDLE;
 
 	node->wal_queue = NULL;
+	node->wal_queue_tail = NULL;
 	pthread_mutex_init(&(node->wal_queue_lock),0);
 	pthread_cond_init(&(node->wal_queue_cond),0);
 
@@ -6121,8 +6122,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 				 * This means we move to the next record but do not 
 				 * delete/remove the record from the linked list.
 				 */
-				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid is not" \
-						 " in snapshot %s\n",sync_snapshot);
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s is not" \
+						 " in snapshot %s\n",node->no_id,iterator->xid,sync_snapshot);
 				pthread_mutex_lock(&(node->wal_queue_lock));
 				break;
 				
@@ -6146,13 +6147,13 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 			else 
 			{
 			
-				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: applying row\n"
-						 ,node->no_id);
+				slon_log(SLON_DEBUG4,"remoteWorkerThread_%d: applying row:%s\n"
+						 ,node->no_id,iterator->row);
 				/**
 				 * apply the row.
 				 */
 				rc = PQputCopyData(local_conn, iterator->row, 
-								   strlen(iterator->row));
+								   strlen(iterator->row));				
 				if (rc < 0)
 				{
 					slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error " \
@@ -6164,6 +6165,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 					break;
 					
 				}
+				PQputCopyData(local_conn,"\n",1);
 
 				pthread_mutex_lock(&(node->wal_queue_lock));
 			}				
@@ -6278,7 +6280,7 @@ void remoteWorker_wal_append(int ev_origin,SlonWALRecord * new_record)
 	assert(new_record->next == NULL);
 	if( node->wal_queue == NULL && node->wal_queue_tail == NULL)
 	{
-
+		assert(new_record != NULL);
 		node->wal_queue = new_record;
 		node->wal_queue_tail = node->wal_queue;
 
@@ -6292,6 +6294,7 @@ void remoteWorker_wal_append(int ev_origin,SlonWALRecord * new_record)
 			new_record->prev->next = new_record;
 		}
 	}
+	assert(node->wal_queue != NULL && node->wal_queue_tail != NULL);
 	pthread_cond_signal(&(node->wal_queue_cond));
 	pthread_mutex_unlock(&(node->wal_queue_lock));
 
@@ -6367,26 +6370,20 @@ static bool xid_in_snapshot(SlonNode * node,
 
 	ip_list = strtok_r(NULL,":",&state);
 	
-	if ( ip_list == NULL) 
-	{
-		/**
-		 * parse error
-		 */
-		slon_log(SLON_ERROR,"remoteWorkerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
-		slon_retry();
-	}
-
-	for( elem = strtok_r(ip_list,",",&state); elem != NULL; elem = strtok_r(NULL,",",&state))
-	{
-		if (strcmp(elem,xid_c)==0)
+	if ( ip_list != NULL) 
+	{	
+		for( elem = strtok_r(ip_list,",",&state); elem != NULL; elem = strtok_r(NULL,",",&state))
 		{
-			/**
-			 * this transaction is in progress.
-			 */
-			free(snapshot);
-			return false;
-		}
+			if (strcmp(elem,xid_c)==0)
+			{
+				/**
+				 * this transaction is in progress.
+				 */
+				free(snapshot);
+				return false;
+			}
 		
+		}
 	}
 	free(snapshot);
 	return true;
@@ -6409,7 +6406,13 @@ remoteWorker_wal_remove(SlonNode * node, SlonWALRecord * record)
 	 */
 	if(record->prev == NULL)
 	{
-		node->wal_queue = NULL;
+		/**
+		 * if there is no record before the one being removed then that record
+		 * had better be at the head of the list (or else something is wrong).
+		 * the head of the list is now the NEXT record.
+		 */
+		assert(record==node->wal_queue);
+		node->wal_queue = record->next;
 	}
 	else
 	{
@@ -6442,5 +6445,6 @@ remoteWorker_wal_remove(SlonNode * node, SlonWALRecord * record)
 		free(prev_record);
 	}
 	assert(record == NULL || record != record->next );
+	assert( node->wal_queue == NULL ? node->wal_queue_tail == NULL : 1 );
 	return record;
 }
