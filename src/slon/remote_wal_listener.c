@@ -125,7 +125,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 		 * connection failed, retry ?
 		 */
 	}
-	snprintf(query,sizeof(query),"CREATE_REPLICATION_SLOT   \"%d\" LOGICAL \"%s\"",
+	snprintf(query,sizeof(query),"CREATE_REPLICATION_SLOT   \"slon_%d\" LOGICAL \"%s\"",
 			 node->no_id, "slony1_funcs.2.2.0");
 	res = PQexec(state->dbconn,query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -197,7 +197,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 		 * connection failed, retry ?
 		 */
 	}
-	snprintf(query,sizeof(query),"START_REPLICATION SLOT \"%d\" LOGICAL %X/%X (\"cluster\" '%s') ",
+	snprintf(query,sizeof(query),"START_REPLICATION SLOT \"slon_%d\" LOGICAL %X/%X (\"cluster\" '%s') ",
 			 node->no_id, 
 			 (uint32)(state->last_committed_pos>>32), 
 			 (uint32)state->last_committed_pos,

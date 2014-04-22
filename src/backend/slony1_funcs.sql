@@ -1133,6 +1133,7 @@ begin
 
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
+	perform @NAMESPACE@.dropReplicationSlots(p_no_id);
 
 	return p_no_id;
 end;
@@ -1541,6 +1542,7 @@ as $$
 declare
 	v_tab_row		record;
 begin
+	perform @NAMESPACE@.dropReplicationSlots(no_id) from @NAMESPACE@.sl_node;
 	raise notice 'Slony-I: Please drop schema "_@CLUSTERNAME@"';
 	return 0;
 end;

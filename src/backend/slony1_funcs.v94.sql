@@ -147,3 +147,14 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () is 
 'Add ON TRUNCATE triggers to replicated tables.';
 
+
+
+create or replace function @NAMESPACE@.dropReplicationSlots(no_id integer) returns void as $$
+begin
+	perform pg_drop_replication_slot(slot_name) FROM pg_replication_slots where
+        slot_name like 'slon_%' and slot_type='logical';
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.dropReplicationSlots(no_id integer) is 
+'Drops any replication slots. ';
