@@ -1,4 +1,8 @@
 #+OPTIONS: ^:{}
+* 2.2.3
+  - Bug 338 - Have ddlScript return a bigint instead of a integer
+  - fixing  Deadlock with application during minor version slony upgrade
+ 
 * 2.2.2
 
  - Include server include paths on --with-pgport builds  for slonik
