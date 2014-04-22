@@ -510,7 +510,13 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 		{
 			char * saveptr2;
 			char * value2;
+			if(value[0]=='"') 
+			{
+				value[strlen(value)-1]='\0';
+				value++;
 
+			}
+				
 			ev_snapshot = malloc(strlen(value)+1);
 			strcpy(ev_snapshot,value);
 			value2 = strtok_r(value,":",&saveptr2);
