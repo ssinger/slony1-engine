@@ -368,6 +368,7 @@ remoteWorkerThread_main(void *cdata)
 
 	node->wal_queue = NULL;
 	node->wal_queue_tail = NULL;
+	node->processed_wal_ptr=0;
 	pthread_mutex_init(&(node->wal_queue_lock),0);
 	pthread_cond_init(&(node->wal_queue_cond),0);
 
@@ -682,7 +683,6 @@ remoteWorkerThread_main(void *cdata)
 					break;
 
 			}
-		
 			
 			if (rc != SCHED_STATUS_OK)
 				break;
@@ -721,7 +721,7 @@ remoteWorkerThread_main(void *cdata)
 				slon_retry();
 			}
 			if(event->from_wal_provider)
-				remote_wal_processed(event->provider_wal_loc, node->no_id);
+				remote_wal_processed(node->processed_wal_ptr, node->no_id);
 			/*
 			 * Remember the sync snapshot in the in memory node structure
 			 */
@@ -5995,7 +5995,9 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 			 * TODO: is this safe or do we need to make sure it is is
 			 * smaller.
 			 */
-			iterator=remoteWorker_wal_remove(node,iterator);
+			if(node->wal_queue == iterator)
+				node->processed_wal_ptr = iterator->xlog;
+			iterator=remoteWorker_wal_remove(node,iterator);		
 			continue;
 		}
 		
@@ -6118,6 +6120,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 			 * The record at iterator has been processed.
 			 * Remove it from the list queue and deallocate it
 			 */
+			if(node->wal_queue == iterator)
+				node->processed_wal_ptr = iterator->xlog;
 			 iterator = remoteWorker_wal_remove(node,iterator);
 		}
 		else

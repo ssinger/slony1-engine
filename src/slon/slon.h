@@ -128,6 +128,8 @@ struct SlonState_s
 	char	   *event_type;
 };
 
+typedef uint64 XlogRecPtr;
+
 /**
  * SlonWALRecord 
  **/
@@ -140,6 +142,7 @@ struct SlonWALRecord_s
 	int64 event;
 	int provider;
 	int set_id;
+	XlogRecPtr xlog;
 	struct SlonWALRecord_s * next;
 	struct SlonWALRecord_s * prev;
 };
@@ -183,6 +186,7 @@ struct SlonNode_s
 
 	SlonWALRecord * wal_queue;   /* the list of WAL records to process */
 	SlonWALRecord * wal_queue_tail; 
+	XlogRecPtr processed_wal_ptr;
 	pthread_mutex_t wal_queue_lock;  /*mutex protecting the WAL queue */
 	pthread_cond_t wal_queue_cond;
 
@@ -403,7 +407,7 @@ typedef enum
 	SCHED_STATUS_ERROR
 }	ScheduleStatus;
 
-typedef uint64 XlogRecPtr;
+
 
 
 /* ----------

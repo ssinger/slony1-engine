@@ -67,7 +67,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state,SlonNode * node);
 
 static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 						  int origin_id, int set_id,char * row, 
-						  char * xid,bool is_sync,int64 ev_seqno);
+						  char * xid,bool is_sync,int64 ev_seqno,XlogRecPtr xlog);
 
 static void 
 parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
@@ -113,6 +113,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 	char * slot;
 	char * conn_info;
 	XlogRecPtr result;
+	int local_nodeid;
 	const char * replication = " replication=database";
 
 	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
@@ -125,14 +126,16 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 		 * connection failed, retry ?
 		 */
 	}
+
 	snprintf(query,sizeof(query),"CREATE_REPLICATION_SLOT   \"slon_%d\" LOGICAL \"%s\"",
-			 node->no_id, "slony1_funcs.2.2.0");
+			 rtcfg_nodeid, "slony1_funcs.2.2.0");
 	res = PQexec(state->dbconn,query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		slon_log(SLON_ERROR,"remoteWALListener_%d: could not send replication " \
 				 "command \"%s\": %s",node->no_id, query, 
 				 PQerrorMessage(state->dbconn));
+		slon_retry();
 	}
 	if (PQntuples(res) != 1 || PQnfields(res) != 4)
 	{
@@ -141,6 +144,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 				   "got %d rows and %d fields, expected %d rows and %d " \
 				   "fields\n",
 				 node->no_id, PQntuples(res), PQnfields(res), 1, 4);
+		slon_retry();
 	}
 	if (sscanf(PQgetvalue(res, 0, 1), "%X/%X", &hi, &lo) != 2)
 	{
@@ -197,8 +201,9 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 		 * connection failed, retry ?
 		 */
 	}
+	
 	snprintf(query,sizeof(query),"START_REPLICATION SLOT \"slon_%d\" LOGICAL %X/%X (\"cluster\" '%s') ",
-			 node->no_id, 
+			 rtcfg_nodeid,
 			 (uint32)(state->last_committed_pos>>32), 
 			 (uint32)state->last_committed_pos,
 			 rtcfg_cluster_name);
@@ -413,7 +418,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 */
 		int64 ev_seqno=0;
 		parseEvent(node,cmdargs,state,walptr,&ev_seqno);
-		push_copy_row(node,state,origin_id,set_id,row,xid_str,true,ev_seqno);
+		push_copy_row(node,state,origin_id,set_id,row,xid_str,true,ev_seqno,walptr);
 	}	
 	else
 	{
@@ -431,7 +436,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 *    and push this row onto it
 		 * 2. Release the connection back to the remoteWorker
 		 */				
-		push_copy_row(node,state,origin_id,set_id,row,xid_str,false,0);
+		push_copy_row(node,state,origin_id,set_id,row,xid_str,false,0,walptr);
 	}
 	return 0;
 		
@@ -812,7 +817,7 @@ static int extract_row_metadata(SlonNode * node,
 
 static void push_copy_row(SlonNode * listening_node, SlonWALState * state, 
 						  int origin_id, int set_id,char * row,
-						  char * xid_str,bool is_sync,int64 ev_seqno)
+						  char * xid_str,bool is_sync,int64 ev_seqno,XlogRecPtr wal_ptr)
 {
 	SlonNode * workerNode;
 	SlonWALRecord * record;
@@ -844,6 +849,7 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 	record->set_id = set_id;
 	record->is_sync=is_sync;
 	record->event  = ev_seqno;
+	record->xlog = wal_ptr;
 	assert(strcmp(row,"")!=0 || is_sync==true);
 	remoteWorker_wal_append(origin_id,record);
 	
