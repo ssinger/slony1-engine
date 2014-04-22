@@ -104,3 +104,12 @@ $$ language plpgsql;
 comment on function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () is 
 'Add ON TRUNCATE triggers to replicated tables.  Not supported on PG 8.3, so a NOOP in this case.';
 
+
+create or replace function @NAMESPACE@.dropReplicationSlots(no_id integer) returns void as $$
+begin
+	return;
+end
+$$ language plpgsql;
+
+comment on function @NAMESPACE@.dropReplicationSlots(no_id integer) is 
+'Drops any replication slots. Not supported on PG version < 9.4.';
