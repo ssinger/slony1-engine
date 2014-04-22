@@ -179,8 +179,6 @@ struct SlonNode_s
 	SlonWorkMsg *message_head;
 	SlonWorkMsg *message_tail;
 
-	SlonWorkerConnectionStatus worker_con_status;  /* The status of the worker*/
-	pthread_mutex_t worker_con_lock;  /* mutex for th worker_dbcon */
 	PGconn  * worker_dbconn; 
 
 	SlonWALRecord * wal_queue;   /* the list of WAL records to process */

@@ -295,7 +295,6 @@ static void compress_actionseq(const char *ssy_actionseq, SlonDString * action_s
 static int	check_set_subscriber(int set_id, int node_id, PGconn *local_dbconn);
 #endif
 
-static void lock_workercon(SlonNode * node);
 static bool xid_in_snapshot(SlonNode * node,
 							char * xid_c,
 							char * snapshot_p);
@@ -365,10 +364,7 @@ remoteWorkerThread_main(void *cdata)
 	sprintf(conn_symname, "remoteWorkerThread_%d", node->no_id);
 	if ((local_conn = slon_connectdb(rtcfg_conninfo, conn_symname)) == NULL)
 		slon_retry();
-	pthread_mutex_init(&(node->worker_con_lock),0);
-	pthread_mutex_lock(&(node->worker_con_lock));
 	node->worker_dbconn = local_conn->dbconn;
-	node->worker_con_status=SLON_WCON_IDLE;
 
 	node->wal_queue = NULL;
 	node->wal_queue_tail = NULL;
@@ -393,7 +389,6 @@ remoteWorkerThread_main(void *cdata)
 						rtcfg_namespace, apply_cache_size);
 	if (query_execute(node, node->worker_dbconn, &query1) < 0)
 		slon_retry();
-	pthread_mutex_unlock(&(node->worker_con_lock));
 
 	/*
 	 * Work until shutdown or node destruction
@@ -452,7 +447,6 @@ remoteWorkerThread_main(void *cdata)
 										 ") as S; ",
 								  rtcfg_namespace, pset->set_id, node->no_id,
 										 rtcfg_namespace, node->no_id);
-							lock_workercon(node);
 							if (query_execute(node, node->worker_dbconn, &query1) < 0)
 								slon_retry();
 
@@ -463,7 +457,6 @@ remoteWorkerThread_main(void *cdata)
 										 node->no_id, dstring_data(&query1),
 										 PQresultErrorMessage(res));
 								PQclear(res);
-								pthread_mutex_unlock(&(node->worker_con_lock));
 								slon_retry();
 							}
 							if (PQntuples(res) != 1)
@@ -471,12 +464,10 @@ remoteWorkerThread_main(void *cdata)
 								slon_log(SLON_FATAL, "remoteWorkerThread_%d: Query \"%s\" did not return one row\n",
 										 node->no_id, dstring_data(&query1));
 								PQclear(res);
-								pthread_mutex_unlock(&(node->worker_con_lock));
 								slon_retry();
 							}
 							strcpy(pset->ssy_seqno, PQgetvalue(res, 0, 0));
 							PQclear(res);
-							pthread_mutex_unlock(&(node->worker_con_lock));
 							slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: set %d starts at ssy_seqno %s\n",
 								 node->no_id, pset->set_id, pset->ssy_seqno);
 						}
@@ -620,12 +611,10 @@ remoteWorkerThread_main(void *cdata)
 						}
 						if (event->ev_seqno >= quit_sync_finalsync)
 						{
-							lock_workercon(node);
 							slon_log(SLON_FATAL, "ABORT at sync %d per command line request%n", quit_sync_finalsync);
 							slon_mkquery(&query2, "rollback transaction; ");
 							query_execute(node, node->worker_dbconn, &query2);
 							dstring_reset(&query2);
-							pthread_mutex_unlock(&(node->worker_con_lock));
 							slon_retry();
 						}
 					}
@@ -653,14 +642,12 @@ remoteWorkerThread_main(void *cdata)
 			}
 			while (true)
 			{				
-				lock_workercon(node);
 				/*
 				 * Execute the forwarding stuff, but do not commit the
 				 * transaction yet.
 				 */
 				if (query_execute(node, node->worker_dbconn, &query1) < 0)
 				{
-					pthread_mutex_unlock(&(node->worker_con_lock));
 					slon_retry();
 				}
 
@@ -676,7 +663,6 @@ remoteWorkerThread_main(void *cdata)
 					sync_status = SYNC_SUCCESS; /* The group of SYNCs have
 												 * succeeded!  Hurray! */
 					rc = SCHED_STATUS_OK;
-					pthread_mutex_unlock(&(node->worker_con_lock));
 					break;
 				}
 				
@@ -690,18 +676,13 @@ remoteWorkerThread_main(void *cdata)
 				(void) slon_mkquery(&query2, "rollback transaction");
 				if (query_execute(node, node->worker_dbconn, &query2) < 0)
 				{
-					pthread_mutex_unlock(&(node->worker_con_lock));
 					slon_retry();
 				}
-				node->worker_con_status=SLON_WCON_IDLE;
-				pthread_mutex_unlock(&(node->worker_con_lock));
 				if ((rc = sched_msleep(node, seconds * 1000)) != SCHED_STATUS_OK)
 					break;
 
 			}
 		
-
-			lock_workercon(node);
 			
 			if (rc != SCHED_STATUS_OK)
 				break;
@@ -737,11 +718,8 @@ remoteWorkerThread_main(void *cdata)
 
 			if (query_execute(node, node->worker_dbconn, &query1) < 0)
 			{
-				pthread_mutex_unlock(&(node->worker_con_lock));
 				slon_retry();
 			}
-			node->worker_con_status=SLON_WCON_IDLE;
-			pthread_mutex_unlock(&(node->worker_con_lock));
 			if(event->from_wal_provider)
 				remote_wal_processed(event->provider_wal_loc, node->no_id);
 			/*
@@ -754,7 +732,6 @@ remoteWorkerThread_main(void *cdata)
 		else	/* not SYNC */
 		{
 
-			lock_workercon(node);
 			/**
 			 * open the transaction.
 			 */
@@ -1588,7 +1565,6 @@ remoteWorkerThread_main(void *cdata)
 				rtcfg_reloadListen(node->worker_dbconn);
 				need_reloadListen = false;
 			}
-			pthread_mutex_unlock(&(node->worker_con_lock));
 		}
 
 #ifdef SLON_MEMDEBUG
@@ -1602,7 +1578,6 @@ remoteWorkerThread_main(void *cdata)
 	 * free memory
 	 */
 	adjust_provider_info(node, wd, true, -1);
-	lock_workercon(node);
 	slon_disconnectdb(local_conn);	
 	dstring_free(&query1);
 	dstring_free(&query2);
@@ -1610,7 +1585,6 @@ remoteWorkerThread_main(void *cdata)
 #ifdef SLON_MEMDEBUG	
 	local_conn = NULL;
 	node->worker_dbconn=NULL;
-	pthread_mutex_unlock(&(node->worker_con_lock));
 	  
 	memset(wd, 66, sizeof(WorkerGroupData));
 #endif
@@ -5734,35 +5708,6 @@ int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
 
 
 
-static void lock_workercon(SlonNode * node)
-{
-	PGresult * res1;
-
-	pthread_mutex_lock(&(node->worker_con_lock));
-	if ( node->worker_con_status == SLON_WCON_INCOPY)
-	{
-		/**
-		 * Stop the COPY so we can do other things
-		 * on this connection
-		 */		
-		if (  PQputCopyEnd(node->worker_dbconn,NULL) != 1 ) 
-		{
-			slon_log(SLON_ERROR,"remoteWorkerThread_%d error ending COPY:\n",node->no_id);
-			slon_retry();
-
-		}
-		res1 = PQgetResult(node->worker_dbconn);
-		if ( PQresultStatus(res1) != PGRES_COMMAND_OK )
-		{
-			slon_log(SLON_ERROR,"remoteWorkerThread_%d error in COPY:%s\n",node->no_id,
-					 PQresultErrorMessage(res1));
-			slon_retry();
-		}
-		PQclear(res1);
-		node->worker_con_status = SLON_WCON_INTXN;
-	}
-	
-}
 int get_active_log_table(SlonNode * node,
 					 PGconn * local_dbconn)
 {
