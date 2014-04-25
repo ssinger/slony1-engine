@@ -118,7 +118,7 @@ function exec_ddl(coordinator) {
 
 
 function individual_ddl(coordinator, nodenum) {
-	premable = get_slonik_preamble();
+	preamble = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT( FILENAME=\'regression/testddl/ddl_update_part2.sql\''
 		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +');';
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
@@ -137,7 +137,7 @@ function trigger_function(coordinator) {
 	var psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
-	premable = get_slonik_preamble();
+	preamble = get_slonik_preamble();
 	slonikScript = "EXECUTE SCRIPT(  SQL='alter table table1 drop column seqed;create trigger table5_trigger "
 		+ " before INSERT on public.table5 for each row execute procedure "
 		+ " insert_table1();'"
@@ -153,7 +153,7 @@ function trigger_function(coordinator) {
 
 
 function inline_ddl(coordinator) {
-	premable = get_slonik_preamble();
+	preamble = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT('
 	    + 'SQL=\'ALTER TABLE table1 ADD COLUMN processed timestamp with time zone;\''
 		+ ' ,EVENT NODE=1);\n';
@@ -170,7 +170,7 @@ function execute_on_subscriber(coordinator)
      * Perform an EXECUTE SCRIPT with a subscriber (a non-provider)
      * and verify that the DDL changes replicate to all other nodes.
      */
-    var premable = get_slonik_preamble();
+    var preamble = get_slonik_preamble();
     var slonikScript = 'EXECUTE SCRIPT('
 	+ 'SQL=\'CREATE TABLE test_on_subscriber(id serial, value text);\''
 	+ ' ,EVENT NODE=3);\n'
@@ -199,7 +199,7 @@ function execute_only_on_list(coordinator)
      * Perform an EXECUTE SCRIPT with a subscriber (a non-provider)
      * and verify that the DDL changes replicate to all other nodes.
      */
-    var premable = get_slonik_preamble();
+    var preamble = get_slonik_preamble();
     var slonikScript = 'EXECUTE SCRIPT('
 	+ 'SQL=\'CREATE TABLE test_only_on(id serial, value text);\''
 	+ ' ,EVENT NODE=3,execute only on=\'1,2,3\');\n'
