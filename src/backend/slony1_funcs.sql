@@ -463,7 +463,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as $$
 begin
-	return 2;
+	return 3;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 

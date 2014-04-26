@@ -3,7 +3,7 @@
  *
  *	Autoconf input file for config.h
  *
- *	Copyright (c) 2003-2010, PostgreSQL Global Development Group
+ *	Copyright (c) 2003-2014, PostgreSQL Global Development Group
  *	Author: Jan Wieck, Afilias USA INC.
  *
  *
@@ -12,9 +12,9 @@
 #ifndef	SLONY_I_CONFIG_H
 #define SLONY_I_CONFIG_H
 
-#define SLONY_I_VERSION_STRING	"2.2.0"
-#define SLONY_I_VERSION_STRING_DEC 2,2,0
-#define SLONY_I_FUNC_VERSION_STRING 2_2_0
+#define SLONY_I_VERSION_STRING	"2.3.0"
+#define SLONY_I_VERSION_STRING_DEC 2,3,0
+#define SLONY_I_FUNC_VERSION_STRING 2_3_0
 
 #ifndef PG_VERSION_MAJOR
 #define PG_VERSION_MAJOR 0
