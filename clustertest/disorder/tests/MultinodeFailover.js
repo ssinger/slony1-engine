@@ -7,13 +7,20 @@ MultinodeFailover = function(coordinator, testResults) {
 	this.testDescription='Test the FAILOVER command.  This test will try FAILOVER'
 		+' with multiple nodes failing';
 	this.compareQueryList.push(['select i_id,comments from disorder.do_item_review order by i_id','i_id']);
-
+	this.nodeCount=5;
 }
 MultinodeFailover.prototype = new Failover();
 MultinodeFailover.prototype.constructor = MultinodeFailover;
 
+/**
+ * Returns the number of nodes used in the test.
+ */
+MultinodeFailover.prototype.getNodeCount = function() {
+	return this.nodeCount;
+}
+
 MultinodeFailover.prototype.runTest = function() {
-        this.coordinator.log("MultinodeFailover.prototype.runTest - begin");
+    this.coordinator.log("MultinodeFailover.prototype.runTest - begin");
 	this.testResults.newGroup("Multinode Fail Over Test");
 	this.setupReplication();
 	this.addCompletePaths();
@@ -121,7 +128,42 @@ MultinodeFailover.prototype.runTest = function() {
 	this.compareDb('db2','db3');
 	this.compareDb('db3','db4');
 	this.compareDb('db3','db5');
-
+	
+	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
+		this.slonArray[idx - 1] = this.coordinator.createSlonLauncher('db' + idx);
+		this.slonArray[idx - 1].run();
+	}
+	
+    /**
+	 * Now configure the cluster as 
+	 * 1 <---- 2 ----> 3 ----> 4
+	 */
+    this.moveSet(1,1,2);
+	this.dropNode(5,1);
+	this.nodeCount=4;
+	var resubscribeSlonik = 'resubscribe node(origin=2,provider=2,receiver=1);\n'
+		+ 'resubscribe node(origin=2,provider=2,receiver=3);\n'
+	    + 'resubscribe node(origin=2,provider=3,receiver=4);\n';
+	var slonikPreamble = this.getSlonikPreamble();
+	var slonik=this.coordinator.createSlonik('failover',slonikPreamble,resubscribeSlonik);
+	slonik.run();
+	this.coordinator.join(slonik);
+	this.testResults.assertCheck('failover passes',slonik.getReturnCode(),0);	
+	load=this.generateLoad();
+	java.lang.Thread.sleep(1000);
+	/**
+	 * failover.  Node 2=>1, node3=>1
+	 */
+	this.failover(2,1,3,1);
+	load.stop(); 
+	this.coordinator.join(load);
+	this.slonikSync(1,1);
+	java.lang.Thread.sleep(1000);
+	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
+		this.slonArray[idx - 1].stop();
+		this.coordinator.join(this.slonArray[idx - 1]);
+	}	
+	this.compareDb('db1','db4');
 }
 
 MultinodeFailover.prototype.failover=function(originA,backupA,originB,backupB) 
