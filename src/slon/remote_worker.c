@@ -6130,27 +6130,35 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 			 * this row is was received from a forwarder
 			 *
 			 * This means that the XID in row does not match
-			 * the XID space of the SYNC.
+			 * the XID space of the SYNC as found in ev_snapshot.
+			 * 
 			 *
-			 * Lemma (1) from above means that we don't see this row too early
-			 * but it is possible that this row has already been processed.
-			 *
+			 * Lemma (1) from above means that we don't see this row too early.
+			 * 
+			 * It is possible that this row is a SYNC that we have already processed.
 			 * Consider a resubscribe set
 			 * where before  1---->2
 			 *                \3
 			 * is changed to 1--->2-->3
 			 * 
-			 * It is possible that at the resubcribe point
-			 * 
-			 *      2 has just commited a SYNC group with 1,1001,1002
-			 *      3 has SYNC 1,1001 but not 1,1002
-			 *      
-			 *   This means we need some of the rows in the transaction we see from 2's WAL stream
-			 *   but not others.
-			 *   
+			 * A SYNC GROUP will NOT cross the RESUBSCRIBE (or MOVE SET) event.
+			 * this means that the SYNC's included in the sync group are either
+			 * i) already processed and can be ignored.
+			 * ii) Not yet processed and have to be.
+			 * 		   
+			 * The trick is that we can't depend on the ev_snapshot in sl_event we
+			 * need to use the XID from the provider.
 			 */
 			slon_log(SLON_ERROR,"remoteWorkerThread_%d: cascading from a logical replica not yet supported\n",
 					 node->no_id);
+			/**
+			 * TODO:
+			 * IGNORE the row for now.  Assume it has already been processed.
+			 */
+			if(node->wal_queue == iterator)
+				node->processed_wal_ptr = iterator->xlog;
+			iterator = remoteWorker_wal_remove(node,iterator);
+			continue;
 			
 		}
 	}
