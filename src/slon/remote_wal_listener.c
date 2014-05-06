@@ -127,8 +127,8 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 		 */
 	}
 
-	snprintf(query,sizeof(query),"CREATE_REPLICATION_SLOT   \"slon_%d\" LOGICAL \"%s\"",
-			 rtcfg_nodeid, "slony1_funcs.2.2.0");
+	snprintf(query,sizeof(query),"CREATE_REPLICATION_SLOT   \"slon_%d_%d\" LOGICAL \"%s\"",
+			 rtcfg_nodeid, node->no_id,"slony1_funcs.2.2.0");
 	res = PQexec(state->dbconn,query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -202,8 +202,9 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 		 */
 	}
 	
-	snprintf(query,sizeof(query),"START_REPLICATION SLOT \"slon_%d\" LOGICAL %X/%X (\"cluster\" '%s') ",
+	snprintf(query,sizeof(query),"START_REPLICATION SLOT \"slon_%d_%d\" LOGICAL %X/%X (\"cluster\" '%s') ",
 			 rtcfg_nodeid,
+			 node->no_id,
 			 (uint32)(state->last_committed_pos>>32), 
 			 (uint32)state->last_committed_pos,
 			 rtcfg_cluster_name);
@@ -345,7 +346,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 	 char table_name[NAMEDATALEN];
 	 char schema_name_quoted[NAMEDATALEN+2];
 	 char xid_str[64];
-	SlonListen * listener;
+
 	/**
 	 * variables we lookup on the local node
 	 */
@@ -370,25 +371,7 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		return rc;
 	}
 	
-	/**
-	 * check to see if origin_id is an origin that we are subscribed from:
-	 * TODO: Make this a check based on sl_subscription data not sl_listen data
-	 *
-	 */
-	for(listener = node->listen_head; listener != NULL; 
-		listener=listener->next) 
-	{
 
-		if( listener->li_origin == origin_id )
-			break;
-
-	}
-	if(listener == NULL)
-	{
-		slon_log(SLON_WARN,"remoteWALListenerThread_%d: no listener found for %d\n", node->no_id, origin_id);
-		return 0;
-
-	}
 
 	/**
 	 * are we subscribed to the set ?
@@ -828,7 +811,13 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 	SlonNode * workerNode;
 	SlonWALRecord * record;
 
+	
 	rtcfg_lock();
+	if(origin_id == rtcfg_nodeid) 
+	{
+		rtcfg_unlock();
+		return;
+	}
 	workerNode = rtcfg_findNode(origin_id);
 	if (workerNode == NULL)
 	{
@@ -900,7 +889,7 @@ remoteWALListenThread_main(void *cdata)
 	{
 		for(statePtr = state_list; statePtr->next != NULL; statePtr = statePtr->next);
 		statePtr->next = malloc(sizeof(SlonWALState_list));
-		memset(state_list,0,sizeof(SlonWALState_list));
+		memset(statePtr->next,0,sizeof(SlonWALState_list));
 		statePtr->next->no_id=node->no_id;
 		statePtr = statePtr->next;
 	}
@@ -967,7 +956,7 @@ remoteWALListenThread_main(void *cdata)
 
 	
 	start_wal(node,&state);
-
+	slon_log(SLON_WARN,"start_wal has finished\n");
 	/**
 	 * the thread is complete.  Remove it from the state list.
 	 */

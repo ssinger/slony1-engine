@@ -152,7 +152,7 @@ comment on function @NAMESPACE@.upgradeSchemaAddTruncateTriggers () is
 create or replace function @NAMESPACE@.dropReplicationSlots(no_id integer) returns void as $$
 begin
 	perform pg_drop_replication_slot(slot_name) FROM pg_replication_slots where
-        slot_name like 'slon_%' and slot_type='logical';
+        slot_name like 'slon_'|| no_id||'_'|| @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')  and slot_type='logical';
 end
 $$ language plpgsql;
 
