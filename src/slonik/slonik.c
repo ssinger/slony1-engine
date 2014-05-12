@@ -2987,7 +2987,7 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 					 "    on (sl_node.no_id=sl_failover_targets.backup_id "
 					 "        and set_origin=%d )"
 					 "    where no_id not in ( %s ) "
-					 "    and backup_id not in ( %s ) "
+					 "    and ( backup_id not in ( %s ) or backup_id is null) "
 					 "    order by no_id; ",
 					 stmt->hdr.script->clustername,
 					 stmt->hdr.script->clustername,
@@ -3069,7 +3069,8 @@ slonik_failed_node(SlonikStmt_failed_node * stmt)
 				rc = -1;
 				goto cleanup;
 			}
-			if (PQgetvalue(res1, i, 0) != NULL)
+
+			if (! PQgetisnull(res1, i, 1) )
 			{
 				nodeinfo[i].failover_candidate = true;
 			}
@@ -3374,7 +3375,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	              SlonDString * failed_node_list)
 {
 	int64		max_seqno = 0;
-	int			max_node_idx = 0;
+	int			max_node_idx = -1;
 	int			backup_idx = 0;
 	char		ev_seqno_c[64];
 	SlonDString query;
@@ -3383,7 +3384,8 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 	PGresult   *res1;
 	SlonikAdmInfo *adminfo1;
 	SlonikStmt_wait_event wait_event;
-
+	int64 backup_node_seqno = 0;
+	
 	dstring_init(&query);
 	
 
@@ -3396,10 +3398,9 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 
 		int64		ev_seqno;
 
-		if (!nodeinfo[i].failover_candidate)
-			continue;
-		if (nodeinfo[i].no_id == node_entry->backup_node)
-			backup_idx = i;
+		//if (!nodeinfo[i].failover_candidate)
+		//	continue;
+		
 		slon_mkquery(&query,
 					 "select max(ev_seqno) "
 					 "	from \"_%s\".sl_event "
@@ -3414,9 +3415,14 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 			goto cleanup;
 		}
 		slon_scanint64(PQgetvalue(res1, 0, 0), &ev_seqno);
-
+		if (nodeinfo[i].no_id == node_entry->backup_node) 
+		{
+			backup_idx = i;
+			backup_node_seqno = ev_seqno;
+		}
 		nodeinfo[i].max_seqno = ev_seqno;
-		if (nodeinfo[i].max_seqno > max_seqno)
+
+		if (nodeinfo[i].max_seqno > max_seqno  && nodeinfo[i].failover_candidate )
 		{
 			max_seqno = nodeinfo[i].max_seqno;
 			max_node_idx = i;
@@ -3424,18 +3430,34 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
 		PQclear(res1);
 
 	}
+	if( max_node_idx == -1)
+	{
+		/**
+		 * no maximum ahead node was found. 
+		 */
+	}
+
 	if (nodeinfo[max_node_idx].no_id != node_entry->backup_node)
 	{
 		if (nodeinfo[max_node_idx].max_seqno ==
 			nodeinfo[backup_idx].max_seqno)
 			max_node_idx = backup_idx;
 	}
-	adminfo1 = nodeinfo[max_node_idx].adminfo;
 
+
+	
 
 	/*
 	 * Now execute all FAILED_NODE events on the most ahead candidate
+	 * 
+	 * If there is no failover candiate we use the requested backup node.
 	 */
+	if(max_node_idx < 0) 
+	{
+		max_node_idx = backup_idx;
+		max_seqno = backup_node_seqno;
+	}
+	adminfo1 = nodeinfo[max_node_idx].adminfo;
 	sprintf(ev_seqno_c, INT64_FORMAT, max_seqno);
 	slon_mkquery(&query,
 				 "lock table \"_%s\".sl_event_lock, \"_%s\".sl_config_lock;"
