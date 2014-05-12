@@ -1259,6 +1259,17 @@ begin
 	if found then
 	   v_restart_required:=true;
 	end if;
+	-- 
+	-- if this node is receiving a subscription from the backup node
+	-- with a failed node as the provider we need to fix this.
+	update @NAMESPACE@.sl_subscribe set 
+	        sub_provider=p_backup_node
+		from @NAMESPACE@.sl_set
+		where set_id = sub_set
+		and set_origin=p_failed_node
+		and sub_provider = ANY(p_failed_nodes)
+		and sub_receiver=@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+
 	-- ----
 	-- Terminate all connections of the failed node the hard way
 	-- ----
@@ -1443,7 +1454,7 @@ begin
 					   where sub_set = v_set
 					   and sub_provider=p_failed_node
 					   and sub_receiver=receive_node.no_id
-					   and receive_node.no_failed=false;
+					   and receive_node.no_failed=false;			
 
 			for v_row in select * from @NAMESPACE@.sl_table
 				where tab_set = v_set
@@ -1505,6 +1516,22 @@ begin
 			end if;
 		end if;
 	end loop;
+	
+	--If there are any subscriptions with 
+	--the failed_node being the provider then
+	--we want to redirect those subscriptions
+	--to come from the backup node.
+	--
+	-- The backup node should be a valid
+	-- provider for all subscriptions served
+	-- by the failed node. (otherwise it
+	-- wouldn't be a allowable backup node).
+	update @NAMESPACE@.sl_subscribe	       
+	       set sub_provider=p_backup_node
+	       from @NAMESPACE@.sl_node
+	       where sub_provider=p_failed_node
+	       and sl_node.no_id=sub_receiver
+	       and sl_node.no_failed=false;	
 
 	update @NAMESPACE@.sl_node
 		   set no_active=false WHERE 
@@ -2393,7 +2420,8 @@ begin
 		update @NAMESPACE@.sl_subscribe
 				set sub_provider = v_sub_last
 				where sub_set = p_set_id
-					and sub_receiver = v_sub_node;
+					and sub_receiver = v_sub_node
+					and sub_receiver <> v_sub_last;
 
 		v_sub_last = v_sub_node;
 		v_sub_node = v_sub_next;
@@ -5034,9 +5062,12 @@ begin
 		-- we use for this origin. We are a cascaded subscriber
 		-- for sets from this node.
 		else
-				if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe
+				if exists (select true from @NAMESPACE@.sl_set, @NAMESPACE@.sl_subscribe,
+				   	  	       @NAMESPACE@.sl_node provider
 						where set_origin = v_row.origin
 						  and sub_set = set_id
+						  and sub_provider=provider.no_id
+						  and provider.no_failed = false
 						  and sub_receiver = v_row.receiver
 						  and sub_active)
 				then
@@ -5056,20 +5087,21 @@ begin
 		if v_row.failed then
 		
 		--for every failed node we delete all sl_listen entries
-		--except via providers (listed in sl_subscribe).
+		--except via providers (listed in sl_subscribe)
+		--or failover candidates (sl_failover_targets)
 		--we do this to prevent a non-failover candidate
 		--that is more ahead of the failover candidate from
 		--sending events to the failover candidate that
 		--are 'too far ahead'
 		delete from @NAMESPACE@.sl_listen where
 			   li_origin=v_row.origin and
-			   li_receiver=v_row.receiver
+			   li_receiver=v_row.receiver			
 			   and li_provider not in 
-			   	   (select sub_provider from
-				   @NAMESPACE@.sl_subscribe,
-				   @NAMESPACE@.sl_set where	
-				   sub_set=set_id
-				   and set_origin=v_row.origin);
+			       (select sub_provider from
+			       @NAMESPACE@.sl_subscribe,
+			       @NAMESPACE@.sl_set where
+			       sub_set=set_id
+			       and set_origin=v_row.origin);
 		end if;
 --		   insert into @NAMESPACE@.sl_listen
 --		   		  (li_origin,li_provider,li_receiver)
