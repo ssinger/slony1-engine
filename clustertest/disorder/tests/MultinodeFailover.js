@@ -48,7 +48,7 @@ MultinodeFailover.prototype.runTest = function() {
 	this.createSecondSet(2);
 	this.subscribeSet(2,2,2,[3,4,5]);
 	this.slonikSync(2,2);
-	var load = this.generateLoad();
+	var load = this.generateLoad(1);
 	java.lang.Thread.sleep(10*1000);
 	this.slonikSync(1,1);
 	this.populateReviewTable(2);
@@ -88,7 +88,7 @@ MultinodeFailover.prototype.runTest = function() {
 	 * reviews on node2. Let multiple txn snapshots be
 	 * generated.
 	 */
-	load=this.generateLoad();
+	load=this.generateLoad(1);
 	for(var idx=0; idx < 20; idx++)
 	{
 		this.updateReviewTable(2,'From node 2.' + idx);
@@ -149,7 +149,7 @@ MultinodeFailover.prototype.runTest = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('failover passes',slonik.getReturnCode(),0);	
-	load=this.generateLoad();
+	load=this.generateLoad(2);
 	java.lang.Thread.sleep(1000);
 	/**
 	 * failover.  Node 2=>1, node3=>1

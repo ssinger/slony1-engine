@@ -334,7 +334,7 @@ Failover.prototype.runTest = function() {
     this.coordinator.log('stopping load');
     java.lang.Thread.sleep(3*30*1000);
     load2.stop();
- 
+	this.coordinator.join(load2);
     this.slonArray[3] = this.coordinator.createSlonLauncher('db4');
 				this.slonArray[3].run();    
     this.failNode(1,3,true);
