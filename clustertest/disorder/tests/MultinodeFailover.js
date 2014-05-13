@@ -47,7 +47,7 @@ MultinodeFailover.prototype.runTest = function() {
 	this.slonikSync(1,1);
 	this.createSecondSet(2);
 	this.subscribeSet(2,2,2,[3,4,5]);
-	this.slonikSync(2,2);
+	this.slonikSync(2,2);	
 	var load = this.generateLoad();
 	java.lang.Thread.sleep(10*1000);
 	this.slonikSync(1,1);
@@ -149,6 +149,7 @@ MultinodeFailover.prototype.runTest = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('failover passes',slonik.getReturnCode(),0);	
+	this.currentOrigin='db2';
 	load=this.generateLoad();
 	java.lang.Thread.sleep(1000);
 	/**
