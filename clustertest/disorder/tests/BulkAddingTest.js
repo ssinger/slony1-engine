@@ -95,7 +95,7 @@ BulkAddingTest.prototype.runTest = function() {
 	 * run some load through the system to make sure
 	 * everything replicates as expected.
 	 */
-	var populate=this.generateLoad('db1');
+	var populate=this.generateLoad();
 	this.subscribeSet(1,1,1,[3]);
 	java.lang.Thread.sleep(3*1000);
 	populate.stop();

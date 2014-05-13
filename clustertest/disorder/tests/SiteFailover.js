@@ -17,7 +17,7 @@ SiteFailover.prototype.getNodeCount = function() {
 
 SiteFailover.prototype.runTest = function() {
     this.coordinator.log("SiteFailover.prototype.runTest - begin");
-    this.testResults.newGroup("Multinode Fail Over Test");
+    this.testResults.newGroup("Site Fail Over Test");
     basicTest.prepareDb(['db6']);
     this.setupReplication();
     
@@ -95,7 +95,7 @@ SiteFailover.prototype.runTest = function() {
     this.subscribeSet(2,3,3,[1,4,5]);
     this.subscribeSet(2,3,5,[2,6]);
     this.slonikSync(1,1);
-    var load = this.generateLoad(1);
+    var load = this.generateLoad();
     java.lang.Thread.sleep(10*1000);
     this.slonikSync(1,1);
     this.populateReviewTable(2);
@@ -123,13 +123,15 @@ SiteFailover.prototype.runTest = function() {
 	slonik.run();
 	this.coordinator.join(slonik);
 	this.testResults.assertCheck('drop 3 nodes passes',slonik.getReturnCode(),0);	
-    
-	load = this.generateLoad(2);
+    this.currentOrigin='db2';
+	load = this.generateLoad();
     java.lang.Thread.sleep(10*1000);
+	load.stop();
+	this.coordinator.join(load);
     this.slonikSync(1,2);
     this.slonikSync(2,5);
     
-
+	
     for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 	this.slonArray[idx - 1].stop();
 	this.coordinator.join(this.slonArray[idx - 1]);
