@@ -260,12 +260,14 @@ localListenThread_main( /* @unused@ */ void *dummy)
 				 */
 				int			no_id;
 				char	   *no_comment;
-
+				char       *no_logical;
 				no_id = (int) strtol(PQgetvalue(res, tupno, 6), NULL, 10);
 				no_comment = PQgetvalue(res, tupno, 7);
+				no_logical = PQgetvalue(res,tupno,8);
 
 				if (no_id != rtcfg_nodeid)
-				  rtcfg_storeNode(no_id, no_comment,false);
+				  rtcfg_storeNode(no_id, no_comment,
+								  no_logical[0] == 't' ? true : false );
 
 				rtcfg_reloadListen(dbconn);
 			}

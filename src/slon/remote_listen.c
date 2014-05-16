@@ -643,6 +643,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 						"       ev_snapshot, "
 					"       \"pg_catalog\".txid_snapshot_xmin(ev_snapshot), "
 					"       \"pg_catalog\".txid_snapshot_xmax(ev_snapshot), "
+						"      ev_forward_xid, "
 						"       ev_type, "
 						"       ev_data1, ev_data2, "
 						"       ev_data3, ev_data4, "
@@ -768,9 +769,9 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		(void) slon_scanint64(PQgetvalue(res, tupno, 1), &ev_seqno);
 
 		slon_log(SLON_DEBUG2, "remoteListenThread_%d: "
-				 "queue event %d,%s %s\n",
+				 "queue event %d,%s %s %s\n",
 				 node->no_id, ev_origin, PQgetvalue(res, tupno, 1),
-				 PQgetvalue(res, tupno, 6));
+				 PQgetvalue(res, tupno, 7),PQgetvalue(res,tupno,6) );
 
 		remoteWorker_event(node->no_id,
 						   ev_origin, ev_seqno,
@@ -778,15 +779,16 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 						   PQgetvalue(res, tupno, 3),	/* ev_snapshot */
 						   PQgetvalue(res, tupno, 4),	/* mintxid */
 						   PQgetvalue(res, tupno, 5),	/* maxtxid */
-						   PQgetvalue(res, tupno, 6),	/* ev_type */
-			 (PQgetisnull(res, tupno, 7)) ? NULL : PQgetvalue(res, tupno, 7),
+						   (PQgetisnull(res, tupno, 6) ? NULL : PQgetvalue(res, tupno, 6)),   /* forward_xid */
+						   PQgetvalue(res, tupno, 7),	/* ev_type */
 			 (PQgetisnull(res, tupno, 8)) ? NULL : PQgetvalue(res, tupno, 8),
 			 (PQgetisnull(res, tupno, 9)) ? NULL : PQgetvalue(res, tupno, 9),
-		   (PQgetisnull(res, tupno, 10)) ? NULL : PQgetvalue(res, tupno, 10),
+			 (PQgetisnull(res, tupno, 10)) ? NULL : PQgetvalue(res, tupno, 10),
 		   (PQgetisnull(res, tupno, 11)) ? NULL : PQgetvalue(res, tupno, 11),
 		   (PQgetisnull(res, tupno, 12)) ? NULL : PQgetvalue(res, tupno, 12),
 		   (PQgetisnull(res, tupno, 13)) ? NULL : PQgetvalue(res, tupno, 13),
-						   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14),false,0);
+		   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14),
+						   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 15),false,0);
 	}
 
 	if (ntuples > 0)

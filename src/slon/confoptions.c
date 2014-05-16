@@ -85,7 +85,7 @@ static struct config_int ConfigureNamesInt[] =
 			SLON_C_INT
 		},
 		&sync_group_maxsize,
-		20,
+		1,
 		0,
 		10000
 	},

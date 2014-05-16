@@ -116,6 +116,18 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 	int local_nodeid;
 	const char * replication = " replication=database";
 
+	while(node->pa_conninfo == 0)
+	{
+		/**
+		 * no connection to the remote node.
+		 * sleep and wait.
+		 */
+		slon_log(SLON_INFO,"remoteWALListenerThread_%d no path to node. sleeping 60\n",
+				 node->no_id);
+		sleep(60);
+		
+	}
+
 	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
 	sprintf(conn_info,"%s %s",node->pa_conninfo,replication);
 	state->dbconn = slon_raw_connectdb(conn_info);	
@@ -189,6 +201,19 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 	int copy_res;
 	char * conn_info;
 	const char * replication = " replication=database";
+
+	while(node->pa_conninfo == 0)
+	{
+		/**
+		 * no connection to the remote node.
+		 * sleep and wait.
+		 */
+		slon_log(SLON_INFO,"remoteWALListenerThread_%d no path to node. sleeping 60\n",
+				 node->no_id);
+		sleep(60);
+		
+	}
+
 	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
 	sprintf(conn_info,"%s %s",node->pa_conninfo,replication);
 	state->dbconn = slon_raw_connectdb(conn_info);	
@@ -402,7 +427,18 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		int64 ev_seqno=0;
 		parseEvent(node,cmdargs,state,walptr,&ev_seqno);
 		push_copy_row(node,state,origin_id,set_id,row,xid_str,true,ev_seqno,walptr);
-	}	
+	}
+	else if( (strcmp(schema_name, rtcfg_namespace)==0 ||
+			 strcmp(schema_name_quoted,rtcfg_namespace)==0) &&
+			 strcmp(table_name,  "sl_seqlog")==0)
+	{
+		/**
+		 * ignore sequence updates.
+		 * The seqlog updates.  
+		 * The remote worker will query seqlog directly.
+		 */
+		
+	}
 	else
 	{
 		/**
@@ -772,6 +808,8 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 	record->event  = ev_seqno;
 	record->xlog = wal_ptr;
 	assert(strcmp(row,"")!=0 || is_sync==true);
+	slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d: adding row origin:%d set_id %d\n",listening_node->no_id,
+			 origin_id, record->set_id);
 	remoteWorker_wal_append(origin_id,record);
 	
 	
@@ -830,7 +868,7 @@ remoteWALListenThread_main(void *cdata)
 	
 	dstring_init(&query);
 	slon_mkquery(&query,"select no_last_xlog_rec from %s.sl_node where no_id=%d",
-				 rtcfg_namespace,node->no_id);
+				 rtcfg_namespace,node->no_id);   	
 
 	/**
 	 * connect to the LOCAL database to query the position(if any) of the replica.
@@ -931,8 +969,8 @@ sendFeedback(SlonNode * node,
 	if (blockpos == state->startpos)
 		return true;
 #endif
-	slon_log(SLON_DEBUG4, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
-			 ((uint32)(blockpos>>32)),(uint32)blockpos);
+//	slon_log(SLON_DEBUG4, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
+//			 ((uint32)(blockpos>>32)),(uint32)blockpos);
 	replybuf[len] = 'r';
 	len += 1;
 	sendint64(blockpos, &replybuf[len]);		/* write */

@@ -67,6 +67,7 @@ struct SlonWorkMsg_event_s
 	char	   *ev_snapshot_c;
 	char	   *ev_mintxid_c;
 	char	   *ev_maxtxid_c;
+	char       *ev_forward_xid;
 	char	   *ev_type;
 	char	   *ev_data1;
 	char	   *ev_data2;
@@ -269,9 +270,10 @@ static int copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 static int sync_event(SlonNode * node, SlonConn * local_conn,
 		   WorkerGroupData * wd, SlonWorkMsg_event * event);
 static int	sync_helper(void *cdata, PGconn *local_dbconn);
-static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, 
+static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list, 
 						   int64 sync_event_no,
-						   PGconn * local_conn,char * sync_snapshot);
+						   PGconn * local_conn,char * sync_snapshot
+						   ,char * forward_xid);
 
 int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
 						   char * seqbuf,ProviderInfo * provider,PerfMon * pm,
@@ -1855,6 +1857,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 			if (rtcfg_node->pa_conninfo != NULL)
 				provider->pa_conninfo =
 					strdup(rtcfg_node->pa_conninfo);
+			provider->pa_walsender = rtcfg_node->pa_walsender;
 		}
 	}
 }
@@ -1872,6 +1875,7 @@ remoteWorker_event(int event_provider,
 				   int ev_origin, int64 ev_seqno,
 				   char *ev_timestamp,
 				   char *ev_snapshot, char *ev_mintxid, char *ev_maxtxid,
+				   char *ev_forward_xid,
 				   char *ev_type,
 				   char *ev_data1, char *ev_data2,
 				   char *ev_data3, char *ev_data4,
@@ -1888,6 +1892,7 @@ remoteWorker_event(int event_provider,
 	int			len_snapshot;
 	int			len_mintxid;
 	int			len_maxtxid;
+	int         len_forward_xid=0;
 	int			len_type;
 	int			len_data1 = 0;
 	int			len_data2 = 0;
@@ -1962,6 +1967,7 @@ remoteWorker_event(int event_provider,
 		+ (len_snapshot = strlen(ev_snapshot) + 1)
 		+ (len_mintxid = strlen(ev_mintxid) + 1)
 		+ (len_maxtxid = strlen(ev_maxtxid) + 1)
+		+ ((ev_forward_xid == NULL) ? 0 :  (len_forward_xid = strlen(ev_forward_xid) + 1))
 		+ (len_type = strlen(ev_type) + 1)
 		+ ((ev_data1 == NULL) ? 0 : (len_data1 = strlen(ev_data1) + 1))
 		+ ((ev_data2 == NULL) ? 0 : (len_data2 = strlen(ev_data2) + 1))
@@ -2000,6 +2006,12 @@ remoteWorker_event(int event_provider,
 	msg->ev_maxtxid_c = cp;
 	strcpy(cp, ev_maxtxid);
 	cp += len_maxtxid;
+	if(ev_forward_xid != NULL)
+	{
+		msg->ev_forward_xid = cp;
+		strcpy(cp,ev_forward_xid);
+		cp += len_forward_xid;
+	}
 	msg->ev_type = cp;
 	strcpy(cp, ev_type);
 	cp += len_type;
@@ -2060,8 +2072,8 @@ remoteWorker_event(int event_provider,
 	 */
 	DLLIST_ADD_TAIL(node->message_head, node->message_tail,
 					(SlonWorkMsg *) msg);
-	slon_log(SLON_DEBUG2,"remoteWorker_event_%d added to queue\n",
-			 event_provider);
+	slon_log(SLON_DEBUG2,"remoteWorker_event_%d added %lld to queue forward %s  from %s origin:%d provider:%d \n",
+			 event_provider,msg->ev_seqno,msg->ev_forward_xid,ev_forward_xid,msg->ev_origin,msg->event_provider);
 	pthread_cond_broadcast(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
@@ -2278,7 +2290,7 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	slon_appendquery(dsp,
 					 "insert into %s.sl_event "
 					 "    (ev_origin, ev_seqno, ev_timestamp, "
-					 "     ev_snapshot, ev_type ",
+					 "     ev_snapshot, ev_forward_xid,ev_type ",
 					 rtcfg_namespace);
 	if (event->ev_data1 != NULL)
 		dstring_append(dsp, ", ev_data1");
@@ -2297,7 +2309,7 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	if (event->ev_data8 != NULL)
 		dstring_append(dsp, ", ev_data8");
 	slon_appendquery(dsp,
-					 "    ) values ('%d', '%s', '%s', '%s', '%s'",
+					 "    ) values ('%d', '%s', '%s', '%s', \"pg_catalog\".txid_current(), '%s'",
 					 event->ev_origin, seqbuf, event->ev_timestamp_c,
 					 event->ev_snapshot_c,
 					 event->ev_type);
@@ -4120,9 +4132,11 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 		else
 		{
-			num_errors += sync_wal_helper(node,provider /*sync_event_no*/
+			num_errors += sync_wal_helper(node,wd->provider_head /*sync_event_no*/
 										  ,event->ev_seqno
-										  ,local_dbconn,event->ev_snapshot_c);
+										  ,local_dbconn,event->ev_snapshot_c
+										  ,event->ev_forward_xid);
+								  
 		}
 	}
 
@@ -5759,7 +5773,7 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 	char seqbuf[64];
 	PGresult   *res1;
 	int i;
-	ProviderInfo *provider;
+	ProviderInfo *provider=NULL;
 	ProviderSet *pset;
 	int rc;
 
@@ -5836,16 +5850,16 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
  *
  *
  */
-static int sync_wal_helper(SlonNode * node, ProviderInfo * provider, 
+static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list, 
 						   int64 sync_event_no,
-						   PGconn * local_conn,char * sync_snapshot)
+						   PGconn * local_conn,char * sync_snapshot,char * event_forward_xid)
 {
 	SlonWALRecord * iterator;
 	SlonWALRecord * prev_record;
 
 	SlonDString copy_in;
 	SlonDString query;
-	WorkerGroupData *wd = provider->wd;	
+	WorkerGroupData *wd = provider_list->wd;	
 	PGresult   *res = NULL;
 	PGresult   *res2=NULL;
 	int errors;
@@ -5857,6 +5871,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 	char ** last_snapshots=NULL;
 	int * snapshot_sets=NULL;
 	int idx;
+	bool is_listening=false;
+	ProviderInfo * provider;
 
 	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d in sync_wal_helper\n",
 			 node->no_id);
@@ -5910,7 +5926,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 	{
 
 		slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error executing COPY IN: \"%s\" %s",
-				 node->no_id, provider->no_id,
+				 node->no_id, provider_list->no_id,
 				 dstring_data(&copy_in),
 				 PQresultErrorMessage(res2));
 		errors++;
@@ -5973,7 +5989,38 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 			iterator=node->wal_queue;
 			continue;
 		}
-	
+		
+		/**
+		 * is this record from a provider this remote worker
+		 * actually listens to? It might not be if a different
+		 * remote worker is listening to that provider.
+		 * The remote_wal_listener will still pass events
+		 * from this origin to this queue.  
+		 *
+		 * We filter them out here
+		 */
+		for(is_listening=false,provider=provider_list;
+			provider != NULL; provider=provider->next)
+		{
+			if(provider->no_id == iterator->provider)
+			{
+				is_listening=true;
+				break;
+			}
+		}
+		
+		if ( ! is_listening )
+		{
+			/**
+			 * discard this row.
+			 */
+			if(node->wal_queue == iterator)
+				node->processed_wal_ptr = iterator->xlog;
+			iterator = remoteWorker_wal_remove(node,iterator);
+			continue;
+		}
+			
+
 		if(iterator->is_sync && iterator->event >= sync_event_no)
 		{
 			/**
@@ -5999,8 +6046,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 				node->processed_wal_ptr = iterator->xlog;
 			iterator=remoteWorker_wal_remove(node,iterator);		
 			continue;
-		}
-		
+		}	
 		/**
 		 * Is this row part of the snapshot of the current SYNC?
 		 * (was it committed at the time of the current SYNC)
@@ -6147,18 +6193,101 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider,
 			 * ii) Not yet processed and have to be.
 			 * 		   
 			 * The trick is that we can't depend on the ev_snapshot in sl_event we
-			 * need to use the XID from the provider.
+			 * need to use the XID from the provider. This is available as event_forward_xid
+			 * assume that the sl_event row was selected from this provider.
 			 */
-			slon_log(SLON_ERROR,"remoteWorkerThread_%d: cascading from a logical replica not yet supported\n",
-					 node->no_id);
-			/**
-			 * TODO:
-			 * IGNORE the row for now.  Assume it has already been processed.
-			 */
-			if(node->wal_queue == iterator)
-				node->processed_wal_ptr = iterator->xlog;
-			iterator = remoteWorker_wal_remove(node,iterator);
-			continue;
+
+			if (event_forward_xid != NULL )
+				
+			{
+				
+
+				
+				if(xid_in_snapshot(node,iterator->xid,last_snapshots[0]))
+				{
+					/**
+					 * we have already applied this transaction.
+					 * don't apply it but remove it from the list.
+					 */
+					slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied" \
+							 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[0]);			
+					if(node->wal_queue == iterator)
+						node->processed_wal_ptr = iterator->xlog;
+					iterator = remoteWorker_wal_remove(node,iterator);
+				}
+
+			
+				else if(strcmp(event_forward_xid,iterator->xid) == 0) 
+				{	
+					/**
+					 * this SYNC event was received from a forwarding node.
+					 * The xid of the event in the wal stream should match the xid
+					 * from the forwarding node.   NOTE: This means that the
+					 * event record must actually come from the provider.
+					 *
+					 * 
+					 */	
+			
+					/**
+					 * apply the row.
+					 */
+
+					/**
+					 * release the lock on the queue while we communicate with the databsae
+					 */
+					pthread_mutex_unlock(&(node->wal_queue_lock));
+
+
+					rc = PQputCopyData(local_conn, iterator->row, 
+									   strlen(iterator->row));				
+					if (rc < 0)
+					{
+						slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error " \
+								 "writing to sl_log: %s\n",
+								 node->no_id, provider->no_id,
+								 PQerrorMessage(local_conn));
+						errors++;
+						pthread_mutex_lock(&(node->wal_queue_lock));
+						break;
+						
+					}
+					PQputCopyData(local_conn,"\n",1);
+					
+					pthread_mutex_lock(&(node->wal_queue_lock));
+
+					/**
+					 * The record at iterator has been processed.
+					 * Remove it from the list queue and deallocate it
+					 */
+					if(node->wal_queue == iterator)
+						node->processed_wal_ptr = iterator->xlog;
+					iterator = remoteWorker_wal_remove(node,iterator);
+				}
+			
+				else {
+					/**
+					 * The forward_xid of the sync does not match
+					 * what does this mean? Are we seeing the sl_log_row
+					 * too early or are we using the wrong provider?
+					 */
+					slon_log(SLON_ERROR,"remoteWorkerThread_%d: event has forward xid %s when row had %s event %lld \n",node->no_id,
+							 event_forward_xid,
+							 iterator->xid,sync_event_no);
+					slon_retry();
+				}
+			}
+			else {
+				/**
+				 * node->id != provider->node_id 
+				 * but event_forward_xid is null.
+				 * 
+				 * Why is event_forward_xid null when the origin isn't
+				 * where we received the event from???
+				 */
+				slon_log(SLON_ERROR,"remoteWorkerThread_%d: event %lld was received from %d but with a null event_forward_xid\n"
+						 , node->no_id, sync_event_no,iterator->provider);
+				assert(false);
+			}
 			
 		}
 	}

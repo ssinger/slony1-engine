@@ -239,6 +239,7 @@ create table @NAMESPACE@.sl_event (
 	ev_seqno			int8,
 	ev_timestamp		timestamptz,
 	ev_snapshot			"pg_catalog".txid_snapshot,
+	ev_forward_xid			bigint,
 	ev_type				text,
 	ev_data1			text,
 	ev_data2			text,
