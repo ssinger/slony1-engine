@@ -6009,19 +6009,10 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			}
 		}
 		
-		if ( ! is_listening )
-		{
-			/**
-			 * discard this row.
-			 */
-			if(node->wal_queue == iterator)
-				node->processed_wal_ptr = iterator->xlog;
-			iterator = remoteWorker_wal_remove(node,iterator);
-			continue;
-		}
+	
 			
 
-		if(iterator->is_sync && iterator->event >= sync_event_no)
+		if(is_listening && iterator->is_sync && iterator->event >= sync_event_no)
 		{
 			/**
 			 * If this is a SYNC, is it the SYNC we are processing to.
@@ -6032,7 +6023,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 					 "SYNC %lld\n",node->no_id, sync_event_no);
 			break;
 		}
-		else if (iterator->is_sync)
+		else if (is_listening && iterator->is_sync)
 		{
 			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: skipping SYNC %lld" \
 					 " while looking for %lld\n"
@@ -6041,11 +6032,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			 * assume we have already processed this SYNC?
 			 * TODO: is this safe or do we need to make sure it is is
 			 * smaller.
-			 */
-			if(node->wal_queue == iterator)
-				node->processed_wal_ptr = iterator->xlog;
-			iterator=remoteWorker_wal_remove(node,iterator);		
-			continue;
+			 */		
 		}	
 		/**
 		 * Is this row part of the snapshot of the current SYNC?
@@ -6080,7 +6067,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 		 *  Because of Lemma 1 we will never see rows from a non-origin 
 		 *  earlier than the transaction SYNC that includes them.
 		 */
-		if(iterator->provider == node->no_id)
+		else if(is_listening && iterator->provider == node->no_id)
 		{
 			/**
 			 * The provider is the set origin.  Consider the
@@ -6162,15 +6149,9 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 
 				pthread_mutex_lock(&(node->wal_queue_lock));
 			}				
-			/**
-			 * The record at iterator has been processed.
-			 * Remove it from the list queue and deallocate it
-			 */
-			if(node->wal_queue == iterator)
-				node->processed_wal_ptr = iterator->xlog;
-			 iterator = remoteWorker_wal_remove(node,iterator);
+		
 		}
-		else
+		else if (is_listening && event_forward_xid!= NULL)
 		{
 			/**
 			 * this row is was received from a forwarder
@@ -6196,87 +6177,70 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			 * need to use the XID from the provider. This is available as event_forward_xid
 			 * assume that the sl_event row was selected from this provider.
 			 */
-
-			if (event_forward_xid != NULL )
-				
+			
+			
+			if(xid_in_snapshot(node,iterator->xid,last_snapshots[0]))
 			{
+				/**
+				 * we have already applied this transaction.
+				 * don't apply it but remove it from the list.
+				 */
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied" \
+						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[0]);			
+			
+			}
+			else if(strcmp(event_forward_xid,iterator->xid) == 0) 
+			{	
+				/**
+				 * this SYNC event was received from a forwarding node.
+				 * The xid of the event in the wal stream should match the xid
+				 * from the forwarding node.   NOTE: This means that the
+				 * event record must actually come from the provider.
+				 *
+				 * 
+				 */	
 				
-
+				/**
+				 * apply the row.
+				 */
 				
-				if(xid_in_snapshot(node,iterator->xid,last_snapshots[0]))
+				/**
+				 * release the lock on the queue while we communicate with the databsae
+				 */
+				pthread_mutex_unlock(&(node->wal_queue_lock));
+				
+				
+				rc = PQputCopyData(local_conn, iterator->row, 
+								   strlen(iterator->row));				
+				if (rc < 0)
 				{
-					/**
-					 * we have already applied this transaction.
-					 * don't apply it but remove it from the list.
-					 */
-					slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied" \
-							 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[0]);			
-					if(node->wal_queue == iterator)
-						node->processed_wal_ptr = iterator->xlog;
-					iterator = remoteWorker_wal_remove(node,iterator);
-				}
-
-			
-				else if(strcmp(event_forward_xid,iterator->xid) == 0) 
-				{	
-					/**
-					 * this SYNC event was received from a forwarding node.
-					 * The xid of the event in the wal stream should match the xid
-					 * from the forwarding node.   NOTE: This means that the
-					 * event record must actually come from the provider.
-					 *
-					 * 
-					 */	
-			
-					/**
-					 * apply the row.
-					 */
-
-					/**
-					 * release the lock on the queue while we communicate with the databsae
-					 */
-					pthread_mutex_unlock(&(node->wal_queue_lock));
-
-
-					rc = PQputCopyData(local_conn, iterator->row, 
-									   strlen(iterator->row));				
-					if (rc < 0)
-					{
-						slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error " \
-								 "writing to sl_log: %s\n",
-								 node->no_id, provider->no_id,
-								 PQerrorMessage(local_conn));
-						errors++;
-						pthread_mutex_lock(&(node->wal_queue_lock));
-						break;
-						
-					}
-					PQputCopyData(local_conn,"\n",1);
-					
+					slon_log(SLON_ERROR, "remoteWorkerThread_%d_%d: error " \
+							 "writing to sl_log: %s\n",
+							 node->no_id, provider->no_id,
+							 PQerrorMessage(local_conn));
+					errors++;
 					pthread_mutex_lock(&(node->wal_queue_lock));
-
-					/**
-					 * The record at iterator has been processed.
-					 * Remove it from the list queue and deallocate it
-					 */
-					if(node->wal_queue == iterator)
-						node->processed_wal_ptr = iterator->xlog;
-					iterator = remoteWorker_wal_remove(node,iterator);
+					break;
+					
 				}
-			
-				else {
-					/**
-					 * The forward_xid of the sync does not match
-					 * what does this mean? Are we seeing the sl_log_row
-					 * too early or are we using the wrong provider?
-					 */
-					slon_log(SLON_ERROR,"remoteWorkerThread_%d: event has forward xid %s when row had %s event %lld \n",node->no_id,
-							 event_forward_xid,
-							 iterator->xid,sync_event_no);
-					slon_retry();
-				}
+				PQputCopyData(local_conn,"\n",1);
+				
+				pthread_mutex_lock(&(node->wal_queue_lock));
+				
 			}
 			else {
+				/**
+				 * The forward_xid of the sync does not match
+				 * what does this mean? Are we seeing the sl_log_row
+				 * too early or are we using the wrong provider?
+				 */
+				slon_log(SLON_ERROR,"remoteWorkerThread_%d: event has forward xid %s when row had %s event %lld \n",node->no_id,
+						 event_forward_xid,
+						 iterator->xid,sync_event_no);
+				slon_retry();
+			}
+		}		
+	 	else if (is_listening) {
 				/**
 				 * node->id != provider->node_id 
 				 * but event_forward_xid is null.
@@ -6287,10 +6251,19 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				slon_log(SLON_ERROR,"remoteWorkerThread_%d: event %lld was received from %d but with a null event_forward_xid\n"
 						 , node->no_id, sync_event_no,iterator->provider);
 				assert(false);
-			}
-			
 		}
+			
+	
+
+		/**
+		 * The record at iterator has been processed.
+		 * Remove it from the list queue and deallocate it
+		 */
+		if(node->wal_queue == iterator)
+			node->processed_wal_ptr = iterator->xlog;
+		iterator = remoteWorker_wal_remove(node,iterator);
 	}
+	
 	pthread_mutex_unlock(&(node->wal_queue_lock));		
 	rc = PQputCopyEnd(local_conn, NULL);
 	if (rc < 0)
