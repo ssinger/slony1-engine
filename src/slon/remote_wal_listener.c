@@ -307,7 +307,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				PQfreemem(copybuf);
 
 				
-				slon_log(SLON_INFO,
+				slon_log(SLON_DEBUG4,
 						 "remoteWALListenerThread_%d: new ptr is %X/%X\n", node->no_id,
 						 (uint32)(temp>>32),(uint32)temp);
 
@@ -492,7 +492,6 @@ parseEvent(SlonNode * node, char * cmdargs,SlonWALState * state,
 	{
 
 		value = parse_csv_token(NULL,',',&saveptr);
-		slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: parsed %s %s\n",node->no_id,column,value);
 		if(value == NULL)
 		{
 			slon_log(SLON_ERROR,"remoteWALListenerThread_%d: " \
@@ -1049,7 +1048,7 @@ void remote_wal_processed(XlogRecPtr confirmed, int no_id)
 		slon_log(SLON_ERROR,"remoteWALListener_%d thread was not found",no_id);
 		slon_retry();
 	}
-	slon_log(SLON_DEBUG2,"remoteWALListener_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
+	slon_log(SLON_DEBUG4,"remoteWALListener_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
 	pthread_mutex_lock(&statePtr->state->position_lock);
 	statePtr->state->last_committed_pos=confirmed;
 	pthread_mutex_unlock(&statePtr->state->position_lock);
