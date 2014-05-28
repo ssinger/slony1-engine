@@ -643,7 +643,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 						"       ev_snapshot, "
 					"       \"pg_catalog\".txid_snapshot_xmin(ev_snapshot), "
 					"       \"pg_catalog\".txid_snapshot_xmax(ev_snapshot), "
-						"      ev_forward_xid, "
+						"      coalesce(ev_provider_xid,\"pg_catalog\".txid_snapshot_xmax(ev_snapshot)), "
 						"       ev_type, "
 						"       ev_data1, ev_data2, "
 						"       ev_data3, ev_data4, "
@@ -779,7 +779,7 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 						   PQgetvalue(res, tupno, 3),	/* ev_snapshot */
 						   PQgetvalue(res, tupno, 4),	/* mintxid */
 						   PQgetvalue(res, tupno, 5),	/* maxtxid */
-						   (PQgetisnull(res, tupno, 6) ? NULL : PQgetvalue(res, tupno, 6)),   /* forward_xid */
+						   (PQgetisnull(res, tupno, 6) ? NULL : PQgetvalue(res, tupno, 6)),   /* provider_xid */
 						   PQgetvalue(res, tupno, 7),	/* ev_type */
 			 (PQgetisnull(res, tupno, 8)) ? NULL : PQgetvalue(res, tupno, 8),
 			 (PQgetisnull(res, tupno, 9)) ? NULL : PQgetvalue(res, tupno, 9),

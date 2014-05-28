@@ -1050,7 +1050,9 @@ void remote_wal_processed(XlogRecPtr confirmed, int no_id)
 	}
 	slon_log(SLON_DEBUG4,"remoteWALListener_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
 	pthread_mutex_lock(&statePtr->state->position_lock);
-	statePtr->state->last_committed_pos=confirmed;
+	if(statePtr->state->last_committed_pos==0 ||
+	   confirmed > statePtr->state->last_committed_pos)
+		statePtr->state->last_committed_pos=confirmed;
 	pthread_mutex_unlock(&statePtr->state->position_lock);
 	pthread_mutex_unlock(&state_list_lock);
 }

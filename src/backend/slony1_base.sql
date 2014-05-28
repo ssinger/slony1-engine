@@ -83,7 +83,8 @@ create table @NAMESPACE@.sl_setsync (
 	ssy_seqno			int8,
 	ssy_snapshot		"pg_catalog".txid_snapshot,
 	ssy_action_list		text,
-
+	ssy_provider int4,
+	ssy_provider_snapshot "pg_catalog".txid_snapshot,
 	CONSTRAINT "sl_setsync-pkey"
 		PRIMARY KEY (ssy_setid),
 	CONSTRAINT "ssy_setid-set_id-ref"
@@ -239,7 +240,7 @@ create table @NAMESPACE@.sl_event (
 	ev_seqno			int8,
 	ev_timestamp		timestamptz,
 	ev_snapshot			"pg_catalog".txid_snapshot,
-	ev_forward_xid			bigint,
+	ev_provider_xid			bigint,
 	ev_type				text,
 	ev_data1			text,
 	ev_data2			text,

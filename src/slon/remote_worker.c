@@ -67,7 +67,7 @@ struct SlonWorkMsg_event_s
 	char	   *ev_snapshot_c;
 	char	   *ev_mintxid_c;
 	char	   *ev_maxtxid_c;
-	char       *ev_forward_xid;
+	char       *ev_provider_xid;
 	char	   *ev_type;
 	char	   *ev_data1;
 	char	   *ev_data2;
@@ -323,6 +323,7 @@ remoteWorkerThread_main(void *cdata)
 	bool		check_config = true;
 	int64		curr_config = -1;
 	char		seqbuf[64];
+	char        seqbuf2[64];
 	bool		event_ok;
 	bool		need_reloadListen = false;
 	char		conn_symname[32];
@@ -1102,6 +1103,8 @@ remoteWorkerThread_main(void *cdata)
 
 				if ((rtcfg_nodeid != old_origin) && (rtcfg_nodeid != new_origin))
 				{
+					ProviderInfo * piter=NULL;
+
 					slon_log(SLON_DEBUG1, "ACCEPT_SET - node not origin\n");
 					(void) slon_mkquery(&query2,
 										"select 1 from %s.sl_event "
@@ -1148,23 +1151,46 @@ remoteWorkerThread_main(void *cdata)
 					}
 					PQclear(res);
 					slon_log(SLON_DEBUG1, "ACCEPT_SET - MOVE_SET exists - adjusting setsync status\n");
-
+					sprintf(seqbuf2,"'%s:%s:'",event->ev_provider_xid,event->ev_provider_xid);
 					/*
 					 * Finalize the setsync status to mave the ACCEPT_SET's
 					 * seqno and snapshot info.
 					 */
+
+					/**
+					 * PROBLEM: A cascaded node can see the ACCEPT_SET
+					 * before the MOVE_SET.  The ACCEPT_SET can come from
+					 * a provider that isn't actually the provider for the set
+					 * we will end up using.  This means that ssy_provider and ssy_provider_snapshot
+					 * are wrong. 
+					 *
+					 */
+					for(piter = wd->provider_head; piter != NULL; piter = piter->next)
+					{
+						if(piter->no_id == event->event_provider)
+							break;
+					}
+					if(piter == NULL)
+					{
+						slon_log(SLON_CONFIG,"remoteWorkerThread_%d: The ACCEPT SET was not received from a provider. Restarting\n",node->no_id);
+						slon_restart();
+					}
+					
+
 					slon_appendquery(&query1,
 									 "update %s.sl_setsync "
 									 "    set ssy_origin = %d, "
 									 "        ssy_seqno = '%s', "
 									 "        ssy_snapshot = '%s', "
-									 "        ssy_action_list = '' "
+									 "        ssy_action_list = '', "
+									 "        ssy_provider_snapshot = %s , "
+									 "        ssy_provider = %d "
 									 "    where ssy_setid = %d; ",
 									 rtcfg_namespace,
 									 new_origin,
 									 seqbuf,
 									 event->ev_snapshot_c,
-									 set_id);
+									 seqbuf2, event->event_provider,set_id);
 
 					/*
 					 * Execute all queries and restart slon.
@@ -1232,6 +1258,12 @@ remoteWorkerThread_main(void *cdata)
 						(int) strtol(PQgetvalue(res, 0, 0), NULL, 10);
 				}
 				PQclear(res);
+
+				/**
+				 * TODO NOTE: IF this node was receiving a set from an origin
+				 * but is now no longer receiving the set from the origin we
+				 * need to update/set the WAL related fields in sl_setsync
+				 */
 
 				/*
 				 * Update the internal runtime configuration
@@ -1875,7 +1907,7 @@ remoteWorker_event(int event_provider,
 				   int ev_origin, int64 ev_seqno,
 				   char *ev_timestamp,
 				   char *ev_snapshot, char *ev_mintxid, char *ev_maxtxid,
-				   char *ev_forward_xid,
+				   char *ev_provider_xid,
 				   char *ev_type,
 				   char *ev_data1, char *ev_data2,
 				   char *ev_data3, char *ev_data4,
@@ -1892,7 +1924,7 @@ remoteWorker_event(int event_provider,
 	int			len_snapshot;
 	int			len_mintxid;
 	int			len_maxtxid;
-	int         len_forward_xid=0;
+	int         len_provider_xid=0;
 	int			len_type;
 	int			len_data1 = 0;
 	int			len_data2 = 0;
@@ -1967,7 +1999,7 @@ remoteWorker_event(int event_provider,
 		+ (len_snapshot = strlen(ev_snapshot) + 1)
 		+ (len_mintxid = strlen(ev_mintxid) + 1)
 		+ (len_maxtxid = strlen(ev_maxtxid) + 1)
-		+ ((ev_forward_xid == NULL) ? 0 :  (len_forward_xid = strlen(ev_forward_xid) + 1))
+		+ ((ev_provider_xid == NULL) ? 0 :  (len_provider_xid = strlen(ev_provider_xid) + 1))
 		+ (len_type = strlen(ev_type) + 1)
 		+ ((ev_data1 == NULL) ? 0 : (len_data1 = strlen(ev_data1) + 1))
 		+ ((ev_data2 == NULL) ? 0 : (len_data2 = strlen(ev_data2) + 1))
@@ -2006,11 +2038,11 @@ remoteWorker_event(int event_provider,
 	msg->ev_maxtxid_c = cp;
 	strcpy(cp, ev_maxtxid);
 	cp += len_maxtxid;
-	if(ev_forward_xid != NULL)
+	if(ev_provider_xid != NULL)
 	{
-		msg->ev_forward_xid = cp;
-		strcpy(cp,ev_forward_xid);
-		cp += len_forward_xid;
+		msg->ev_provider_xid = cp;
+		strcpy(cp,ev_provider_xid);
+		cp += len_provider_xid;
 	}
 	msg->ev_type = cp;
 	strcpy(cp, ev_type);
@@ -2073,7 +2105,7 @@ remoteWorker_event(int event_provider,
 	DLLIST_ADD_TAIL(node->message_head, node->message_tail,
 					(SlonWorkMsg *) msg);
 	slon_log(SLON_DEBUG2,"remoteWorker_event_%d added %lld to queue forward %s  from %s origin:%d provider:%d \n",
-			 ev_origin,msg->ev_seqno,msg->ev_forward_xid,ev_forward_xid,msg->ev_origin,msg->event_provider);
+			 ev_origin,msg->ev_seqno,msg->ev_provider_xid,ev_provider_xid,msg->ev_origin,msg->event_provider);
 	pthread_cond_broadcast(&(node->message_cond));
 	pthread_mutex_unlock(&(node->message_lock));
 }
@@ -2290,7 +2322,7 @@ query_append_event(SlonDString * dsp, SlonWorkMsg_event * event)
 	slon_appendquery(dsp,
 					 "insert into %s.sl_event "
 					 "    (ev_origin, ev_seqno, ev_timestamp, "
-					 "     ev_snapshot, ev_forward_xid,ev_type ",
+					 "     ev_snapshot, ev_provider_xid,ev_type ",
 					 rtcfg_namespace);
 	if (event->ev_data1 != NULL)
 		dstring_append(dsp, ", ev_data1");
@@ -2499,6 +2531,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	int			sub_provider = 0;
 	char	   *ssy_seqno = NULL;
 	char	   *ssy_snapshot = NULL;
+	char       *ssy_provider_snapshot=NULL;
 	SlonDString ssy_action_list;
 	char		seqbuf[64];
 	char	   *copydata = NULL;
@@ -2507,6 +2540,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 	struct timeval tv_start;
 	struct timeval tv_start2;
 	struct timeval tv_now;
+	char  logical_provider[10];
 
 	gettimeofday(&tv_start, NULL);
 
@@ -3505,7 +3539,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			}
 			ssy_seqno = PQgetvalue(res1, 0, 0);
 			ssy_snapshot = PQgetvalue(res1, 0, 1);
-
+			ssy_provider_snapshot = PQgetvalue(res1,0,1);
 			(void) slon_mkquery(&query2,
 					   "log_txid >= \"pg_catalog\".txid_snapshot_xmax('%s') "
 				   "or (log_txid >= \"pg_catalog\".txid_snapshot_xmin('%s')",
@@ -3563,6 +3597,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		dstring_terminate(&ssy_action_list);
 		PQclear(res2);
+	
 	}
 	else
 	{
@@ -3572,7 +3607,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		 */
 		(void) slon_mkquery(&query1,
 							"select ssy_seqno, ssy_snapshot, "
-							"    ssy_action_list "
+							"    ssy_action_list,\"pg_catalog\".txid_current_snapshot() "
 							"from %s.sl_setsync where ssy_setid = %d; ",
 							rtcfg_namespace, set_id);
 		res1 = PQexec(pro_dbconn, dstring_data(&query1));
@@ -3609,7 +3644,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_init(&ssy_action_list);
 		ssy_seqno = PQgetvalue(res1, 0, 0);
 		ssy_snapshot = PQgetvalue(res1, 0, 1);
-		dstring_append(&ssy_action_list, PQgetvalue(res1, 0, 4));
+		dstring_append(&ssy_action_list, PQgetvalue(res1, 0, 2));
+		ssy_provider_snapshot=PQgetvalue(res1, 0, 3);
 		dstring_terminate(&ssy_action_list);
 	}
 
@@ -3620,12 +3656,14 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 						"delete from %s.sl_setsync where ssy_setid = %d;"
 						"insert into %s.sl_setsync "
 						"    (ssy_setid, ssy_origin, ssy_seqno, "
-						"     ssy_snapshot, ssy_action_list) "
-						"    values ('%d', '%d', '%s', '%q', '%q'); ",
+						"     ssy_snapshot, ssy_action_list,ssy_provider,ssy_provider_snapshot) "
+						"    values ('%d', '%d', '%s', '%q', '%q', %d ,'%q'); ",
 						rtcfg_namespace, set_id,
 						rtcfg_namespace,
 						set_id, node->no_id, ssy_seqno, ssy_snapshot,
-						dstring_data(&ssy_action_list));
+						dstring_data(&ssy_action_list),						
+						sub_node->no_id,ssy_provider_snapshot);
+	
 	dstring_free(&ssy_action_list);
 	if (query_execute(node, loc_dbconn, &query1) < 0)
 	{
@@ -4135,7 +4173,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 			num_errors += sync_wal_helper(node,wd->provider_head /*sync_event_no*/
 										  ,event->ev_seqno
 										  ,local_dbconn,event->ev_snapshot_c
-										  ,event->ev_forward_xid);
+										  ,event->ev_provider_xid);
 								  
 		}
 	}
@@ -4251,6 +4289,14 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 		PQclear(res1);
 	}
+
+
+	/**
+	 * note: If the provider is a logical forwarder
+	 * then we need to store the XID of the SYNC on the provider
+	 * we just used.  
+	 * 
+	 **/
 
 	/*
 	 * Light's are still green ... update the setsync status of all the sets
@@ -4370,7 +4416,7 @@ sync_helper(void *cdata, PGconn *local_conn)
 
 	dstring_init(&query);
 
-
+	assert(false);
 	/*
 	 * OK, we got work to do.
 	 */
@@ -5771,6 +5817,8 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 {
 	SlonDString query;
 	char seqbuf[64];
+	char provider_seqbuf[64];
+	char provider_snapshot[129];
 	PGresult   *res1;
 	int i;
 	ProviderInfo *provider=NULL;
@@ -5785,15 +5833,25 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 	 * update sl_setsync.
 	 */
 	sprintf(seqbuf,INT64_FORMAT ,event->ev_seqno);
+	if(event->provider_wal_loc != 0) 
+	{
+		sprintf(provider_seqbuf,INT64_FORMAT, event->provider_wal_loc);
+		sprintf(provider_snapshot,"'%s:%s'",provider_seqbuf,provider_seqbuf);
+	}
+	else
+		sprintf(provider_seqbuf,"NULL");
 	dstring_init(&query);
 	slon_mkquery(&query,
 				 "update %s.sl_setsync set "
 				 "    ssy_seqno = '%s', ssy_snapshot = '%s', "
-				 "    ssy_action_list = '' "
+				 "    ssy_action_list = '', "
+				 "    ssy__provider= %d "
+				 "    ssy_provider_snapshot = %s "
 				 "where "
 				 " ssy_setid in (",
 				 rtcfg_namespace,
-				 seqbuf, event->ev_snapshot_c);	
+				 seqbuf, event->ev_snapshot_c, event->event_provider,
+		         provider_snapshot);
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -5867,16 +5925,18 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 	int subscribed_sets=0;
 	int tupno;
 	char ** last_snapshots=NULL;
+	char ** last_provider_snapshots=NULL;
 	int * snapshot_sets=NULL;
+	int * last_providers=NULL;
 	bool is_listening=false;
 	ProviderInfo * provider;
 	bool zero_subscriptions=true;
-
+	int set_idx;
 
 	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d in sync_wal_helper\n",
 			 node->no_id);
 	dstring_init(&query);
-	slon_mkquery(&query,"select SSY.ssy_setid,SSY.ssy_snapshot "
+	slon_mkquery(&query,"select SSY.ssy_setid,SSY.ssy_snapshot,SSY.ssy_provider,SSY.ssy_provider_snapshot "
 				 " from %s.sl_setsync SSY "
 				 " where SSY.ssy_origin=%d"
 				 , rtcfg_namespace,node->no_id);
@@ -5902,10 +5962,18 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 	
 	snapshot_sets = malloc(sizeof(int) * subscribed_sets);
 	last_snapshots = malloc(sizeof(char*) * subscribed_sets);
+	last_providers = malloc(sizeof(int) * subscribed_sets);
+	last_provider_snapshots = malloc(sizeof(char*) * subscribed_sets);
+
 	for(tupno = 0 ; tupno < subscribed_sets; tupno++)
 	{
 		snapshot_sets[tupno] = atoi(PQgetvalue(res,tupno,0));
-		last_snapshots[tupno] = strdup(PQgetvalue(res,tupno,1));
+		last_snapshots[tupno] = strdup(PQgetvalue(res,tupno,1));		
+		last_providers[tupno] = atoi(PQgetvalue(res,tupno,2));
+		if(!PQgetisnull(res,tupno,3))
+			last_provider_snapshots[tupno]=strdup(PQgetvalue(res,tupno,3));
+		else
+			last_provider_snapshots[tupno]=NULL;
 	}
 	PQclear(res);
 	/**
@@ -6011,7 +6079,32 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				zero_subscriptions=false;
 		}
 		
-	
+		if(!zero_subscriptions) 
+		{
+			/**
+			 * todo: what if multiple sets are on different snapshots
+			 * per sl_setsync ?
+			 * We need to find the last_snapshots row for THIS set
+			 * and use that value.
+			 */
+			for(set_idx = 0; set_idx < subscribed_sets; set_idx ++ )
+			{
+				if(snapshot_sets[set_idx] == iterator->set_id)
+				{
+					break;
+				}				
+			}
+			if(set_idx == subscribed_sets) 
+			{
+				/**
+				 * set id was not found in sl_setsync.
+				 * Either set_id is wrong or we don't (yet)
+				 * have a sl_setsync row.
+				 * TODO/FIXME
+				 */
+				set_idx=0;
+			}
+		}
 			
 
 		if(is_listening && iterator->is_sync && iterator->event >= sync_event_no)			
@@ -6096,6 +6189,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			pthread_mutex_unlock(&(node->wal_queue_lock));
 
 
+
+
 			if(!xid_in_snapshot(node,iterator->xid,sync_snapshot))
 			{
 				/**
@@ -6112,11 +6207,13 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				
 			}
 			
-			/**
-			 * todo: what if multiple sets are on different snapshots
-			 * per sl_setsync
+			/**	
+			 * Remember this is the case where the provider is the origin
+			 * so last_snapshots is actually meaningful.
 			 */
-			if(xid_in_snapshot(node,iterator->xid,last_snapshots[0]))
+						
+
+			if(xid_in_snapshot(node,iterator->xid,last_snapshots[set_idx]))
 			{
 				/**
 				 * we have already applied this transaction.
@@ -6124,7 +6221,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 */
 				pthread_mutex_lock(&(node->wal_queue_lock));
 				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied"\
-						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[0]);			
+						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[set_idx]);			
 				
 			}
 			else 
@@ -6178,6 +6275,10 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			 * The trick is that we can't depend on the ev_snapshot in sl_event we
 			 * need to use the XID from the provider. This is available as event_forward_xid
 			 * assume that the sl_event row was selected from this provider.
+			 * We can compare the providers XID from when it added the sync(from the event)
+			 * to the last XID we applied from this provider (stored in sl_setsync).
+			 * We can do comparision between the 2 XID values because rows are applied
+			 * on the provider by a slon remoteWorker in a linear fashion.
 			 */
 			
 			if(zero_subscriptions)
@@ -6190,14 +6291,27 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 						 node->no_id);
 				
 			}			
-			else if(xid_in_snapshot(node,iterator->xid,last_snapshots[0]))
+			else if(last_provider_snapshots[set_idx] != NULL 
+					&& xid_in_snapshot(node,iterator->xid,last_provider_snapshots[set_idx]))
 			{
+				if(iterator->provider != last_providers[set_idx]) 
+				{
+					
+					/**
+					 * the provider has changed. 
+					 * We really should update sl_setsync
+					 * as part of the MOVE SET/RESUBSCRIBE set.
+					 */
+					assert(false);
+				}
+
+
 				/**
 				 * we have already applied this transaction.
 				 * don't apply it but remove it from the list.
 				 */
 				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied" \
-						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[0]);			
+						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_provider_snapshots[set_idx]);			
 			
 			}
 			else if(strcmp(event_forward_xid,iterator->xid) == 0) 
@@ -6311,9 +6425,17 @@ cleanup:
 		free(last_snapshots[tupno]);
 	}
 	if ( last_snapshots != NULL)
-		free(last_snapshots);
+		free(last_snapshots);	
 	if(snapshot_sets != NULL)
 		free(snapshot_sets);
+	for(tupno = 0; tupno < subscribed_sets; tupno++)
+	{
+		free(last_provider_snapshots[tupno]);
+	}
+	if(last_provider_snapshots != NULL)
+		free(last_provider_snapshots);
+	if(last_providers != NULL)
+		free(last_providers);
 	return retcode;
 
 }
@@ -6410,7 +6532,7 @@ static bool xid_in_snapshot(SlonNode * node,
 		/**
 		 * parse error
 		 */
-		slon_log(SLON_ERROR,"remoteWorkerThread_%d: error parsing snapshot %s",node->no_id,snapshot);
+		slon_log(SLON_ERROR,"remoteWorkerThread_%d: error parsing snapshot %s\n",node->no_id,snapshot);
 		slon_retry();
 	}
 	
@@ -6447,7 +6569,7 @@ static bool xid_in_snapshot(SlonNode * node,
 			if (strcmp(elem,xid_c)==0)
 			{
 				/**
-				 * this transaction is in progress.
+				 * this transaction is in pxrogress.
 				 */
 				free(snapshot);
 				return false;

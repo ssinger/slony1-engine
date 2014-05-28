@@ -866,7 +866,7 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 	char	   *cacheKey;
 	bool		found;
 
-	/*
+/*
 	 * Get the trigger call context
 	 */
 	if (!CALLED_AS_TRIGGER(fcinfo))

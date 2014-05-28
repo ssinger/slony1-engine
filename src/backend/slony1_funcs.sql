@@ -832,7 +832,8 @@ begin
 		-- Node exists, update the existing row.
 		-- ----
 		update @NAMESPACE@.sl_node
-				set no_comment = p_no_comment
+				set no_comment = p_no_comment,
+				no_walsender = p_logical
 				where no_id = p_no_id;
 	else
 		-- ----
@@ -2346,6 +2347,9 @@ declare
 	v_sub_last			int4;
 	v_sub_next			int4;
 	v_last_sync			int8;
+	v_last_provider     int4;
+	v_last_provider_snapshot txid_snapshot;
+	v_local_provider_change boolean;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -2380,6 +2384,7 @@ begin
 	if not found then
 		raise exception 'Slony-I: subscription path broken in moveSet_int';
 	end if;
+	v_local_provider_change=false;
 	while v_sub_node <> p_old_origin loop
 		-- ----
 		-- Tracing node by node, the old receiver is now in
@@ -2403,7 +2408,14 @@ begin
 				set sub_provider = v_sub_last
 				where sub_set = p_set_id
 					and sub_receiver = v_sub_node;
-
+		if v_sub_node = v_local_node_id then
+		   --
+		   -- we just changed the provider of
+		   -- this node in sl_subscribe
+		   -- this means that the provider in
+		   -- sl_setsync also needs to change.
+		   v_local_provider_change=true;
+		end if;
 		v_sub_last = v_sub_node;
 		v_sub_node = v_sub_next;
 	end loop;
@@ -2458,6 +2470,16 @@ begin
 			-- On every other node, change the setsync so that it will
 			-- pick up from the new origins last known sync.
 			--
+
+			if v_local_provider_change=false then
+			
+				select ssy_provider into v_last_provider 
+				   	   from @NAMESPACE@.sl_setsync
+				   	   where ssy_setid=p_set_id;
+		 		select ssy_provider_snapshot into v_last_provider_snapshot
+				   from @NAMESPACE@.sl_setsync
+				   where ssy_setid = p_set_id;
+			end if;
 			delete from @NAMESPACE@.sl_setsync
 					where ssy_setid = p_set_id;
 			select coalesce(max(ev_seqno), 0) into v_last_sync
@@ -2467,9 +2489,9 @@ begin
 			if v_last_sync > 0 then
 				insert into @NAMESPACE@.sl_setsync
 						(ssy_setid, ssy_origin, ssy_seqno,
-						ssy_snapshot, ssy_action_list)
+						ssy_snapshot, ssy_action_list,ssy_provider,ssy_provider_snapshot)
 						select p_set_id, p_new_origin, v_last_sync,
-						ev_snapshot, NULL
+						ev_snapshot, NULL,v_last_provider,v_last_provider_snapshot
 						from @NAMESPACE@.sl_event
 						where ev_origin = p_new_origin
 							and ev_seqno = v_last_sync;
