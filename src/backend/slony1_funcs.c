@@ -1782,10 +1782,13 @@ versionFunc(logApply)(PG_FUNCTION_ARGS)
 
 			SPI_freeplan(evict->plan);
 			oldContext = MemoryContextSwitchTo(applyCacheContext);
-			pfree(cacheEnt->finfo_input);
-			pfree(cacheEnt->typioparam);
-			pfree(cacheEnt->typmod);
+			pfree(evict->finfo_input);
+			pfree(evict->typioparam);
+			pfree(evict->typmod);
 			MemoryContextSwitchTo(oldContext);
+			evict->finfo_input = NULL;
+			evict->typioparam = NULL;
+			evict->typmod = NULL;
 			evict->plan = NULL;
 #ifdef APPLY_CACHE_VERIFY
 			evict->evicted = 1;

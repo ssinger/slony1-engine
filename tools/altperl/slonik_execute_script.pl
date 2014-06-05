@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -20,13 +20,14 @@ my $filename = '';
 my $fh       = undef;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE,
-	   "c=s"      => \$SCRIPT_ARG,
-           "n|node=s" => \$node);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE,
+    "c=s"      => \$SCRIPT_ARG,
+    "n|node=s" => \$node
+);
 
-my $USAGE =
-"Usage:
+my $USAGE = "Usage:
     execute_script [options] set# full_path_to_sql_script_file
     execute_script [options] -c SCRIPT set#
 
@@ -46,14 +47,14 @@ my $USAGE =
 ";
 
 if ($SHOW_USAGE) {
-  print $USAGE;
-  exit 0;
+    print $USAGE;
+    exit 0;
 }
 
 require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-my ($set, $file) = @ARGV;
+my ( $set, $file ) = @ARGV;
 die $USAGE unless $set;
 $set = get_set($set) or die "Non-existent set specified.\n";
 $node = $SET_ORIGIN unless $node;
@@ -61,20 +62,23 @@ $node = $SET_ORIGIN unless $node;
 # We can either have -c SCRIPT or a filename as an argument.  The
 # latter takes precedence.
 if ($file) {
-    unless ($file =~ /^\// and -f $file) {
-	print STDERR "SQL script path needs to be a full path, e.g. /tmp/my_script.sql\n\n";
-	die $USAGE;
+    unless ( $file =~ /^\// and -f $file ) {
+        print STDERR
+"SQL script path needs to be a full path, e.g. /tmp/my_script.sql\n\n";
+        die $USAGE;
     }
-    $filename = $file
+    $filename = $file;
 }
 elsif ($SCRIPT_ARG) {
+
     # Put the script into a file
-    ($fh, $filename) = tempfile();
+    ( $fh, $filename ) = tempfile();
     print $fh $SCRIPT_ARG;
     close $fh;
 }
 else {
-    print STDERR "You must include either a filename or a SQL statement on the command line to be run.\n\n";
+    print STDERR
+"You must include either a filename or a SQL statement on the command line to be run.\n\n";
     die $USAGE;
 }
 
@@ -87,4 +91,4 @@ $slonik .= "    filename = '$filename',\n";
 $slonik .= "    event node = $node\n";
 $slonik .= "  );\n";
 
-run_slonik_script($slonik, 'EXECUTE SCRIPT');
+run_slonik_script( $slonik, 'EXECUTE SCRIPT' );

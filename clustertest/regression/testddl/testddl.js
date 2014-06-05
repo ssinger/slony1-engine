@@ -118,7 +118,7 @@ function exec_ddl(coordinator) {
 
 
 function individual_ddl(coordinator, nodenum) {
-	premable = get_slonik_preamble();
+	preamble = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT( FILENAME=\'regression/testddl/ddl_update_part2.sql\''
 		+ ' ,EVENT NODE=' + nodenum + ' ,EXECUTE ONLY ON = ' + nodenum +');';
 	run_slonik('update ddl',coordinator,preamble,slonikScript);
@@ -137,7 +137,7 @@ function trigger_function(coordinator) {
 	var psql = coordinator.createPsqlCommand('db1',sql);
 	psql.run();
 	coordinator.join(psql);
-	premable = get_slonik_preamble();
+	preamble = get_slonik_preamble();
 	slonikScript = "EXECUTE SCRIPT(  SQL='alter table table1 drop column seqed;create trigger table5_trigger "
 		+ " before INSERT on public.table5 for each row execute procedure "
 		+ " insert_table1();'"
@@ -153,7 +153,7 @@ function trigger_function(coordinator) {
 
 
 function inline_ddl(coordinator) {
-	premable = get_slonik_preamble();
+	preamble = get_slonik_preamble();
 	slonikScript = 'EXECUTE SCRIPT('
 	    + 'SQL=\'ALTER TABLE table1 ADD COLUMN processed timestamp with time zone;\''
 		+ ' ,EVENT NODE=1);\n';
@@ -170,7 +170,7 @@ function execute_on_subscriber(coordinator)
      * Perform an EXECUTE SCRIPT with a subscriber (a non-provider)
      * and verify that the DDL changes replicate to all other nodes.
      */
-    var premable = get_slonik_preamble();
+    var preamble = get_slonik_preamble();
     var slonikScript = 'EXECUTE SCRIPT('
 	+ 'SQL=\'CREATE TABLE test_on_subscriber(id serial, value text);\''
 	+ ' ,EVENT NODE=3);\n'
@@ -187,6 +187,38 @@ function execute_on_subscriber(coordinator)
 	+ 'EXECUTE SCRIPT('
 	+ 'SQL=\'DROP TABLE test_on_subscriber;\''
 	+ ' ,EVENT NODE=1, EXECUTE ONLY ON=1);\n' 
+            
+    run_slonik('execute_on_subscriber.drop',coordinator,preamble,slonikScript);
+    
+}
+
+
+function execute_only_on_list(coordinator)
+{
+    /**
+     * Perform an EXECUTE SCRIPT with a subscriber (a non-provider)
+     * and verify that the DDL changes replicate to all other nodes.
+     */
+    var preamble = get_slonik_preamble();
+    var slonikScript = 'EXECUTE SCRIPT('
+	+ 'SQL=\'CREATE TABLE test_only_on(id serial, value text);\''
+	+ ' ,EVENT NODE=3,execute only on=\'1,2,3\');\n'
+        + 'sync(id=3);\n wait for event(origin=3, confirmed=all, wait on=3);\n';
+    
+    run_slonik('execute_on_subscriber.create',coordinator,preamble,slonikScript);
+    /**
+     * Now drop the table on nodes 1 and 2. 
+     * That will fail if the CREATE did not propogate
+     */
+    slonikScript = 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_only_on;\''
+	+ ' ,EVENT NODE=2, EXECUTE ONLY ON=2);\n' 
+	+ 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_only_on;\''
+	+ ' ,EVENT NODE=1, EXECUTE ONLY ON=1);\n' 
+	+ 'EXECUTE SCRIPT('
+	+ 'SQL=\'DROP TABLE test_only_on;\''
+	+ ' ,EVENT NODE=3, EXECUTE ONLY ON=3);\n' ;
             
     run_slonik('execute_on_subscriber.drop',coordinator,preamble,slonikScript);
     
@@ -229,6 +261,8 @@ function do_test(coordinator) {
 	trigger_function(coordinator);
 	wait_for_sync(coordinator);
 	execute_on_subscriber(coordinator);
+        wait_for_sync(coordinator);
+        execute_only_on_list(coordinator);
 }
 
 function get_compare_queries() {

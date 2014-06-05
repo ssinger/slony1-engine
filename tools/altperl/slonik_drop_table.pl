@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
 # Parts Copyright 2006 Summerault, LLC
@@ -11,11 +11,12 @@ $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE
+);
 
-my $USAGE =
-"Usage: slonik_drop_table [--config file] table_id set
+my $USAGE = "Usage: slonik_drop_table [--config file] table_id set
 
     table_id  The ID of the table to be dropped from replication
     set  The name or ID of the set to drop the table from
@@ -34,9 +35,9 @@ if ($SHOW_USAGE) {
 require '@@PERLSHAREDIR@@/slon-tools.pm';
 require $CONFIG_FILE;
 
-my ($TABLE_ID,$set) = @ARGV;
+my ( $TABLE_ID, $set ) = @ARGV;
 $SET_ID = get_set($set);
-unless ($TABLE_ID && $SET_ID) {
+unless ( $TABLE_ID && $SET_ID ) {
     die $USAGE;
 }
 
@@ -54,4 +55,4 @@ $slonik .= "    echo 'Could not drop table $TABLE_ID for $CLUSTER_NAME!';\n";
 $slonik .= "    exit 1;\n";
 $slonik .= "  }\n";
 
-run_slonik_script($slonik, 'DROP TABLE');
+run_slonik_script( $slonik, 'DROP TABLE' );

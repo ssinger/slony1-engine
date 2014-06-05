@@ -470,7 +470,7 @@ create or replace function @NAMESPACE@.slonyVersionMinor()
 returns int4
 as $$
 begin
-	return 2;
+	return 3;
 end;
 $$ language plpgsql;
 comment on function @NAMESPACE@.slonyVersionMinor () is 
@@ -3646,7 +3646,7 @@ Set sequence seq_id to have new value last_value.
 --	Capture DDL into sl_log_script
 -- ----------------------------------------------------------------------
 create or replace function @NAMESPACE@.ddlCapture (p_statement text, p_nodes text)
-returns integer
+returns bigint
 as $$
 declare
 	c_local_node	integer;

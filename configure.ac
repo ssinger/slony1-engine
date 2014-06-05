@@ -3,7 +3,7 @@
 #
 #	Autoconf configuration file for Slony-I
 #
-#	Copyright (c) 2003-2009, PostgreSQL Global Development Group
+#	Copyright (c) 2003-2014, PostgreSQL Global Development Group
 #	Author: Jan Wieck, Afilias USA INC.
 #
 #
@@ -11,7 +11,7 @@
 # ----------
 m4_define([SLONREL_VERSION], esyscmd([echo "$Name:  $" | \
   sed -e 's/\:\ REL_//' -e 's/\$//g' -e 's/_/./g' -e 's/\./\_/3' \
-    -e 's/\ //g' -e s/\:/`echo 2.2.0`/ | tr -d '\n']))
+    -e 's/\ //g' -e s/\:/`echo 2.3.0`/ | tr -d '\n']))
 
 m4_pattern_allow([^SLON_AC_])
 

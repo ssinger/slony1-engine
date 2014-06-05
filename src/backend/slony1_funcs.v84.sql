@@ -1,7 +1,7 @@
 -- ----------------------------------------------------------------------
--- slony1_funcs.v83.sql
+-- slony1_funcs.v84.sql
 --
---    Version 8.3 specific part of the replication support functions.
+--    Version 8.4 specific part of the replication support functions.
 --
 --	Copyright (c) 2007-2009, PostgreSQL Global Development Group
 --	Author: Jan Wieck, Afilias USA INC.
@@ -132,13 +132,25 @@ begin
 		perform @NAMESPACE@.alterTableConfigureTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname)
 		,'disable','enable') 
 		        from @NAMESPACE@.sl_table
-                where tab_set not in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
+                where tab_set not in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
+                      and exists (select 1 from  pg_catalog.pg_trigger
+                                           where pg_trigger.tgname like '_@CLUSTERNAME@_truncatetrigger' and pg_trigger.tgenabled = 'O'
+                                                 and pg_trigger.tgrelid=tab_reloid ) 
+                      and  exists (select 1 from  pg_catalog.pg_trigger
+                                            where pg_trigger.tgname like '_@CLUSTERNAME@_truncatedeny' and pg_trigger.tgenabled = 'D' 
+                                                  and pg_trigger.tgrelid=tab_reloid);
 
 		-- Activate truncate triggers for origin
 		perform @NAMESPACE@.alterTableConfigureTruncateTrigger(@NAMESPACE@.slon_quote_brute(tab_nspname) || '.' || @NAMESPACE@.slon_quote_brute(tab_relname)
 		,'enable','disable') 
 		        from @NAMESPACE@.sl_table
-                where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'));
+                where tab_set in (select set_id from @NAMESPACE@.sl_set where set_origin = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@'))
+                      and exists (select 1 from  pg_catalog.pg_trigger
+                                           where pg_trigger.tgname like '_@CLUSTERNAME@_truncatetrigger' and pg_trigger.tgenabled = 'D'
+                                                 and pg_trigger.tgrelid=tab_reloid )                                                    
+                      and  exists (select 1 from  pg_catalog.pg_trigger
+                                            where pg_trigger.tgname like '_@CLUSTERNAME@_truncatedeny' and pg_trigger.tgenabled = 'O'
+                                                  and pg_trigger.tgrelid=tab_reloid);
 
 		return 1;
 end

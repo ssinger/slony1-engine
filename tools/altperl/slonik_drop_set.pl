@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -10,8 +10,10 @@ $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE
+);
 
 my $USAGE = <<EOF
 "Usage: drop_set [--config file] set#
@@ -30,11 +32,11 @@ isn't anything to prevent potentially career-limiting "unfortunate results."
 Handle with care... 
 
 EOF
-;
+  ;
 
 if ($SHOW_USAGE) {
-  print $USAGE;
-  exit 0;
+    print $USAGE;
+    exit 0;
 }
 
 require '@@PERLSHAREDIR@@/slon-tools.pm';
@@ -54,4 +56,4 @@ $slonik .= "        exit 1;\n";
 $slonik .= "  }\n";
 $slonik .= "  echo 'Dropped set $set';\n";
 
-run_slonik_script($slonik, 'DROP SET');
+run_slonik_script( $slonik, 'DROP SET' );

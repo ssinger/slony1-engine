@@ -1,5 +1,5 @@
 #!@@PERL@@
-# 
+#
 # Author: Christopher Browne
 # Copyright 2004-2009 Afilias Canada
 
@@ -10,11 +10,12 @@ $CONFIG_FILE = '@@SYSCONFDIR@@/slon_tools.conf';
 $SHOW_USAGE  = 0;
 
 # Read command-line options
-GetOptions("config=s" => \$CONFIG_FILE,
-	   "help"     => \$SHOW_USAGE);
+GetOptions(
+    "config=s" => \$CONFIG_FILE,
+    "help"     => \$SHOW_USAGE
+);
 
-my $USAGE =
-"Usage: uninstall_nodes [--config file]
+my $USAGE = "Usage: uninstall_nodes [--config file]
 
     Removes Slony configuration from all nodes in a cluster.
 
@@ -30,8 +31,8 @@ drop the node's configuration from replication.
 ";
 
 if ($SHOW_USAGE) {
-  print $USAGE;
-  exit 0;
+    print $USAGE;
+    exit 0;
 }
 
 require '@@PERLSHAREDIR@@/slon-tools.pm';
@@ -40,9 +41,9 @@ require $CONFIG_FILE;
 my $slonik = '';
 $slonik .= genheader();
 foreach my $node (@NODES) {
-    next if $node == $MASTERNODE; # Do this one last
+    next if $node == $MASTERNODE;    # Do this one last
     $slonik .= "  uninstall node (id=$node);\n";
 }
 $slonik .= "  uninstall node (id=$MASTERNODE);\n";
 
-run_slonik_script($slonik, 'UNINSTALL NODE');
+run_slonik_script( $slonik, 'UNINSTALL NODE' );

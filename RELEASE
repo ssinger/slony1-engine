@@ -9,8 +9,6 @@
      - Bug 287 :: Fix UPDATE FUNCTIONS so it works when the old shared
                   library is no longer around
 
-     - Bug 290 :: Make the symbols in the shared library unique 
-
      - The slony1_funcs.so and .sql files that get installed are also
        versioned, which allows multiple versions of slony to be
        installed in the same postgresql lib directory.
