@@ -740,7 +740,6 @@ remoteWorkerThread_main(void *cdata)
 								 " where no_id=%d;commit", rtcfg_namespace,  (uint32)(confirmed_lsn>>32),
 								 (uint32)confirmed_lsn,
 								 event->event_provider);
-					slon_log(SLON_DEBUG2,dstring_data(&query1));
 					res1 = PQexec(local_conn->dbconn, dstring_data(&query1));
 					if (PQresultStatus(res1) != PGRES_COMMAND_OK)			 
 					{
