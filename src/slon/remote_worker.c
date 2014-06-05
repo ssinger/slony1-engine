@@ -327,6 +327,7 @@ remoteWorkerThread_main(void *cdata)
 	bool		event_ok;
 	bool		need_reloadListen = false;
 	char		conn_symname[32];
+	ProviderInfo * provider;
 
 	SlonSyncStatus sync_status = SYNC_INITIAL;
 	int			sg_proposed = 1;
@@ -643,6 +644,38 @@ remoteWorkerThread_main(void *cdata)
 				}
 				sg_last_grouping = sync_group_size;
 				pthread_mutex_unlock(&(node->message_lock));
+			}
+
+			
+			/**			   
+			 * Check to see if the event came from a provider that is actually listed
+			 * in the provider list.
+			 */
+			for (provider = wd->provider_head; provider; provider = provider->next)
+			{
+				if(provider->no_id == event->event_provider)
+					break;
+			}
+			if (provider == NULL)
+			{
+				adjust_provider_info(node, wd, false, event->event_provider);
+			}
+			for (provider = wd->provider_head; provider; provider = provider->next)
+			{
+				if(provider->no_id == event->event_provider)
+					break;
+			}
+			if(provider == NULL)
+			{
+				/**
+				 * The event did NOT come from a provider listed in the provider list.
+				 * ignore it. 
+				 */
+				sprintf(seqbuf, INT64_FORMAT, event->ev_seqno);
+				slon_log(SLON_INFO,"remoteWorkerThread_%d: ignoring event %s from %d because that node is not in the " \
+						 "provider list\n", 
+						 node->no_id,seqbuf,event->event_provider);
+				continue;
 			}
 			while (true)
 			{				
@@ -1883,13 +1916,17 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 	 * make sure that the node we got this message from
 	 * is in the provider list
 	 */
+#if 0 
 	for(provider = wd->provider_head ; event_provider > 0 &&
 			provider != NULL; provider = provider->next)
 	{
 		if (provider->no_id == event_provider)
 			break;
 	}
-	if (event_provider >= 0 && provider == NULL)
+	if (event_provider >= 0 && provider == NULL )
+#else 
+		if(event_provider >= 0 && wd->provider_head == NULL)
+#endif
 	{
 		/*
 		 * No provider entry found. Create a new one.
@@ -1922,6 +1959,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 			provider->pa_walsender = rtcfg_node->pa_walsender;
 		}
 	}
+
 }
 
 
@@ -3808,19 +3846,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		}
 	}
 
-	/*
-	 * Make sure that we have the event provider in our provider list.
-	 */
-	for (provider = wd->provider_head; provider; provider = provider->next)
-	{
-		if (provider->no_id == event->event_provider)
-			break;
-	}
-	if (provider == NULL)
-	{
-		adjust_provider_info(node, wd, false, event->event_provider);
-	}
-
+	
 	/*
 	 * Establish all required data provider connections
 	 */
