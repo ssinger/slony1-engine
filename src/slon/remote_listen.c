@@ -788,7 +788,8 @@ remoteListen_receive_events(SlonNode * node, SlonConn * conn,
 		   (PQgetisnull(res, tupno, 12)) ? NULL : PQgetvalue(res, tupno, 12),
 		   (PQgetisnull(res, tupno, 13)) ? NULL : PQgetvalue(res, tupno, 13),
 		   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 14),
-						   (PQgetisnull(res, tupno, 14)) ? NULL : PQgetvalue(res, tupno, 15),false,0);
+		   (PQgetisnull(res, tupno, 15)) ? NULL : PQgetvalue(res, tupno, 15)
+						   ,node->pa_walsender,0);
 	}
 
 	if (ntuples > 0)

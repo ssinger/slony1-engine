@@ -36,7 +36,17 @@ typedef struct  {
 
 struct SlonOriginList_t {
 	int no_id;
+	/**
+	 * The lsn of the most recently received row
+	 * originating from this origin
+	 */
 	XlogRecPtr last_event_lsn;
+	/**
+	 * The lsn of the most recently processed (or discarded)
+	 * row originating at this origin via the provider that owns
+	 * this structure.
+	 */
+	XlogRecPtr last_processed_lsn;
 	struct SlonOriginList_t * next;
 };
 
@@ -214,7 +224,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 		
 	}
 
-	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+1);
+	conn_info = malloc(strlen(node->pa_conninfo) + strlen(replication)+2);
 	sprintf(conn_info,"%s %s",node->pa_conninfo,replication);
 	state->dbconn = slon_raw_connectdb(conn_info);	
 
@@ -304,7 +314,6 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				/**
 				 * process the row
 				 */
-				PQfreemem(copybuf);
 
 				
 				slon_log(SLON_DEBUG4,
@@ -325,7 +334,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				sendFeedback(node,state,position , 0,false);
 
 			}			
-		
+			PQfreemem(copybuf);
 		}
 		else if (copy_res == 0)
 		{
@@ -456,6 +465,11 @@ static int process_WAL(SlonNode * node, SlonWALState * state, char * row,XlogRec
 		 * 2. Release the connection back to the remoteWorker
 		 */				
 		push_copy_row(node,state,origin_id,set_id,row,xid_str,false,0,walptr);
+	}
+
+	if(cmdargs != NULL) 
+	{
+		free(cmdargs);
 	}
 	return 0;
 		
@@ -758,6 +772,10 @@ static int extract_row_metadata(SlonNode * node,
 			*cmdargs = malloc(strlen(curptr)+1);
 			strcpy(*cmdargs,curptr);
 		}
+		else 
+		{
+			*cmdargs = NULL;
+		}
 	
 	return 0;
 	
@@ -771,7 +789,7 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 {
 	SlonNode * workerNode;
 	SlonWALRecord * record;
-
+	SlonOriginList * originIter;
 	
 	rtcfg_lock();
 	if(origin_id == rtcfg_nodeid) 
@@ -803,12 +821,42 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 	record->row = strdup(row);
 	record->provider = listening_node->no_id;
 	record->set_id = set_id;
+	record->origin = origin_id;
 	record->is_sync=is_sync;
 	record->event  = ev_seqno;
 	record->xlog = wal_ptr;
 	assert(strcmp(row,"")!=0 || is_sync==true);
 	slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d: adding row origin:%d set_id %d\n",listening_node->no_id,
 			 origin_id, record->set_id);
+
+	pthread_mutex_lock(&state->position_lock);
+	/**
+	 * Update the origin list for this provider
+	 * to reflect the lsn.
+	 */
+	for(originIter = state->origin_list; originIter != NULL; originIter = originIter->next)
+	{
+		if(originIter->no_id == origin_id)
+			break;
+	}
+	if(originIter == NULL)
+	{
+		originIter = malloc(sizeof(SlonOriginList));
+		memset(originIter,0,sizeof(SlonOriginList));
+		originIter->no_id = origin_id;
+		if(state->origin_list == NULL)
+		{
+			state->origin_list = originIter;
+		}
+		else 
+		{
+			originIter->next = state->origin_list;
+			state->origin_list = originIter;
+		}
+	}
+	originIter->last_event_lsn = wal_ptr;
+	pthread_mutex_unlock(&state->position_lock);
+
 	remoteWorker_wal_append(origin_id,record);
 	
 	
@@ -839,6 +887,7 @@ remoteWALListenThread_main(void *cdata)
 	slon_log(SLON_INFO,
 			 "remoteWALListenThread_%d: thread starts\n",
 			 node->no_id);
+	memset(&state,0,sizeof(SlonWALState));
 	pthread_mutex_lock(&state_list_lock);
 	
 	if (state_list == NULL)
@@ -857,6 +906,9 @@ remoteWALListenThread_main(void *cdata)
 		statePtr = statePtr->next;
 	}
 	statePtr->state=&state;
+	
+
+
 	pthread_mutex_unlock(&state_list_lock);
 
 	pthread_mutex_init(&state.position_lock,0);
@@ -1032,29 +1084,76 @@ recvint64(char *buf)
 	return result;
 }
 
-void remote_wal_processed(XlogRecPtr confirmed, int no_id)
+XlogRecPtr remote_wal_processed(XlogRecPtr confirmed, int provider_id, int origin_id)
 {
 	SlonWALState_list * statePtr;
+	SlonOriginList * originIter;
+	XlogRecPtr minConfirmedLsn;
 
 	pthread_mutex_lock(&state_list_lock);
 	for(statePtr = state_list; statePtr != NULL; statePtr = statePtr->next)
 	{
-		if (no_id == statePtr->no_id)
+		if (provider_id == statePtr->no_id)
 			break;
 		
 	}
 	if ( statePtr == 0)
 	{
-		slon_log(SLON_ERROR,"remoteWALListener_%d thread was not found",no_id);
+		slon_log(SLON_ERROR,"remoteWALListener_%d thread was not found",provider_id);
 		slon_retry();
 	}
-	slon_log(SLON_DEBUG4,"remoteWALListener_%d processed until %X/%X\n",no_id, (uint32) (confirmed>>32),(uint32)confirmed);
+
 	pthread_mutex_lock(&statePtr->state->position_lock);
+
+	/**
+	 * for this remote_wal_provider connection we maintain a list of the
+	 * last lsn received and confirmed of each origin.
+	 * Update the provider.origin pair with the confirmed position.
+	 */
+	for(originIter = statePtr->state->origin_list; originIter != NULL; originIter = originIter->next)
+	{
+		if(originIter->no_id == origin_id)
+			break;
+	}
+	if(originIter == NULL)
+	{
+		/**
+		 * we have not received a row from this origin via this provider.
+		 */
+		slon_log(SLON_ERROR,"remoteWALListener_%d does not have a record of origin %d\n"
+				 ,provider_id,origin_id);
+		assert(false);
+		return;
+		
+	}
+	originIter->last_processed_lsn = confirmed;
+
+	/**
+	 * now loop through the set of origins and find 
+	 * the lowest last_processed_lsn for active nodes.
+	 */
+	for(originIter = statePtr->state->origin_list; originIter != NULL; originIter = originIter->next)
+	{
+		if(originIter->last_event_lsn >= statePtr->state->last_committed_pos)
+		{
+			if(originIter->last_processed_lsn <  minConfirmedLsn ||
+			   minConfirmedLsn == 0)
+			{
+				minConfirmedLsn = originIter->last_processed_lsn;
+			}
+		}
+	}
+	
+
+	
+	slon_log(SLON_DEBUG4,"remoteWALListener_%d processed until %X/%X\n",provider_id, (uint32) (minConfirmedLsn>>32),(uint32)minConfirmedLsn);
+
 	if(statePtr->state->last_committed_pos==0 ||
-	   confirmed > statePtr->state->last_committed_pos)
-		statePtr->state->last_committed_pos=confirmed;
+	  minConfirmedLsn > statePtr->state->last_committed_pos)
+		statePtr->state->last_committed_pos=minConfirmedLsn;
 	pthread_mutex_unlock(&statePtr->state->position_lock);
 	pthread_mutex_unlock(&state_list_lock);
+	return minConfirmedLsn;
 }
 
 

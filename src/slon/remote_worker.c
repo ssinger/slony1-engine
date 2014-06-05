@@ -272,8 +272,8 @@ static int sync_event(SlonNode * node, SlonConn * local_conn,
 static int	sync_helper(void *cdata, PGconn *local_dbconn);
 static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list, 
 						   int64 sync_event_no,
-						   PGconn * local_conn,char * sync_snapshot
-						   ,char * forward_xid);
+						   PGconn * local_conn
+						   , SlonWorkMsg_event * event);
 
 int construct_sl_log_query(SlonNode * node,SlonConn * local_conn,
 						   char * seqbuf,ProviderInfo * provider,PerfMon * pm,
@@ -723,8 +723,39 @@ remoteWorkerThread_main(void *cdata)
 			{
 				slon_retry();
 			}
+			/**
+			 * a different remote worker might have an event still pending
+			 * from this provider with a lower lsn provider lsn. FIXME
+			 * also we will need to update sl_node. (call sync_event wal???)
+			 */
 			if(event->from_wal_provider)
-				remote_wal_processed(node->processed_wal_ptr, node->no_id);
+			{
+				XlogRecPtr confirmed_lsn;	
+				PGresult   *res1;
+				confirmed_lsn = remote_wal_processed(event->provider_wal_loc, event->event_provider,event->ev_origin);
+				if(confirmed_lsn > 0) 
+				{
+					dstring_reset(&query1);
+					slon_mkquery(&query1,"begin;update %s.sl_node set no_last_xlog_rec = '%X/%X' " 
+								 " where no_id=%d;commit", rtcfg_namespace,  (uint32)(confirmed_lsn>>32),
+								 (uint32)confirmed_lsn,
+								 event->event_provider);
+					slon_log(SLON_DEBUG2,dstring_data(&query1));
+					res1 = PQexec(local_conn->dbconn, dstring_data(&query1));
+					if (PQresultStatus(res1) != PGRES_COMMAND_OK)			 
+					{
+						slon_log(SLON_ERROR,
+								 "remoteWorkerThread_%d: \"%s\" %s %s\n",
+								 node->no_id, dstring_data(&query1),
+								 PQresStatus(rc),
+								 PQresultErrorMessage(res1));
+						PQclear(res1);
+						dstring_terminate(&query1);
+						return 1;
+					}
+					PQclear(res1);
+				}
+			}
 			/*
 			 * Remember the sync snapshot in the in memory node structure
 			 */
@@ -4172,8 +4203,8 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		{
 			num_errors += sync_wal_helper(node,wd->provider_head /*sync_event_no*/
 										  ,event->ev_seqno
-										  ,local_dbconn,event->ev_snapshot_c
-										  ,event->ev_provider_xid);
+										  ,local_dbconn
+										  ,event);
 								  
 		}
 	}
@@ -4302,13 +4333,31 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 	 * Light's are still green ... update the setsync status of all the sets
 	 * we've just replicated ...
 	 */
-	(void) slon_mkquery(&query,
-						"update %s.sl_setsync set "
-						"    ssy_seqno = '%s', ssy_snapshot = '%s', "
-						"    ssy_action_list = '' "
-						"where ssy_origin=%d and  ssy_setid in (",
-						rtcfg_namespace,
-						seqbuf, event->ev_snapshot_c,node->no_id);
+	if(event->from_wal_provider)
+	{
+		(void) slon_mkquery(&query,
+							"update %s.sl_setsync set "
+							"    ssy_seqno = '%s', ssy_snapshot = '%s', "
+							"    ssy_action_list = '', "
+							"    ssy_provider = %d ,"
+							"    ssy_provider_snapshot='%s:%s:'  "
+							"where ssy_origin=%d and  ssy_setid in (",
+							rtcfg_namespace,
+							seqbuf, event->ev_snapshot_c,event->event_provider,
+							event->ev_provider_xid,
+							event->ev_provider_xid,
+							node->no_id);
+	}
+	else 
+	{
+		(void) slon_mkquery(&query,
+							"update %s.sl_setsync set "
+							"    ssy_seqno = '%s', ssy_snapshot = '%s', "
+							"    ssy_action_list = '' "
+							"where ssy_origin=%d and  ssy_setid in (",
+							rtcfg_namespace,
+							seqbuf, event->ev_snapshot_c,node->no_id);
+	}
 	i = 0;
 	for (provider = wd->provider_head; provider; provider = provider->next)
 	{
@@ -5880,6 +5929,7 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
 		PQclear(res1);
 	}
 	dstring_reset(&query);
+
 	slon_mkquery(&query,"update %s.sl_node set no_last_xlog_rec = '%X/%X'" 
 				 " where no_id=%d", rtcfg_namespace,  (uint32)(event->provider_wal_loc>>32),
 				 (uint32)event->provider_wal_loc,
@@ -5910,7 +5960,7 @@ static int sync_event_wal(SlonNode * node, SlonConn * local_conn,
  */
 static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list, 
 						   int64 sync_event_no,
-						   PGconn * local_conn,char * sync_snapshot,char * event_forward_xid)
+						   PGconn * local_conn, SlonWorkMsg_event * event )
 {
 	SlonWALRecord * iterator;
 
@@ -5932,6 +5982,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 	ProviderInfo * provider;
 	bool zero_subscriptions=true;
 	int set_idx;
+	int idx;
 
 	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d in sync_wal_helper\n",
 			 node->no_id);
@@ -5950,30 +6001,30 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 		dstring_free(&query);	   
 		return 60;
 	}
+	dstring_free(&query);
 	subscribed_sets = PQntuples(res);
 	if ( subscribed_sets == 0)
 	{
 		slon_log(SLON_DEBUG2, "remoteWorkerThread_%d: no sets in sl_setsync",
 				 node->no_id);
-			PQclear(res);
-		dstring_free(&query);	   
-		return 0;
 	}
-	
-	snapshot_sets = malloc(sizeof(int) * subscribed_sets);
-	last_snapshots = malloc(sizeof(char*) * subscribed_sets);
-	last_providers = malloc(sizeof(int) * subscribed_sets);
-	last_provider_snapshots = malloc(sizeof(char*) * subscribed_sets);
-
-	for(tupno = 0 ; tupno < subscribed_sets; tupno++)
+	else 
 	{
-		snapshot_sets[tupno] = atoi(PQgetvalue(res,tupno,0));
-		last_snapshots[tupno] = strdup(PQgetvalue(res,tupno,1));		
-		last_providers[tupno] = atoi(PQgetvalue(res,tupno,2));
-		if(!PQgetisnull(res,tupno,3))
-			last_provider_snapshots[tupno]=strdup(PQgetvalue(res,tupno,3));
-		else
-			last_provider_snapshots[tupno]=NULL;
+		snapshot_sets = malloc(sizeof(int) * subscribed_sets);
+		last_snapshots = malloc(sizeof(char*) * subscribed_sets);
+		last_providers = malloc(sizeof(int) * subscribed_sets);
+		last_provider_snapshots = malloc(sizeof(char*) * subscribed_sets);
+		
+		for(tupno = 0 ; tupno < subscribed_sets; tupno++)
+		{
+			snapshot_sets[tupno] = atoi(PQgetvalue(res,tupno,0));
+			last_snapshots[tupno] = strdup(PQgetvalue(res,tupno,1));		
+			last_providers[tupno] = atoi(PQgetvalue(res,tupno,2));
+			if(!PQgetisnull(res,tupno,3))
+				last_provider_snapshots[tupno]=strdup(PQgetvalue(res,tupno,3));
+			else
+				last_provider_snapshots[tupno]=NULL;
+		}
 	}
 	PQclear(res);
 	/**
@@ -6117,6 +6168,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			 */
 			slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: we have received " \
 					 "SYNC %lld\n",node->no_id, sync_event_no);
+			event->provider_wal_loc = iterator->xlog;
 			break;
 		}
 		else if (is_listening && iterator->is_sync)
@@ -6191,7 +6243,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 
 
 
-			if(!xid_in_snapshot(node,iterator->xid,sync_snapshot))
+			if(!xid_in_snapshot(node,iterator->xid,event->ev_snapshot_c))
 			{
 				/**
 				 * skip this record. The transaction has not yet committed
@@ -6201,7 +6253,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 * delete/remove the record from the linked list.
 				 */
 				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s is not" \
-						 " in snapshot %s\n",node->no_id,iterator->xid,sync_snapshot);
+						 " in snapshot %s\n",node->no_id,iterator->xid,event->ev_snapshot_c);
 				pthread_mutex_lock(&(node->wal_queue_lock));
 				break;
 				
@@ -6213,7 +6265,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			 */
 						
 
-			if(xid_in_snapshot(node,iterator->xid,last_snapshots[set_idx]))
+			if(subscribed_sets > 0 && xid_in_snapshot(node,iterator->xid,last_snapshots[set_idx]))
 			{
 				/**
 				 * we have already applied this transaction.
@@ -6224,7 +6276,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_snapshots[set_idx]);			
 				
 			}
-			else 
+			else if(subscribed_sets > 0)
 			{
 			
 				slon_log(SLON_DEBUG4,"remoteWorkerThread_%d: applying row:%s\n"
@@ -6250,7 +6302,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			}				
 		
 		}
-		else if (is_listening && event_forward_xid!= NULL)
+		else if (is_listening && event->ev_provider_xid!= NULL)
 		{
 			/**
 			 * this row is was received from a forwarder ( iterator->provider == node->no_id is false)
@@ -6291,7 +6343,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 						 node->no_id);
 				
 			}			
-			else if(last_provider_snapshots[set_idx] != NULL 
+			else if(subscribed_sets > 0 && last_provider_snapshots[set_idx] != NULL 
 					&& xid_in_snapshot(node,iterator->xid,last_provider_snapshots[set_idx]))
 			{
 				if(iterator->provider != last_providers[set_idx]) 
@@ -6311,10 +6363,11 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 * don't apply it but remove it from the list.
 				 */
 				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied" \
-						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_provider_snapshots[set_idx]);			
+						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_provider_snapshots[set_idx]);
+				remote_wal_processed(event->provider_wal_loc, event->event_provider,event->ev_origin);
 			
 			}
-			else if(strcmp(event_forward_xid,iterator->xid) == 0) 
+			else if(subscribed_sets > 0 && strcmp(event->ev_provider_xid,iterator->xid) == 0) 
 			{	
 				/**
 				 * this SYNC event was received from a forwarding node.
@@ -6358,11 +6411,21 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 * The forward_xid of the sync does not match
 				 * what does this mean? Are we seeing the sl_log_row
 				 * too early or are we using the wrong provider?
+				 * 
+				 * OR have we already processed this row.
+				 * After a restart slon might re-process some rows because
+				 * we can only advance the wal location/lsn at the wal_provder
+				 * when events for ALL origins have been processed. 
 				 */
-				slon_log(SLON_ERROR,"remoteWorkerThread_%d: event has forward xid %s when row had %s event %lld \n",node->no_id,
-						 event_forward_xid,
-						 iterator->xid,sync_event_no);
-				assert(false);
+				int64 event_xid =  strtoll(event->ev_provider_xid,NULL,10);
+				int64 row_xid = strtoll(iterator->xid,NULL,10);
+				if(row_xid >= event_xid)
+				{
+					slon_log(SLON_ERROR,"remoteWorkerThread_%d: event has forward xid %s when row had %s event %lld \n",node->no_id,
+							 event->ev_provider_xid,
+							 iterator->xid,sync_event_no);
+					assert(false);
+				}
 			}
 		}		
 	 	else if (is_listening) {
@@ -6377,6 +6440,15 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 						 , node->no_id, sync_event_no,iterator->provider);
 				assert(false);
 		}
+		else {
+			/**
+			 * we are NOT listening for events from this node.
+			 * we can discard the row.
+			 * Let the listener know.
+			 */
+			
+			remote_wal_processed(iterator->xlog, iterator->provider,iterator->origin);
+		}
 			
 	
 
@@ -6388,6 +6460,15 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			node->processed_wal_ptr = iterator->xlog;
 		iterator = remoteWorker_wal_remove(node,iterator);
 	}
+
+	/**
+	 * Count the size of the queue for debugging 
+	 */
+	for(idx=0, iterator=node->wal_queue; iterator != NULL; iterator = iterator->next)
+	{
+		idx++;
+	}
+	slon_log(SLON_DEBUG2,"remoteWorkerThread_%d sync_wal_helper existing with %d in the queue\n",node->no_id,idx);
 	
 	pthread_mutex_unlock(&(node->wal_queue_lock));		
 	rc = PQputCopyEnd(local_conn, NULL);
@@ -6418,6 +6499,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 PQresultErrorMessage(res));
 		errors++;
 	}
+	PQclear(res);
 cleanup:	
 
 	for(tupno = 0; tupno < subscribed_sets; tupno++)

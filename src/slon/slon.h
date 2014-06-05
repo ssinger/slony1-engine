@@ -141,6 +141,7 @@ struct SlonWALRecord_s
 	char * row;
 	int64 event;
 	int provider;
+	int origin;
 	int set_id;
 	XlogRecPtr xlog;
 	struct SlonWALRecord_s * next;
@@ -729,7 +730,7 @@ extern int	slon_log_level;
  * functions in remote_wal_listener.h
  */
 
-void remote_wal_processed(XlogRecPtr confirmed, int no_id);
+XlogRecPtr remote_wal_processed(XlogRecPtr confirmed, int provider_id,int origin_id);
 
 
 /*
