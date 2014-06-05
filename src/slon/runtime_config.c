@@ -120,8 +120,8 @@ rtcfg_storeNode(int no_id, char *no_comment, bool walsender)
 	if (node)
 	{
 		slon_log(SLON_CONFIG,
-				 "storeNode: no_id=%d no_comment='%s' walsender=%c - update node\n",
-				 no_id, no_comment,walsender);
+				 "storeNode: no_id=%d no_comment='%s' walsender=%d - update node\n",
+				 no_id, no_comment,walsender ? 1 : 0);
 
 		free(node->no_comment);
 		node->no_comment = strdup(no_comment);
@@ -134,8 +134,8 @@ rtcfg_storeNode(int no_id, char *no_comment, bool walsender)
 	 * Add the new node to our in-memory configuration.
 	 */
 	slon_log(SLON_CONFIG,
-			 "storeNode: no_id=%d no_comment='%s' walsender=%c\n",
-			 no_id, no_comment,walsender);
+			 "storeNode: no_id=%d no_comment='%s' walsender=%d\n",
+			 no_id, no_comment,walsender ? 1 : 0 );
 
 	node = (SlonNode *) malloc(sizeof(SlonNode));
 	if (node == NULL)
