@@ -2,6 +2,7 @@
 * Slony-I Release Notes
 ** 2.1.5
 - Bug 315 :: Fixes to the compile time include directories
+- Remove HAVE_POSIX_SIGNALS from config.h 
 
 ** 2.1.4 
 

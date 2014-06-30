@@ -63,7 +63,7 @@
 #undef HAVE_GETACTIVESNAPSHOT
 
 /* Set to 1 if we have POSIX signals */
-#undef HAVE_POSIX_SIGNALS
+/**#undef HAVE_POSIX_SIGNALS**/
 
 /* Set to 1 if we have PGPORT */
 #undef HAVE_PGPORT
