@@ -264,13 +264,6 @@ void ProcessConfigFile(const char *filename)
 
 	fclose(fp);
 
-	for (item = head; item; item=item->next)
-	{
-		if (!set_config_option(item->name, item->value))
-		{
-			goto cleanup_exit;
-		}
-	}
 	for(item = head; item; item=item->next)
 	{
 		set_config_option(item->name, item->value);
