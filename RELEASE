@@ -4,6 +4,7 @@
   - fixing  Deadlock with application during minor version slony upgrade
   - Bug 342 FAILOVER fixes for some multi-node configurations
   - Remove HAVE_POSIX_SIGNALS from config.h
+  - Bug 344 Do not abort reading slon config values when an unrecognized one is encountered
   
 * 2.2.2
 
