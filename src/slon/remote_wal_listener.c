@@ -296,7 +296,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 					pthread_mutex_lock(&state->position_lock);
 					position = state->last_committed_pos;
 					pthread_mutex_unlock(&state->position_lock);
-					sendFeedback_serverreq(node,state,position , now,false);
+					sendFeedback(node,state,position , now,false);
 				}
 			}
 			else if (copybuf[0]=='w')
