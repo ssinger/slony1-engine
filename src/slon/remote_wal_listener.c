@@ -282,14 +282,22 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				int64 now;
 				struct timeval tp;
 				gettimeofday(&tp,NULL);
-				now  = (int64) (tp.tv_sec -
-					((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
-								* USECS_PER_SEC) + tp.tv_usec;
-				pthread_mutex_lock(&state->position_lock);
-				position = state->last_committed_pos;
-				pthread_mutex_unlock(&state->position_lock);
-				sendFeedback(node,state,position , now,false);
 
+				if(copybuf[8 * 2 + 1])
+				{
+					/**
+					 * the server requested a reply.
+					 */
+					slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d: sending keepalive response\n",
+						 node->no_id);
+					now  = (int64) (tp.tv_sec -
+									((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY)
+									* USECS_PER_SEC) + tp.tv_usec;
+					pthread_mutex_lock(&state->position_lock);
+					position = state->last_committed_pos;
+					pthread_mutex_unlock(&state->position_lock);
+					sendFeedback_serverreq(node,state,position , now,false);
+				}
 			}
 			else if (copybuf[0]=='w')
 			{
@@ -305,7 +313,7 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				
 				temp = recvint64(&copybuf[1]);
 
-				slon_log(SLON_DEBUG2,"remoteWALListenerThread_%d: read row: %s\n",
+				slon_log(SLON_DEBUG4,"remoteWALListenerThread_%d: read row: %s\n",
 						 node->no_id,
 						 copybuf+hdr_len);
 
@@ -316,9 +324,9 @@ static void start_wal(SlonNode * node, SlonWALState * state)
 				 */
 
 				
-				slon_log(SLON_DEBUG4,
-						 "remoteWALListenerThread_%d: new ptr is %X/%X\n", node->no_id,
-						 (uint32)(temp>>32),(uint32)temp);
+				//slon_log(SLON_DEBUG4,
+				//		 "remoteWALListenerThread_%d: new ptr is %X/%X\n", node->no_id,
+				//		 (uint32)(temp>>32),(uint32)temp);
 
 				
 	
@@ -844,6 +852,7 @@ static void push_copy_row(SlonNode * listening_node, SlonWALState * state,
 		originIter = malloc(sizeof(SlonOriginList));
 		memset(originIter,0,sizeof(SlonOriginList));
 		originIter->no_id = origin_id;
+		originIter->last_processed_lsn = state->last_committed_pos;
 		if(state->origin_list == NULL)
 		{
 			state->origin_list = originIter;
@@ -1020,8 +1029,8 @@ sendFeedback(SlonNode * node,
 	if (blockpos == state->startpos)
 		return true;
 #endif
-//	slon_log(SLON_DEBUG4, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
-//			 ((uint32)(blockpos>>32)),(uint32)blockpos);
+	slon_log(SLON_DEBUG4, "remoteWALListenerThread_%d: sending feedback %X/%X\n",node->no_id,
+			 ((uint32)(blockpos>>32)),(uint32)blockpos);
 	replybuf[len] = 'r';
 	len += 1;
 	sendint64(blockpos, &replybuf[len]);		/* write */
@@ -1088,7 +1097,10 @@ XlogRecPtr remote_wal_processed(XlogRecPtr confirmed, int provider_id, int origi
 {
 	SlonWALState_list * statePtr;
 	SlonOriginList * originIter;
-	XlogRecPtr minConfirmedLsn;
+	XlogRecPtr minConfirmedLsn=0;
+
+	if( ((uint32) (confirmed>>32))==0)
+		assert(false);
 
 	pthread_mutex_lock(&state_list_lock);
 	for(statePtr = state_list; statePtr != NULL; statePtr = statePtr->next)
@@ -1123,7 +1135,7 @@ XlogRecPtr remote_wal_processed(XlogRecPtr confirmed, int provider_id, int origi
 		slon_log(SLON_ERROR,"remoteWALListener_%d does not have a record of origin %d\n"
 				 ,provider_id,origin_id);
 		assert(false);
-		return;
+		return 0;
 		
 	}
 	originIter->last_processed_lsn = confirmed;
@@ -1143,10 +1155,9 @@ XlogRecPtr remote_wal_processed(XlogRecPtr confirmed, int provider_id, int origi
 			}
 		}
 	}
-	
-
-	
-	slon_log(SLON_DEBUG4,"remoteWALListener_%d processed until %X/%X\n",provider_id, (uint32) (minConfirmedLsn>>32),(uint32)minConfirmedLsn);
+		
+	slon_log(SLON_DEBUG4,"remoteWALListener_%d processed until %X/%X\n",provider_id, 
+			 (uint32) (minConfirmedLsn>>32),(uint32)minConfirmedLsn);
 
 	if(statePtr->state->last_committed_pos==0 ||
 	  minConfirmedLsn > statePtr->state->last_committed_pos)

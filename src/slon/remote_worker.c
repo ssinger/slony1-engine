@@ -761,7 +761,7 @@ remoteWorkerThread_main(void *cdata)
 			 * from this provider with a lower lsn provider lsn. FIXME
 			 * also we will need to update sl_node. (call sync_event wal???)
 			 */
-			if(event->from_wal_provider)
+			if(event->from_wal_provider && event->provider_wal_loc > 0 )
 			{
 				XlogRecPtr confirmed_lsn;	
 				PGresult   *res1;
@@ -6389,7 +6389,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 */
 				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: xid %s was applied" \
 						 " in the previous transaction %s\n",node->no_id,iterator->xid,last_provider_snapshots[set_idx]);
-				remote_wal_processed(event->provider_wal_loc, event->event_provider,event->ev_origin);
+				
+				remote_wal_processed(iterator->xlog, event->event_provider,event->ev_origin);
 			
 			}
 			else if(subscribed_sets > 0 && strcmp(event->ev_provider_xid,iterator->xid) == 0) 
