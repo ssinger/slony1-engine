@@ -3637,6 +3637,10 @@ comment on function @NAMESPACE@.sequenceSetValue(p_seq_id int4, p_seq_origin int
 Set sequence seq_id to have new value last_value.
 ';
 
+--
+-- 2.2.3 changed the return type of ddlCapture 
+-- drop it to allow a new return type.
+drop function if exists @NAMESPACE@.ddlCapture (p_statement text, p_nodes text);
 -- ----------------------------------------------------------------------
 -- FUNCTION ddlCapture (statement, nodes)
 --
