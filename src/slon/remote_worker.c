@@ -3569,7 +3569,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 * sequence list to all actions after that.
 			 */
 			(void) slon_mkquery(&query1,
-								"select ev_seqno, ev_snapshot "
+								"select ev_seqno, txid_current_snapshot() "
 								"from %s.sl_event "
 								"where ev_origin = %d and ev_seqno = '%s'; ",
 					   rtcfg_namespace, node->no_id, PQgetvalue(res1, 0, 0));
@@ -3608,6 +3608,10 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			ssy_seqno = PQgetvalue(res1, 0, 0);
 			ssy_snapshot = PQgetvalue(res1, 0, 1);
 			ssy_provider_snapshot = PQgetvalue(res1,0,1);
+			dstring_init(&ssy_action_list);
+			dstring_terminate(&ssy_action_list);
+		}
+#if 0 
 			(void) slon_mkquery(&query2,
 					   "log_txid >= \"pg_catalog\".txid_snapshot_xmax('%s') "
 				   "or (log_txid >= \"pg_catalog\".txid_snapshot_xmin('%s')",
@@ -3665,7 +3669,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		}
 		dstring_terminate(&ssy_action_list);
 		PQclear(res2);
-	
+#endif
 	}
 	else
 	{
@@ -3712,6 +3716,8 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 		dstring_init(&ssy_action_list);
 		ssy_seqno = PQgetvalue(res1, 0, 0);
 		ssy_snapshot = PQgetvalue(res1, 0, 1);
+		slon_log(SLON_DEBUG4,"ssy_snapshot from provider is %s\n",node->no_id,
+				 ssy_snapshot);
 		dstring_append(&ssy_action_list, PQgetvalue(res1, 0, 2));
 		ssy_provider_snapshot=PQgetvalue(res1, 0, 3);
 		dstring_terminate(&ssy_action_list);
@@ -3731,7 +3737,9 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 						set_id, node->no_id, ssy_seqno, ssy_snapshot,
 						dstring_data(&ssy_action_list),						
 						sub_node->no_id,ssy_provider_snapshot);
-	
+	slon_log(SLON_DEBUG4,"remoteWorkerThread_%d: setsync ssy_snapshot is: " \
+			 "%s %s\n",
+			 node->no_id,ssy_snapshot,dstring_data(&ssy_action_list));
 	dstring_free(&ssy_action_list);
 	if (query_execute(node, loc_dbconn, &query1) < 0)
 	{
@@ -3752,6 +3760,7 @@ copy_set(SlonNode * node, SlonConn * local_conn, int set_id,
 			 node->no_id,
 			 TIMEVAL_DIFF(&tv_start2, &tv_now));
 
+			 
 	/*
 	 * Roll back the transaction we used on the provider and close the
 	 * database connection.
@@ -6170,7 +6179,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 					break;
 				}				
 			}
-			if(set_idx == subscribed_sets) 
+			if(set_idx == subscribed_sets && ! iterator->is_sync) 
 			{
 				/**
 				 * set id was not found in sl_setsync.
@@ -6179,6 +6188,10 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 				 * TODO/FIXME
 				 */
 				set_idx=0;
+				//slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: no sl_setsync row for set %d %s\n",
+				//		 node->no_id,iterator->set_id,iterator->row);
+				//=iterator->next;
+				//continue;
 			}
 		}
 			
