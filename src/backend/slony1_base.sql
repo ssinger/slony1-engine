@@ -370,6 +370,7 @@ last value from the requested sequence.';
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_log_1 (
 	log_origin			int4,
+	log_setid           int4,
 	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,
@@ -402,6 +403,7 @@ comment on column @NAMESPACE@.sl_log_1.log_cmdargs is 'The data needed to perfor
 -- ----------------------------------------------------------------------
 create table @NAMESPACE@.sl_log_2 (
 	log_origin			int4,
+	log_setid           int4,
 	log_txid			bigint,
 	log_tableid			int4,
 	log_actionseq		int8,

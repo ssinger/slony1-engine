@@ -150,7 +150,7 @@ static XlogRecPtr init_wal_slot(SlonWALState * state, SlonNode * node)
 	}
 
 	snprintf(query,sizeof(query),"CREATE_REPLICATION_SLOT   \"slon_%d_%d\" LOGICAL \"%s\"",
-			 rtcfg_nodeid, node->no_id,"slony1_funcs.2.2.0");
+			 rtcfg_nodeid, node->no_id,"slony1_funcs." SLONY_I_VERSION_STRING );
 	res = PQexec(state->dbconn,query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -742,7 +742,6 @@ static int extract_row_metadata(SlonNode * node,
 				free(tmp_buf);
 				column++;
 			}
-#if 0 
 			else if(column == 1)
 			{
 				/**
@@ -756,7 +755,6 @@ static int extract_row_metadata(SlonNode * node,
 				free(tmp_buf);
 				column++;
 			}
-#endif
 			else
 			{
 				/**

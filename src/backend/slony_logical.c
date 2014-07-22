@@ -519,8 +519,9 @@ pg_decode_change(LogicalDecodingContext * ctx, ReorderBufferTXN* txn,
 	array_text = DatumGetCString(FunctionCall1Coll(&flinfo,InvalidOid,
 												   PointerGetDatum(outvalues)));
 	ReleaseSysCache(array_type_tuple);
-	appendStringInfo(ctx->out,"%d\t%u\t%d\t%u\t%s\t%s\t%c\t%d\t%s"
+	appendStringInfo(ctx->out,"%d\t%d\t%u\t%d\t%u\t%s\t%s\t%c\t%d\t%s"
 					 ,origin_id
+					 ,set_id
 					 ,txn->xid
 					 ,table_id
 					 ,0 /*actionseq*/

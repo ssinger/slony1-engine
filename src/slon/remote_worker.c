@@ -6067,6 +6067,7 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 	 */
 	dstring_init(&copy_in);
 	slon_mkquery(&copy_in, "COPY %s.\"sl_log_%d\" ( log_origin, " \
+				 "log_setid," \
 				 "log_txid,log_tableid,log_actionseq,log_tablenspname, " \
 				 "log_tablerelname, log_cmdtype, log_cmdupdncols," \
 				 "log_cmdargs) FROM STDIN",
