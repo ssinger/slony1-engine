@@ -1099,8 +1099,6 @@ XlogRecPtr remote_wal_processed(XlogRecPtr confirmed, int provider_id, int origi
 	SlonOriginList * originIter;
 	XlogRecPtr minConfirmedLsn=0;
 
-	if( ((uint32) (confirmed>>32))==0)
-		assert(false);
 
 	pthread_mutex_lock(&state_list_lock);
 	for(statePtr = state_list; statePtr != NULL; statePtr = statePtr->next)
