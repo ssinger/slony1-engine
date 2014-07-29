@@ -2434,8 +2434,7 @@ begin
 		update @NAMESPACE@.sl_subscribe
 				set sub_provider = v_sub_last
 				where sub_set = p_set_id
-                                        and sub_receiver = v_sub_node
-                                        and sub_receiver <> v_sub_last;
+				    and sub_receiver <> v_sub_last
 					and sub_receiver = v_sub_node;
 		if v_sub_node = v_local_node_id then
 		   --
