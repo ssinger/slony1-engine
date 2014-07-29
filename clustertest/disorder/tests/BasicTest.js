@@ -592,8 +592,9 @@ BasicTest.prototype.teardownSlony = function() {
 
 
 
-BasicTest.prototype.generateLoad = function(set_origin) {
+BasicTest.prototype.generateLoad = function() {
 
+	var set_origin = this.getCurrentOrigin();
     this.coordinator.log("BasicTest.prototype.generateLoad - origin[" + set_origin + "] - start");
 	var disorderClientJs = this.coordinator.readFile('disorder/client/disorder.js');
 	disorderClientJs+= this.coordinator.readFile('disorder/client/run_fixed_load.js');

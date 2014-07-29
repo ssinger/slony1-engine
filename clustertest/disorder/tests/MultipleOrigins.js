@@ -64,7 +64,7 @@ MultipleOrigins.prototype.runTest = function() {
 	 *  
 	 *  where set 1 is origin on 1, set 2 is origin on 2.
 	 */
-	var load = this.generateLoad(1);
+	var load = this.generateLoad();
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
 	this.coordinator.join(load);
@@ -78,7 +78,7 @@ MultipleOrigins.prototype.runTest = function() {
 	 */	
 	this.moveSet(1,1,4);
 	this.currentOrigin='db4';
-	load = this.generateLoad(4);
+	load = this.generateLoad();
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
 	this.coordinator.join(load);
@@ -91,7 +91,7 @@ MultipleOrigins.prototype.runTest = function() {
 	this.slonikSync(1,1);
 	this.slonikSync(1,4);
 	this.failNode(1,4,true);
-	load = this.generateLoad(4);
+	load = this.generateLoad();
 	java.lang.Thread.sleep(10*1000);
 	load.stop();
 	this.coordinator.join(load);
