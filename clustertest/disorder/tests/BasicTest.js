@@ -55,7 +55,7 @@ BasicTest.prototype.getSlonikPreamble = function() {
 
 BasicTest.prototype.isLogical=function(node_id) {
 
-	return false;
+    return true;
 }
 
 /**
@@ -377,7 +377,7 @@ BasicTest.prototype.dropDb = function(dbnames) {
  * 
  */
 BasicTest.prototype.getSyncWaitTime = function() {
-	return 3*60;
+	return 30*60;
 }
 
 /**

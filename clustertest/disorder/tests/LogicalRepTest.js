@@ -19,9 +19,9 @@ LogicalRepTest.prototype.getNodeCount = function() {
 }
 
 LogicalRepTest.prototype.isLogical=function(node_id) {
-	if (node_id == 1) {
-		return true;		
-	}
+//	if (node_id == 1) {
+//		return true;		
+//	}
 	return true;
 }
 

@@ -13,6 +13,12 @@ Failover = function(coordinator, testResults) {
 		+' from different cluster configurations';
 
 }
+
+
+Failover.prototype.getSyncWaitTime = function() {
+	return 20*60;
+}
+
 Failover.prototype = new FailNodeTest();
 Failover.prototype.constructor = Failover;
 
@@ -57,7 +63,7 @@ Failover.prototype.runTest = function() {
 	this.slonikSync(1,1);
 
 
-	
+
 
 	var load = this.generateLoad();
 	
@@ -82,6 +88,7 @@ Failover.prototype.runTest = function() {
 	this.dropNode(5,1);
 	//Make sure all the events from node 1 (ie the DROP NODE above)
 	//make it elsewhere.
+
 	this.slonikSync(1,1);
 	this.reAddNode(5,1,3);
    	this.subscribeSet(1,1,3,[5]);

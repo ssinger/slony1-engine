@@ -1120,7 +1120,7 @@ begin
 				where ev_origin = p_no_id;
 		delete from @NAMESPACE@.sl_node
 				where no_id = p_no_id;
-
+		perform @NAMESPACE@.dropReplicationSlots(p_no_id);
 		return p_no_id;
 	end if;
 
@@ -1135,6 +1135,7 @@ begin
 	-- Rewrite sl_listen table
 	perform @NAMESPACE@.RebuildListenEntries();
 	perform @NAMESPACE@.dropReplicationSlots(p_no_id);
+
 
 	return p_no_id;
 end;
@@ -1278,6 +1279,15 @@ begin
 		and set_origin=p_failed_node
 		and sub_provider = ANY(p_failed_nodes)
 		and sub_receiver=@NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
+
+	--
+	-- Blank out the last provider + snapshot info
+	-- from sl_setsync because if the old provider
+	-- has failed.
+	update @NAMESPACE@.sl_setsync 
+		   set ssy_provider=null,
+		   	   ssy_provider_snapshot=null
+		   where ssy_provider =ANY(p_failed_nodes);
 
 	-- ----
 	-- Terminate all connections of the failed node the hard way

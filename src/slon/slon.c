@@ -492,7 +492,7 @@ SlonMain(void)
 	}
 	PQclear(res);
 	dstring_free(&query);
-
+#if 0
 #ifndef WIN32
 	if (signal(SIGHUP, SIG_IGN) == SIG_ERR)
 	{
@@ -520,7 +520,7 @@ SlonMain(void)
 		slon_abort();
 	}
 #endif
-
+#endif
 	slon_log(SLON_INFO, "main: main process started\n");
 
 	/*
@@ -885,12 +885,15 @@ SlonWatchdog(void)
 
 
 	slon_log(SLON_CONFIG, "slon: watchdog ready - pid = %d\n", slon_watchdog_pid);
-
+#if 1
 	slon_worker_pid = fork();
-	if (slon_worker_pid == 0)
+	if (   slon_worker_pid == 0)
 	{
+#endif
+		slon_worker_pid = 0;
 		SlonMain();
 		exit(-1);
+#if 1
 	}
 	else if (slon_worker_pid < 0)
 	{
@@ -899,7 +902,7 @@ SlonWatchdog(void)
 		slon_exit(-1);
 
 	}
-
+#endif
 	/*
 	 * Install signal handlers
 	 */

@@ -21,6 +21,10 @@ MoveSet.prototype.getNodeCount = function() {
 	return 5;
 }
 
+MoveSet.prototype.isLogical=function(node_id) {
+	return true;
+}
+
 MoveSet.prototype.runTest = function() {
         this.coordinator.log("MoveSet.prototype.runTest - begin");
 
@@ -53,7 +57,7 @@ MoveSet.prototype.runTest = function() {
 	
 	this.syncWaitTime = 60*5;
 	this.slonikSync("1","1");
-	this.syncWaitTime= 3 * 60;
+	this.syncWaitTime= 10 * 60;
         this.coordinator.log("MoveSet.prototype.runTest - sets subscribed, data synced");
 	var pairings=[
 	              [1,2]

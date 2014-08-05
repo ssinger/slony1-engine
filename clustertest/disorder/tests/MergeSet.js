@@ -6,7 +6,7 @@ coordinator.includeFile("disorder/tests/BasicTest.js");
 
 function MergeSet(coordinator,results) {
 	BasicTest.call(this,coordinator,results);
-	this.syncWaitTime = 60;
+	this.syncWaitTime = 60 * 10 ;
 	this.testDescription = 'This test exercises the merge set command \n';
 }
 
@@ -38,26 +38,30 @@ MergeSet.prototype.runTest = function() {
 		slonArray[idx-1] = this.coordinator.createSlonLauncher('db' + idx);
 		slonArray[idx-1].run();
 	}
-	this.createSecondSet(1);
+
 	var load = this.generateLoad();
 	java.lang.Thread.sleep(5*1000);
 	this.subscribeSet(1,1,1,[2,3]);
 	this.subscribeSet(1,1,3,[4,5]);
+	this.createSecondSet(1);
 	this.subscribeSet(2,1,1,[2,3]);
-	this.subscribeSet(2,1,3,[4,5]);
-	var mergeScript="merge set(id=1,add id=2,origin=1);";
-	var slonikPreamble=this.getSlonikPreamble();
-	var slonik = this.coordinator.createSlonik('merge set',slonikPreamble,mergeScript);
-	slonik.run();
-	this.coordinator.join(slonik);
-	this.testResults.assertCheck('merge set okay',slonik.getReturnCode(),
-				     0);
+        this.subscribeSet(2,1,3,[4,5]);
+
+     //load = this.generateLoad();
+	//var mergeScript="merge set(id=1,add id=2,origin=1);";
+	//var slonikPreamble=this.getSlonikPreamble();
+	//var slonik = this.coordinator.createSlonik('merge set',slonikPreamble,mergeScript);
+	//slonik.run();
+	//this.coordinator.join(slonik);
+	//this.testResults.assertCheck('merge set okay',slonik.getReturnCode(),
+	//			     0);
 
 	load.stop();
 	this.coordinator.join(load);
         this.coordinator.log("MergeSet.prototype.runTest - subscriptions complete");
 	this.slonikSync(1,1);
 	this.coordinator.log("MergeSet.prototype.runTest - syncing complete");
+	java.lang.Thread.sleep(60*1000);
 	this.compareDb('db1','db2');
 	this.compareDb('db1','db3');
 	this.compareDb('db1','db4');
