@@ -1,4 +1,8 @@
 #+OPTIONS: ^:{}
+
+* 2.3.4
+  - Include alloca.h in slonik(fix for solaris)
+
 * 2.2.3
   - Bug 338 - Have ddlScript return a bigint instead of a integer
   - fixing  Deadlock with application during minor version slony upgrade
