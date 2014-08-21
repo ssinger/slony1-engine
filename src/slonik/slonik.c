@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <alloca.h>
 #else
 #include <winsock2.h>
 #include <windows.h>
