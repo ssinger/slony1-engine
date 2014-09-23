@@ -754,10 +754,10 @@ remoteWorkerThread_main(void *cdata)
 			}
 			else if (strcmp(event->ev_type, "DROP_NODE") == 0)
 			{
-				char *      node_list = event->ev_data1;
+				char *      node_list = strdup(event->ev_data1);
 				char * saveptr=NULL;
 				char * node_id=NULL;
-
+				
 				while((node_id=strtok_r(node_id==NULL ? node_list : NULL ,",",&saveptr))!=NULL)					
 				{
 					int			no_id = (int) strtol(node_id, NULL, 10);
@@ -798,6 +798,7 @@ remoteWorkerThread_main(void *cdata)
 						slon_retry();
 					}
 				}
+				free(node_list);
 
 				/*
 				 * this is a remote node. Arrange for daemon restart.

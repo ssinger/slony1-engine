@@ -2,6 +2,7 @@
 
 * 2.3.4
   - Include alloca.h in slonik(fix for solaris)
+  - Bug 345 Fix bug when dropping multiple nodes at once
 
 * 2.2.3
   - Bug 338 - Have ddlScript return a bigint instead of a integer
