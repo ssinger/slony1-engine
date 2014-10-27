@@ -665,7 +665,8 @@ remoteWorkerThread_main(void *cdata)
 				if(provider->no_id == event->event_provider)
 					break;
 			}
-			if(provider == NULL)
+
+			if(provider == NULL &&  wd->provider_head != NULL)
 			{
 				/**
 				 * The event did NOT come from a provider listed in the provider list.
@@ -677,6 +678,7 @@ remoteWorkerThread_main(void *cdata)
 						 node->no_id,seqbuf,event->event_provider);
 				continue;
 			}
+
 			while (true)
 			{				
 				/*
@@ -1804,6 +1806,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 							provider->pa_conninfo =
 								strdup(rtcfg_node->pa_conninfo);
 						provider->pa_walsender = rtcfg_node->pa_walsender;
+						assert(provider->pa_walsender);
 					}
 				}
 
@@ -1957,6 +1960,7 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 				provider->pa_conninfo =
 					strdup(rtcfg_node->pa_conninfo);
 			provider->pa_walsender = rtcfg_node->pa_walsender;
+			assert(provider->pa_walsender);
 		}
 	}
 
@@ -6143,8 +6147,8 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 			continue;
 		}
 	
-		slon_log(SLON_DEBUG4,"remoteWorkerThread_%d: examining WAL record %lld, %s %d\n",node->no_id,
-				 iterator->event,iterator->xid,iterator->provider);
+		//slon_log(SLON_DEBUG4,"remoteWorkerThread_%d: examining WAL record %lld, %s %d\n",node->no_id,
+		//		 iterator->event,iterator->xid,iterator->provider);
 		
 		/**
 		 * is this record from a provider this remote worker
@@ -6392,8 +6396,14 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 					 * the provider has changed. 
 					 * We really should update sl_setsync
 					 * as part of the MOVE SET/RESUBSCRIBE set.
+					 *
+					 * Don't assert for now, skip this record, leave it
+					 * in the queue and continue
+					 *
+					 *assert(false);
 					 */
-					assert(false);
+					iterator=iterator->next;
+					continue;
 				}
 
 
@@ -6483,11 +6493,55 @@ static int sync_wal_helper(SlonNode * node, ProviderInfo * provider_list,
 		else {
 			/**
 			 * we are NOT listening for events from this node.
-			 * we can discard the row.
-			 * Let the listener know.
+			 * However as part of a cluster reconfiguration(think failover)
+			 * we might later decide that we really do need the row from
+			 * this provider.
+			 *
+			 *
+			 * If this is a non-SYNC row then we leave the event in the queue
+			 * just in case.
+			 *
+			 * If this is a SYNC event, we check to see if the 
+			 * SYNC event has already been processed by this remote_worker.
+			 * If so we walk through the event queue and remove all rows prior
+			 * to this one from the provider.
+			 *
+			 *
 			 */
-			
-			remote_wal_processed(iterator->xlog, iterator->provider,iterator->origin);
+			if(! iterator->is_sync)
+			{
+				iterator=iterator->next;
+				continue;
+
+			}
+			else if (iterator->event <= node->last_event)
+			{
+				/**
+				 * walk through the queue 
+				 * looking for events from this place.
+				 */
+				SlonWALRecord * purgeIterator;
+				for(purgeIterator=node->wal_queue; purgeIterator != NULL; purgeIterator=purgeIterator->next)
+				{
+					if(purgeIterator == iterator)
+					{
+						break;
+					}
+					if(purgeIterator->provider == iterator->provider)
+					{
+						purgeIterator=remoteWorker_wal_remove(node,purgeIterator);
+						if(purgeIterator==NULL)
+							break;
+					}
+				}
+				remote_wal_processed(iterator->xlog, iterator->provider,iterator->origin);
+			}
+			else {
+				slon_log(SLON_DEBUG2,"remoteWorkerThread_%d: %lld > %lld for provider %d\n",
+						 node->no_id,iterator->event,node->last_event,iterator->provider);
+				iterator=iterator->next;
+				continue;
+			}
 		}
 			
 	
