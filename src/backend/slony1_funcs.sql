@@ -4999,6 +4999,7 @@ returns int
 as $$
 declare
 	v_row	record;
+        v_cnt  integer;
 begin
 	-- ----
 	-- Grab the central configuration lock
@@ -5088,8 +5089,8 @@ begin
 				end if;
 		end if;
 
-		if v_row.failed then
-		
+		if v_row.failed then		
+
 		--for every failed node we delete all sl_listen entries
 		--except via providers (listed in sl_subscribe)
 		--or failover candidates (sl_failover_targets)
@@ -5097,7 +5098,17 @@ begin
 		--that is more ahead of the failover candidate from
 		--sending events to the failover candidate that
 		--are 'too far ahead'
-		delete from @NAMESPACE@.sl_listen where
+
+		--if the failed node is not an origin for any
+                --node then we don't delete all listen paths
+		--for events from it.  Instead we leave
+                --the listen network alone.
+		
+		select count(*) into v_cnt from @NAMESPACE@.sl_subscribe sub,
+		       @NAMESPACE@.sl_set s
+                       where s.set_origin=v_row.origin and s.set_id=sub.sub_set;
+                if v_cnt > 0 then
+		    delete from @NAMESPACE@.sl_listen where
 			   li_origin=v_row.origin and
 			   li_receiver=v_row.receiver			
 			   and li_provider not in 
@@ -5106,7 +5117,8 @@ begin
 			       @NAMESPACE@.sl_set where
 			       sub_set=set_id
 			       and set_origin=v_row.origin);
-		end if;
+		    end if;
+               end if;
 --		   insert into @NAMESPACE@.sl_listen
 --		   		  (li_origin,li_provider,li_receiver)
 --				  SELECT v_row.origin, pa_server
