@@ -4513,8 +4513,11 @@ begin
 	-- ----
 	-- Remove the replication triggers.
 	-- ----
-	for v_tab_row in select tab_id from @NAMESPACE@.sl_table
+	for v_tab_row in select tab_id from @NAMESPACE@.sl_table,
+	    	      	@NAMESPACE@.sl_node 
 			where tab_set = p_sub_set
+                        and no_id = @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@')
+                        and no_walsender=true
 			order by tab_id
 	loop
 		perform @NAMESPACE@.alterTableDropTriggers(v_tab_row.tab_id);
