@@ -72,26 +72,26 @@ Failover.prototype.runTest = function() {
 	 * FAIL node 5.
 	 * Node 5 is not a provider.
 	 * This should go off smoothly.
-	 */
-	this.failNode(5,1,true);
+         */	
+	//this.failNode(5,1,true);
   
 	var lag1 = this.measureLag(1,5);
 	java.lang.Thread.sleep(10*1000);
 	var lag2 = this.measureLag(1,5);
-	this.testResults.assertCheck('lag on node 5 is increasing',lag2 > lag1 ,true);
+	//this.testResults.assertCheck('lag on node 5 is increasing',lag2 > lag1 ,true);
 		
 	
 	/**
 	 * DROP node 5.
 	 */
 	this.coordinator.log('PROGRESS:Testing drop of node 5');
-	this.dropNode(5,1);
+//	this.dropNode(5,1);
 	//Make sure all the events from node 1 (ie the DROP NODE above)
 	//make it elsewhere.
 
 	this.slonikSync(1,1);
-	this.reAddNode(5,1,3);
-   	this.subscribeSet(1,1,3,[5]);
+//	this.reAddNode(5,1,3);
+ //  	this.subscribeSet(1,1,3,[5]);
 
 	
 
