@@ -1702,11 +1702,11 @@ adjust_provider_info(SlonNode * node, WorkerGroupData * wd, int cleanup,
 		if (provider->set_head == NULL)
 		{
 			/*
-			 * Tell this helper thread to exit, join him and destroy thread
+			 * Tell connection to close
 			 * related data.
 			 */
 			slon_log(SLON_CONFIG, "remoteWorkerThread_%d: "
-					 "helper thread for provider %d terminated\n",
+					 "connection for provider %d terminated\n",
 					 node->no_id, provider->no_id);
 
 			/*
