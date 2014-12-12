@@ -41,7 +41,7 @@
 # This query cache is flushed once per SYNC group. If the queries required
 # to apply a SYNC group exceeds this number, the apply trigger will use
 # an LRU to evict the longest not used prepared query.
-# Range:  [10,2000], default: 6
+# Range:  [10,2000], default: 100
 #apply_cache_size=100
 
 # If this parameter is 1, messages go both to syslog and the standard 
