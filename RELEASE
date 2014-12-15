@@ -1,6 +1,9 @@
 #+OPTIONS: ^:{}
 
-* 2.3.4
+* 2.2.5
+  - Bug 352 Handle changes from PG HEAD ("9.5")
+
+* 2.2.4
   - Include alloca.h in slonik(fix for solaris)
   - Bug 345 Fix bug when dropping multiple nodes at once
 
@@ -215,5 +218,4 @@
 - Bug 297 :: Make test_slony_state-dbi.pl work with PG 9.2
 - Bug 299 :: Fix a bug in MOVE SET where slon might pull data from the old origin using
              SYNC values for the new origin
-
 
