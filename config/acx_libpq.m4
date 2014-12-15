@@ -480,12 +480,22 @@ if test -z "$ac_cv_set_config_option_args"; then
       ac_cv_set_config_option_args=7)
    AC_MSG_RESULT([yes, and it takes $ac_cv_set_config_option_args arguments])
 fi
+if test -z "$ac_cv_set_config_option_args"; then
+   AC_TRY_COMPILE(
+     [#include "postgres.h"
+      #include "utils/guc.h"],
+     [set_config_option(NULL, NULL, (GucContext) 0, (GucSource) 0, (GucAction) 0, (bool) 0, (int) 0, (bool) 0);],
+      ac_cv_set_config_option_args=8)
+   AC_MSG_RESULT([yes, and it takes $ac_cv_set_config_option_args arguments])
+fi
 
 AC_MSG_CHECKING(for set_config_option)
 if test "$ac_cv_set_config_option_args" = 6; then
    AC_DEFINE(SETCONFIGOPTION_6)
 elif test "$ac_cv_set_config_option_args" = 7; then
    AC_DEFINE(SETCONFIGOPTION_7)
+elif test "$ac_cv_set_config_option_args" = 8; then
+   AC_DEFINE(SETCONFIGOPTION_8)
 else
    AC_MSG_RESULT([problem: set_config_option has incompatible args])
 fi
