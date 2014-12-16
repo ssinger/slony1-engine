@@ -1,6 +1,9 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 #include <pg_config.h>
+#ifndef INT64_FORMAT
+#define INT64_FORMAT "%" INT64_MODIFIER "d"
+#endif
 
 
 /* ----------------------------------------------------------------

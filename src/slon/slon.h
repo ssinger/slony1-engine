@@ -29,6 +29,9 @@
 #include <sys/time.h>
 #endif
 
+#ifndef INT64_FORMAT
+#define INT64_FORMAT "%" INT64_MODIFIER "d"
+#endif
 
 #define SLON_MEMDEBUG	1
 #ifndef false

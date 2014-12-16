@@ -2,14 +2,11 @@
 * Slony-I 2.3 Release Notes
 
 ** Significant Changes
-
    
 ** Bugs fixed in the course of the release
 
 	These are expected to represent bugs that were previously present,
 	not a consequence of problems introduced and subsequently fixed in
-	the 2.2 branch.
+	the 2.3 branch.
 
-- Bug ??? :: Description of bug ???
-
-
+   - Bug 352 :: Issues with PostgreSQL "head" (what shall become 9.5 or so).  It is pretty usual for #include files to shift a bit and for functions to change arguments a bit.
