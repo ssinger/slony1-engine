@@ -1102,7 +1102,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 			argtypes[1] = INT4OID;
 			argtypes[2] = INT8OID;
 
-			snprintf(query, 1023, "select %s.sequenceSetValue($1," \
+			snprintf(query, 1023, "select \"%s\".sequenceSetValue($1," \
 					 "$2,NULL,$3,true); ", tg->tg_trigger->tgargs[0]);
 			plan = SPI_prepare(query, 3, argtypes);
 			if (plan == NULL)
