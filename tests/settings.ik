@@ -2,7 +2,7 @@
 # This file contains the various sets of possible DB
 # configuration defaults/overrides
 
-CLUSTER1=${CLUSTER1:-"slony_regress1"}
+CLUSTER1=${CLUSTER1:-"Slony_Regress1"}
 CLUSTER2=${CLUSTER2:-"slony_regress2"}
 CLUSTER3=${CLUSTER3:-"slony_regress3"}
 
