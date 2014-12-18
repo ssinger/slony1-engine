@@ -1735,7 +1735,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 				 */
 				querytypes = (Oid *) palloc(sizeof(Oid) * 2);
 
-				sprintf(applyQueryPos, "TRUNCATE %s.%s CASCADE;",
+				sprintf(applyQueryPos, "TRUNCATE ONLY %s.%s CASCADE ;",
 						slon_quote_identifier(nspname),
 						slon_quote_identifier(relname));
 
