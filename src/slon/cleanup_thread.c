@@ -34,7 +34,6 @@
 int			vac_frequency = SLON_VACUUM_FREQUENCY;
 char	   *cleanup_interval;
 
-static int	vac_bias = 0;
 static unsigned long earliest_xid = 0;
 static unsigned long get_earliest_xid(PGconn *dbconn);
 
@@ -50,12 +49,14 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 {
 	SlonConn   *conn;
 	SlonDString query_baseclean;
+	SlonDString query_cleanup_interval_second;
 	SlonDString query2;
 	SlonDString query_pertbl;
 
 	PGconn	   *dbconn;
 	PGresult   *res;
 	PGresult   *res2;
+	PGresult   *res3;
 	struct timeval tv_start;
 	struct timeval tv_end;
 	int			t;
@@ -63,19 +64,10 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	int			vac_enable = SLON_VACUUM_FREQUENCY;
 	char	   *vacuum_action;
 	int			ntuples;
+	int              cleanup_interval_second;
+	int vac_bias = 0;
 
 	slon_log(SLON_CONFIG, "cleanupThread: thread starts\n");
-
-	/*
-	 * Want the vacuum time bias to be between 0 and 100 seconds, hence
-	 * between 0 and 100000
-	 */
-	if (vac_bias == 0)
-	{
-		vac_bias = rand() % (SLON_CLEANUP_SLEEP * 166);
-	}
-	slon_log(SLON_CONFIG, "cleanupThread: bias = %d\n", vac_bias);
-
 	/*
 	 * Connect to the local database
 	 */
@@ -91,9 +83,40 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	}
 
 	dbconn = conn->dbconn;
+        monitor_state("local_cleanup", 0, conn->conn_pid, "thread main loop", 0, "n/a");
+        /*
+         *rnancy : Want the vacuum time bias to be 10% of the cleanup interval
+         */
+        if (vac_bias == 0)
+        {
+                /* convert cleanup_interval in second*/
+                
+                dstring_init(&query_cleanup_interval_second);
+                slon_mkquery(&query_cleanup_interval_second,
+                                 "select date_part('epoch','%s'::interval);",
+                                 cleanup_interval
+                );
+                
+                res3 = PQexec(dbconn, dstring_data(&query_cleanup_interval_second));
+                if (PQresultStatus(res3) != PGRES_TUPLES_OK) /* query error */
+                        {
+                                slon_log(SLON_ERROR,
+                                                 "cleanupThread: \"%s\" - %s",
+                                                 dstring_data(&query_cleanup_interval_second), PQresultErrorMessage(res3));
+                                slon_retry();
+                        }
+                cleanup_interval_second = atoi(PQgetvalue(res3, 0, 0));
+                
+                slon_log(SLON_DEBUG1, "cleanupThread: Cleanup interval is : %ds\n", cleanup_interval_second); 
 
-	monitor_state("local_cleanup", 0, conn->conn_pid, "thread main loop", 0, "n/a");
+                vac_bias = (int)((cleanup_interval_second * 10) /100);
 
+                PQclear(res3);
+                dstring_free(&query_cleanup_interval_second);
+
+        }
+        slon_log(SLON_CONFIG, "cleanupThread: bias = %d\n", vac_bias);
+       
 	/*
 	 * Build the query string for calling the cleanupEvent() stored procedure
 	 */
@@ -117,7 +140,10 @@ cleanupThread_main( /* @unused@ */ void *dummy)
 	 * cluster will run into conflicts due to trying to vacuum common tables *
 	 * such as pg_listener concurrently
 	 */
-	while (sched_wait_time(conn, SCHED_WAIT_SOCK_READ, SLON_CLEANUP_SLEEP * 1000 + vac_bias + (rand() % (SLON_CLEANUP_SLEEP * 166))) == SCHED_STATUS_OK)
+	 while (sched_wait_time(conn, 
+                                 SCHED_WAIT_SOCK_READ, 
+                                 cleanup_interval_second * 1000 + vac_bias + (rand() % cleanup_interval_second)) == SCHED_STATUS_OK)
+                                 
 	{
 		/*
 		 * Call the stored procedure cleanupEvent()
