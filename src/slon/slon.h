@@ -61,7 +61,6 @@
  /* FIXME: must determine and use OS specific max path length */
  /* cbb: Not forcibly necessary; note that MAXPGPATH is 1024 */
 
-#define SLON_CLEANUP_SLEEP			600 /* sleep 10 minutes between */
  /* cleanup calls */
 #define SLON_VACUUM_FREQUENCY		3	/* vacuum every 3rd cleanup */
 
