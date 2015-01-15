@@ -5,8 +5,10 @@
   - Bug 349 :: Issue with quoting of cluster name - only hit when processing DDL
   - Bug 350 :: Make cleanup_interval config parameter work as expected
   - Include alloca.h in slonik(fix for solaris)
-  - Bug 345 Fix bug when dropping multiple nodes at once
-
+  - Bug     :: 345 Fix bug when dropping multiple nodes at once
+  - Bug 354 :: Fix race condition in FAILOVER
+  - Bug 356 :: Perform TRUNCATE ONLY on replicas (when replicating a truncate)
+ 
 * 2.2.3
   - Bug 338 - Have ddlScript return a bigint instead of a integer
   - fixing  Deadlock with application during minor version slony upgrade
