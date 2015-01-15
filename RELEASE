@@ -1,10 +1,9 @@
 #+OPTIONS: ^:{}
 
-* 2.2.5
+* 2.2.4
   - Bug 352 :: Handle changes from PG HEAD ("9.5")
   - Bug 349 :: Issue with quoting of cluster name - only hit when processing DDL
-
-* 2.2.4
+  - Bug 350 :: Make cleanup_interval config parameter work as expected
   - Include alloca.h in slonik(fix for solaris)
   - Bug 345 Fix bug when dropping multiple nodes at once
 
