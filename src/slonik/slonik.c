@@ -2165,17 +2165,10 @@ load_slony_functions(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 4;
 	}
-<<<<<<< HEAD
 	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90500)) /* 9.0 ... 9.4 */
 	{
 		/**
 		 * 9.0 to 9.4 are so far just like 8.4
-=======
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 90500)) /* 9.0, 9.1, 9.2 */
-	{
-		/**
-		 * 9.0 and 9.1 and 9.2 and 9.3,9.4 are so far just like 8.4
->>>>>>> 7c22d3b... remove unsupported for PG 9.4 since it has ben released
 		 */
 		use_major = 8;
 		use_minor = 4;
