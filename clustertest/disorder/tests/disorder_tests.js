@@ -29,6 +29,7 @@ coordinator.includeFile('disorder/tests/MultinodeFailover.js');
 coordinator.includeFile('disorder/tests/Resubscribe.js');
 coordinator.includeFile('disorder/tests/SiteFailover.js');
 coordinator.includeFile('disorder/tests/DropNode.js');
+coordinator.includeFile('disorder/tests/CleanupInterval.js');
 
 var tests = 
     [new EmptySet(coordinator,results)
@@ -59,6 +60,7 @@ var tests =
 	 ,new Resubscribe(coordinator,results)
 	 ,new SiteFailover(coordinator,results)
 	 ,new DropNode(coordinator,results)
+	 ,new CleanupInterval(coordinator,results)
 	 //Below tests are known to fail.
 	 //,new UnsubscribeBeforeEnable(coordinator,results)
      //,new DropSet(coordinator,results) //fails bug 133

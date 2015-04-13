@@ -479,10 +479,10 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 #ifdef SETCONFIGOPTION_6
 		set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION,
 						  true, true);
-#elif SETCONFIGOPTION_7
+#elif defined(SETCONFIGOPTION_7)
 		set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION,
 						  true, true, 0);
-#elif SETCONFIGOPTION_8
+#elif defined(SETCONFIGOPTION_8)
 		set_config_option("DateStyle", "ISO", PGC_USERSET, PGC_S_SESSION,
 						  true, true, 0, 0);
 #endif
@@ -759,10 +759,10 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 #ifdef SETCONFIGOPTION_6
 		set_config_option("DateStyle", olddatestyle,
 						  PGC_USERSET, PGC_S_SESSION, true, true);
-#elsif SETCONFIGOPTION_7
+#elif defined(SETCONFIGOPTION_7)
 		set_config_option("DateStyle", olddatestyle,
 						  PGC_USERSET, PGC_S_SESSION, true, true, 0);
-#elsif SETCONFIGOPTION_8
+#elif defined(SETCONFIGOPTION_8)
 		set_config_option("DateStyle", olddatestyle,
 						  PGC_USERSET, PGC_S_SESSION, true, true, 0, 0);
 #endif
@@ -1735,7 +1735,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 				 */
 				querytypes = (Oid *) palloc(sizeof(Oid) * 2);
 
-				sprintf(applyQueryPos, "TRUNCATE %s.%s CASCADE;",
+				sprintf(applyQueryPos, "TRUNCATE ONLY %s.%s CASCADE ;",
 						slon_quote_identifier(nspname),
 						slon_quote_identifier(relname));
 
