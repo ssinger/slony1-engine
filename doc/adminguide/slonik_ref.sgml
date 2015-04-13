@@ -2824,13 +2824,17 @@ FAILOVER(
       
      </varlistentry>
     </variablelist>
+
+    <para> The contents of the script are split into individual
+    statements which are logged into the table <xref
+    linkend=tablel.sl-log-script>, and are processed individually,
+    followed by the command <command>RESET ALL;</command>.</para>
     
     <para> See also the warnings in &rddlchanges;.</para>
 
     <para> Note that this is a potentially heavily-locking
     operation, which means that it can get stuck behind other database
     activity.</para>
-  
 
     <para> Note that if you need to make reference to the cluster
     name, you can use the token <command>@CLUSTERNAME@</command>; if
@@ -2868,7 +2872,6 @@ EXECUTE SCRIPT (
     similarly altered to remove replication triggers, therefore
     requiring that exclusive locks be taken out on each node, in
     turn. </para>
-
   
 
    </refsect1>

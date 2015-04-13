@@ -332,6 +332,37 @@ nodes to get rid of the node formerly using the node ID that needs to
 be held by another node.</para> </answer>
 </qandaentry>
 
+<qandaentry id="fqtnfunctions">
+<question><para> I had a DDL script that set the
+<envar>search_path</envar>; this setting remained in place on the
+database connections on subscriber nodes after
+<application>slon</application> propagated the change to subscriber
+nodes.  A stored procedure, running only on subscribers, wound up
+receiving that search path and behaving unexpectedly.</para> 
+
+<para> This was observed in bug #355. </para>
+</question>
+
+<answer><para> <quote>Best practice</quote> for such functions is that
+they should either:
+<itemizedlist>
+<listitem><para> Reference objects using fully qualified names so that <envar>search_path</envar> is not involved, or </para></listitem>
+<listitem><para> Assign the  search path required by the function  as part of the definition of the function.</para></listitem>
+</itemizedlist>
+</para> </answer>
+
+<answer><para> Future versions of &slony1; will run the command
+<command>RESET ALL;</command> after processing DDL, which will run
+<emphasis>after each statement</emphasis> so that the search path will
+be returned to default early.</para>
+
+<para>This will have the effective result of turning <command>set
+search_path</command> into no operation, as the search path will be
+reset to default before the next statement is processed.
+</para></answer>
+
+</qandaentry>
+
 </qandadiv>
 
 <qandadiv id="faqimpossibilities"> <title> &slony1; FAQ: Impossible Things People Try </title>
