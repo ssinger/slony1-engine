@@ -21,6 +21,6 @@ LDFLAGS:= $(LDFLAGS) -lsocket
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 %.so: $(SO_OBJS)
-	$(LD) -G -Bdynamic -o $@ $<
+	$(LD) -G -Bdynamic -o $@ $^
 
 sqlmansect = 7

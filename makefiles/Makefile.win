@@ -17,7 +17,7 @@ CFLAGS_SL =
 override CFLAGS += -DCYGWIN=1
 
 %.dll: $(SO_OBJS)
-	$(DLLTOOL) --export-all --output-def $*.def $<
+	$(DLLTOOL) --export-all --output-def $*.def $^
 	$(DLLWRAP) -o $@ --def $*.def $< $(DLLLIBS)
 	rm -f $*.def
 %.o: %.c

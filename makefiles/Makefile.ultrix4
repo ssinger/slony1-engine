@@ -7,6 +7,6 @@ DLSUFFIX = .so
 CFLAGS_SL = -G 0
 
 %.so: $(SO_OBJS)
-	$(CC) -c -G 0 $(CPPFLAGS) $(CFLAGS) -o $@ $<
+	$(CC) -c -G 0 $(CPPFLAGS) $(CFLAGS) -o $@ $^
 
 sqlmansect = 7

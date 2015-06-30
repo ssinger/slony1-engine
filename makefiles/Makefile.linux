@@ -12,7 +12,7 @@ CFLAGS_SL = -fpic
 endif
 
 %.so: $(SO_OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $?
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $^
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
