@@ -40,6 +40,7 @@ endif
 endif
 SO_OBJS		= 			\
 	slonik.o			\
+	slonik_api.o        \
 	slonik_cmd.o        \
 	dbutil.o			\
 	parser.o $(WIN32RES)            \
