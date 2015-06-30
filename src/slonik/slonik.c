@@ -179,7 +179,7 @@ fail_node_promote(SlonikStmt_failed_node * stmt,
  * ----------
  */
 int
-main(int argc, const char *argv[])
+slonik_cmd_main(int argc, const char *argv[])
 {
 	extern int	optind;
 	int			opt;

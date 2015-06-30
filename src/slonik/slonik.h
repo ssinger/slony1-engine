@@ -649,7 +649,7 @@ extern void yyerror(const char *str);
 extern int	yyparse(void);
 extern int	yylex(void);
 
-
+int slonik_cmd_main(int argc, const char *argv[]);
 
 /*
  * Common option types

@@ -9,6 +9,7 @@
 slony_subdir = src/slonik
 slony_top_builddir = ../..
 SLFILEDESC="Slony command interpreter"
+SO_NAME = libslonik.$(VERSION)$(DLSUFFIX)
 include $(slony_top_builddir)/Makefile.global
 ifeq ($(HAVE_PGPORT),1)
 CPPFLAGS:=$(CPPFLAGS_SERVER) $(CPPFLAGS_CLIENT)
@@ -20,6 +21,7 @@ ifeq ($(PORTNAME), aix)
 endif
 
 CFLAGS += -I$(slony_top_builddir) -DPGSHARE="\"$(pgsharedir)\"" 
+override CFLAGS += -I$(slony_top_builddir) $(CFLAGS_SL)
 
 PROG		= slonik
 
@@ -36,14 +38,16 @@ ifdef HAVE_PGCOMMON
 LDFLAGS += -lpgcommon
 endif
 endif
-
-OBJS		= 			\
+SO_OBJS		= 			\
 	slonik.o			\
+	slonik_cmd.o        \
 	dbutil.o			\
 	parser.o $(WIN32RES)            \
 	../parsestatements/scanner.o    \
 	scan.o
 DISTFILES = Makefile $(wildcard *.c) $(wildcard *.h) $(wildcard *.l) $(wildcard *.y)
+
+OBJS = slonik_cmd.o
 
 ALL =					\
 	$(PROG)
@@ -51,12 +55,14 @@ ALL =					\
 
 all:	$(ALL)
 
-$(PROG):	$(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $(PROG)
+$(PROG):	$(OBJS) $(SO_NAME)
+	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -L. -lslonik.$(VERSION) -o $(PROG)
 slonik.o:			slonik.c slonik.h
+slonik_cmd.o:       slonik_cmd.c slonik.h
+$(SO_NAME):		$(SO_OBJS)
 dbutil.o:			dbutil.c slonik.h
 parser.o:			parser.c scan.c
-
+slonik_cmd.o:       slonik_cmd.c slonik.h
 parser.c:			parser.y slonik.h
 ifdef YACC
 	$(YACC) -d $(YFLAGS) $<

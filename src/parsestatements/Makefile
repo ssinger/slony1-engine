@@ -3,6 +3,7 @@ slony_top_builddir = ../..
 include $(slony_top_builddir)/Makefile.global
 
 CPPFLAGS:=$(CPPFLAGS_CLIENT)
+CFLAGS:=$(CFLAGS) -fpic
 
 PROG=test-scanner
 FLEX=flex
