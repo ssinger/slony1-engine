@@ -106,6 +106,9 @@ struct SlonikScript_s
 	SlonikAdmInfo *adminfo_list;
 
 	SlonikStmt *script_stmts;
+	int	   current_try_level;
+	int	   block_stmt_no;
+	int	   last_event_node;
 };
 
 
@@ -650,7 +653,10 @@ extern int	yyparse(void);
 extern int	yylex(void);
 
 int slonik_cmd_main(int argc, const char *argv[]);
-
+void script_commit_all(SlonikStmt * stmt,
+				  SlonikScript * script);
+void script_rollback_all(SlonikStmt * stmt,
+					SlonikScript * script);
 /*
  * Common option types
  */

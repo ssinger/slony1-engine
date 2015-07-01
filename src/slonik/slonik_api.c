@@ -33,6 +33,8 @@ struct SlonikContext {
 static int header_setup(SlonikStmt *hdr,
 						struct SlonikContext * context);
 
+static int commit_check(SlonikStmt *hdr,struct SlonikContext * context);
+static int rollback_check(SlonikStmt *hdr,struct SlonikContext * context);
 
 struct SlonikContext * slonik_api_init_context(const char * clustername,
 											   SlonikApi_NodeConnInfo ** adm_conninfo)
@@ -42,6 +44,7 @@ struct SlonikContext * slonik_api_init_context(const char * clustername,
 	SlonikScript * script = malloc(sizeof(SlonikScript));
 	memset(script,0,sizeof(SlonikScript));
 	script->clustername=strdup(clustername);
+	script->last_event_node=-1;
 	SlonikAdmInfo * prevAdmInfo=NULL;
 	for(nodeInfo = adm_conninfo; *nodeInfo != NULL; nodeInfo++)
 	{
@@ -71,15 +74,22 @@ struct SlonikContext * slonik_api_init_context(const char * clustername,
 int slonik_api_sync(struct SlonikContext * context, int no_id) 
 {
 	
-
+	int rc;
 	SlonikStmt_sync sync;
 
 	header_setup(&sync.hdr,context);
 	sync.hdr.stmt_type=STMT_SYNC;
 	sync.no_id = no_id;
-	return slonik_sync(&sync);
-	
-		
+	rc = slonik_sync(&sync);
+	if(rc == 0)
+	{
+		commit_check(&sync.hdr,context);
+	}
+	else 
+	{
+		rollback_check(&sync.hdr,context);
+	}
+	return rc;
 
 
 }
@@ -93,6 +103,8 @@ int slonik_api_subscribe_set(struct SlonikContext * context,
 							 int omit_copy)
 {
 	SlonikStmt_subscribe_set stmt;
+	int rc;
+
 	header_setup(&stmt.hdr,context);
 	stmt.hdr.stmt_type=STMT_SUBSCRIBE_SET;
 	stmt.sub_setid = set_id;
@@ -100,7 +112,16 @@ int slonik_api_subscribe_set(struct SlonikContext * context,
 	stmt.sub_receiver=receiver;
 	stmt.sub_forward=forward;
 	stmt.omit_copy=omit_copy;
-	return slonik_subscribe_set(&stmt);
+	rc = slonik_subscribe_set(&stmt);
+	if(rc == 0)
+	{
+		commit_check(&stmt.hdr,context);
+	}
+	else 
+	{
+		rollback_check(&stmt.hdr,context);
+	}
+	return rc;
 }
 
 
@@ -113,4 +134,24 @@ static int header_setup(SlonikStmt *hdr,
 	hdr->stmt_lno=0;
 	hdr->script=context->script;
 	hdr->next=NULL;
+	return 0;
 }
+
+static int commit_check(SlonikStmt *hdr,struct SlonikContext * context)
+{
+	if(context->script->current_try_level == 0)
+	{
+		script_commit_all(hdr,context->script);
+	}
+	 return 0;
+ }
+
+static int rollback_check(SlonikStmt *hdr,struct SlonikContext * context)
+{
+	if(context->script->current_try_level == 0)
+	{
+		script_rollback_all(hdr,context->script);
+	}
+	return 0;
+}
+

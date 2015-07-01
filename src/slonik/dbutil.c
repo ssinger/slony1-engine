@@ -38,7 +38,6 @@
 int			db_notice_silent = false;
 SlonikStmt *db_notice_stmt = NULL;
 
-extern int	current_try_level;
 
 /*
  * Local functions
@@ -493,7 +492,7 @@ db_begin_xact(SlonikStmt * stmt, SlonikAdmInfo * adminfo, bool suppress_locking)
 		return -1;
 	}
 	PQclear(res);
-	if (current_try_level > 0 && !suppress_locking)
+	if (stmt->script->current_try_level > 0 && !suppress_locking)
 	{
 		/**
 		 * inside of a try block we obtain sl_event_lock

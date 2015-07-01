@@ -56,11 +56,8 @@ extern int	STMTS[MAXSTATEMENTS];
  * Global data
  */
 SlonikScript *parser_script = NULL;
-int			parser_errors = 0;
-int			current_try_level;
-int			block_stmt_no = 0;
-int			last_event_node = -1;
-int			auto_wait_disabled = 0;
+int parser_errors=0;
+int	   auto_wait_disabled = 0;
 
 static char share_path[MAXPGPATH];
 #if HAVE_PGPORT
@@ -119,10 +116,7 @@ static int script_check_stmts(SlonikScript * script,
 static int	script_exec(SlonikScript * script);
 static int script_exec_stmts(SlonikScript * script,
 				  SlonikStmt * stmt);
-static void script_commit_all(SlonikStmt * stmt,
-				  SlonikScript * script);
-static void script_rollback_all(SlonikStmt * stmt,
-					SlonikScript * script);
+
 static void script_disconnect_all(SlonikScript * script);
 static void replace_tokens(SlonDString *dest, SlonDString *src, 
 					replacement_token *replacements);
@@ -1315,11 +1309,11 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 			break;
 	}
 	free(events);
-	block_stmt_no = 0;
+	script->block_stmt_no = 0;
 	while (hdr && errors == 0)
 	{
 		hdr->script = script;
-		block_stmt_no++;
+		script->block_stmt_no++;
 
 		switch (hdr->stmt_type)
 		{
@@ -1330,11 +1324,11 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					int			rc;
 					int			saved_stmt_no;
 
-					current_try_level++;
-					saved_stmt_no = block_stmt_no;
+					script->current_try_level++;
+					saved_stmt_no = script->block_stmt_no;
 					rc = script_exec_stmts(script, stmt->try_block);
-					current_try_level--;
-					block_stmt_no = saved_stmt_no;
+					script->current_try_level--;
+					script->block_stmt_no = saved_stmt_no;
 
 					if (rc < 0)
 					{
@@ -1380,7 +1374,7 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					printf("%s:%d: %s\n",
 						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 						   stmt->str);
-					block_stmt_no--;
+					script->block_stmt_no--;
 				}
 				break;
 
@@ -1399,7 +1393,7 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 					printf("%s:%d: %s\n",
 						   stmt->hdr.stmt_filename, stmt->hdr.stmt_lno,
 						   outstr);
-					block_stmt_no--;
+					script->block_stmt_no--;
 				}
 				break;
 
@@ -1756,7 +1750,7 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 
 		}
 
-		if (current_try_level == 0)
+		if (script->current_try_level == 0)
 		{
 			if (errors == 0)
 			{
@@ -1775,7 +1769,7 @@ script_exec_stmts(SlonikScript * script, SlonikStmt * hdr)
 }
 
 
-static void
+void
 script_commit_all(SlonikStmt * stmt, SlonikScript * script)
 {
 	SlonikAdmInfo *adminfo;
@@ -1795,7 +1789,7 @@ script_commit_all(SlonikStmt * stmt, SlonikScript * script)
 }
 
 
-static void
+void
 script_rollback_all(SlonikStmt * stmt, SlonikScript * script)
 {
 	SlonikAdmInfo *adminfo;
@@ -4009,9 +4003,9 @@ slonik_merge_set(SlonikStmt_merge_set * stmt)
 	{
 		char	   *result;
 
-		if (current_try_level > 0)
+		if (stmt->hdr.script->current_try_level > 0)
 		{
-			if (current_try_level == 1 && block_stmt_no == 1)
+			if (stmt->hdr.script->current_try_level == 1 && stmt->hdr.script->block_stmt_no == 1)
 			{
 				/**
 				 * on the first command of the try block we can
@@ -5919,8 +5913,8 @@ slonik_submitEvent(SlonikStmt * stmt,
 	int			rc;
 	int			recreate_txn = 0;
 
-	if (last_event_node >= 0 &&
-		last_event_node != adminfo->no_id
+	if (script->last_event_node >= 0 &&
+		script->last_event_node != adminfo->no_id
 		&& !suppress_wait_for)
 	{
 		SlonikStmt_wait_event wait_event;
@@ -5930,9 +5924,9 @@ slonik_submitEvent(SlonikStmt * stmt,
 		 * time to wait.
 		 */
 
-		if (current_try_level != 0)
+		if (script->current_try_level != 0)
 		{
-			if (current_try_level == 1 && block_stmt_no == 1)
+			if (script->current_try_level == 1 && script->block_stmt_no == 1)
 			{
 				recreate_txn = 1;
 				db_rollback_xact(stmt, adminfo);
@@ -5951,8 +5945,8 @@ slonik_submitEvent(SlonikStmt * stmt,
 		 *
 		 */
 		wait_event.hdr = *stmt;
-		wait_event.wait_origin = last_event_node;
-		wait_event.wait_on = last_event_node;
+		wait_event.wait_origin = script->last_event_node;
+		wait_event.wait_on = script->last_event_node;
 		wait_event.wait_confirmed = adminfo->no_id;
 		wait_event.wait_timeout = 0;
 		wait_event.ignore_nodes = 0;
@@ -5967,7 +5961,7 @@ slonik_submitEvent(SlonikStmt * stmt,
 	}
 	rc = db_exec_evcommand(stmt, adminfo, query);
 	if (!suppress_wait_for)
-		last_event_node = adminfo->no_id;
+		script->last_event_node = adminfo->no_id;
 	return rc;
 
 }
@@ -6106,9 +6100,9 @@ slonik_wait_config_caughtup(SlonikAdmInfo * adminfo1,
 	dstring_init(&event_list);
 	dstring_init(&node_list);
 
-	if (current_try_level != 0)
+	if (stmt->script->current_try_level != 0)
 	{
-		if (current_try_level == 1 && block_stmt_no == 1)
+		if (stmt->script->current_try_level == 1 && stmt->script->block_stmt_no == 1)
 		{
 			/**
 			 * The first statement in the try block requires

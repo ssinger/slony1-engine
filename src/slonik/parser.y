@@ -234,6 +234,7 @@ script				: hdr_clustername
 						parser_script->filename			= current_file;
 						parser_script->adminfo_list		= $2;
 						parser_script->script_stmts		= $3;
+						parser_script->last_event_node = -1;
 					}
 					;
 
