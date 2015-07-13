@@ -11,3 +11,5 @@
 
    - Bug 352 :: Issues with PostgreSQL "head" (what shall become 9.5 or so).  It is pretty usual for #include files to shift a bit and for functions to change arguments a bit.
    - Bug 349 :: Issue with quoting of cluster name - only hit when processing DDL
+   - Bug 359 :: Additional parameter to GetConfigOptionByName() in HEAD
+
