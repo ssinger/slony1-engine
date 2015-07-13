@@ -472,7 +472,11 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 	/*
 	 * Save the current datestyle setting and switch to ISO (if not already)
 	 */
+#ifdef GETCONFIGOPTIONBYNAME_2
 	olddatestyle = GetConfigOptionByName("DateStyle", NULL);
+#elif defined (GETCONFIGOPTIONBYNAME_3)
+	olddatestyle = GetConfigOptionByName("DateStyle", NULL, false);
+#endif
 	if (!strstr(olddatestyle, "ISO"))
 	{
 #ifdef SETCONFIGOPTION_6
