@@ -106,7 +106,6 @@ static void usage(void);
 static SlonikAdmInfo *get_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_active_adminfo(SlonikStmt * stmt, int no_id);
 static SlonikAdmInfo *get_checked_adminfo(SlonikStmt * stmt, int no_id);
-static int	slonik_repair_config(SlonikStmt_repair_config * stmt);
 static int	slonik_resubscribe_node(SlonikStmt_resubscribe_node * stmt);
 
 static int	script_check(SlonikScript * script);
@@ -2227,7 +2226,7 @@ slonik_restart_node(SlonikStmt_restart_node * stmt)
 }
 
 
-static int
+int
 slonik_repair_config(SlonikStmt_repair_config * stmt)
 {
 	SlonikAdmInfo *adminfo1;

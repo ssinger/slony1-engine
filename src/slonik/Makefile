@@ -60,6 +60,7 @@ $(PROG):	$(OBJS) $(SO_NAME)
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -L. -lslonik.$(VERSION) -o $(PROG)
 slonik.o:			slonik.c slonik.h
 slonik_cmd.o:       slonik_cmd.c slonik.h
+slonik_api.o:       slonik_api.c slonik_api.h
 $(SO_NAME):		$(SO_OBJS)
 dbutil.o:			dbutil.c slonik.h
 parser.o:			parser.c scan.c

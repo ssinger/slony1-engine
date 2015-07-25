@@ -595,6 +595,7 @@ extern int	slonik_update_functions(SlonikStmt_update_functions * stmt);
 extern int	slonik_wait_event(SlonikStmt_wait_event * stmt);
 extern int	slonik_switch_log(SlonikStmt_switch_log * stmt);
 extern int	slonik_sync(SlonikStmt_sync * stmt);
+extern int      slonik_repair_config(SlonikStmt_repair_config * stmt);
 extern int	slonik_sleep(SlonikStmt_sleep * stmt);
 
 extern int	slon_scanint64(char *str, int64 *result);
