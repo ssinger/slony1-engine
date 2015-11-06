@@ -463,6 +463,34 @@ else
   AC_MSG_RESULT([yes, and it takes $ac_cv_ScanKeywordLookup_args arguments])
 fi
 
+AC_MSG_CHECKING(for GetConfigOptionByName)
+if test -z "$ac_cv_GetConfigOptionByName_args"; then
+  AC_TRY_COMPILE(
+   [#include "postgres.h" 
+    #include "utils/guc.h"],
+   [GetConfigOptionByName(NULL, NULL); ],
+   ac_cv_GetConfigOptionByName_args=2)
+fi
+if test -z "$ac_cv_GetConfigOptionByName_args"; then
+  AC_TRY_COMPILE(
+   [#include "postgres.h" 
+    #include "utils/guc.h"],
+   [GetConfigOptionByName(NULL, NULL, NULL); ],
+   ac_cv_GetConfigOptionByName_args=3)
+fi
+
+AC_MSG_CHECKING(for GetConfigOptionByName)
+if test -z "$ac_cv_GetConfigOptionByName_args"; then
+   AC_MSG_RESULT(no)
+else
+   if test "$ac_cv_GetConfigOptionByName_args" = 2; then
+      AC_DEFINE(GETCONFIGOPTIONBYNAME_2)
+   elif test "$ac_cv_GetConfigOptionByName_args" = 3; then
+      AC_DEFINE(GETCONFIGOPTIONBYNAME_3)
+   fi
+   AC_MSG_RESULT([yes, and it takes $ac_cv_GetConfigOptionByName_args arguments])
+fi
+
 AC_MSG_CHECKING(for set_config_option)
 if test -z "$ac_cv_set_config_option_args"; then
    AC_TRY_COMPILE(
