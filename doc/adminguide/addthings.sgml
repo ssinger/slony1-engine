@@ -162,7 +162,7 @@ To add a node to the replication cluster you should
 schema in it.
 <programlisting>
 createdb -h $NEWSLAVE_HOST $SLAVEDB
-pg_dump -h $MASTER_HOST -s $MASTERDB | psql -h $NEWSLAVE_HOST $SLAVEDB
+pg_dump --exclude-schema=_$CLUSTERNAME -h $MASTER_HOST -s $MASTERDB | psql -h $NEWSLAVE_HOST $SLAVEDB
 </programlisting>
 </para>
 </listitem>
