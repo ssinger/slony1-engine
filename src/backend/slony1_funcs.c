@@ -22,7 +22,6 @@
 
 #include "miscadmin.h"
 #include "nodes/makefuncs.h"
-#include "parser/keywords.h"
 #include "parser/parse_type.h"
 #include "executor/spi.h"
 #include "commands/trigger.h"
