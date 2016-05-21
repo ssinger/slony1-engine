@@ -1,6 +1,7 @@
 #+OPTIONS: ^:{}
 * 2.2.5
   - PG 9.5 makefile fix for win32
+  - PG 9.6 header file fix
 
 * 2.2.4
   - Bug 352 :: Handle changes from PG HEAD ("9.5")
