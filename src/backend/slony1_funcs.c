@@ -476,6 +476,8 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 	olddatestyle = GetConfigOptionByName("DateStyle", NULL);
 #elif defined (GETCONFIGOPTIONBYNAME_3)
 	olddatestyle = GetConfigOptionByName("DateStyle", NULL, false);
+#else
+#error "GETCONFIGOPTIONBYNAME_2 or GETCONFIGOPTIONBYNAME_3 must be defined"
 #endif
 	if (!strstr(olddatestyle, "ISO"))
 	{
