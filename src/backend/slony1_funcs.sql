@@ -6413,12 +6413,20 @@ comment on function @NAMESPACE@.slon_node_health_check() is 'called when slon st
 create or replace function @NAMESPACE@.log_truncate () returns trigger as
 $$
 	declare
+		r_role text;
 		c_nspname text;
 		c_relname text;
 		c_log integer;
 		c_node integer;
 		c_tabid integer;
 	begin
+		-- Ignore this call if session_replication_role = 'local'
+		select into r_role setting
+			from pg_catalog.pg_settings where name = 'session_replication_role';
+		if r_role = 'local' then
+			return NULL;
+		end if;
+
         c_tabid := tg_argv[0];
 	    c_node := @NAMESPACE@.getLocalNodeId('_@CLUSTERNAME@');
 		select tab_nspname, tab_relname into c_nspname, c_relname
@@ -6455,7 +6463,16 @@ is 'trigger function run when a replicated table receives a TRUNCATE request';
 
 create or replace function @NAMESPACE@.deny_truncate () returns trigger as
 $$
+	declare
+		r_role text;
 	begin
+		-- Ignore this call if session_replication_role = 'local'
+		select into r_role setting
+			from pg_catalog.pg_settings where name = 'session_replication_role';
+		if r_role = 'local' then
+			return NULL;
+		end if;
+
 		raise exception 'truncation of replicated table forbidden on subscriber node';
     end
 $$ language plpgsql;
