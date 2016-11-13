@@ -1112,7 +1112,10 @@ begin
 				where ev_origin = p_no_id;
 		delete from @NAMESPACE@.sl_node
 				where no_id = p_no_id;
-
+		delete from @NAMESPACE@.sl_seqlog
+		       where seql_origin=p_no_id;
+		delete from @NAMESPACE@.sl_log_script
+		       where log_origin=p_no_id;
 		return p_no_id;
 	end if;
 
