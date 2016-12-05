@@ -19,16 +19,18 @@ my $dataBaseUser;
 my $dataBasePassword;
 my $dataBasePort;
 my @nodes;
-my $schema = 'public';
-my $usage = "$0 -node host:database:user[:password:port] [-node ...] [-schema myschema]
+my @schema=();
+my $usage =
+  "$0 -node host:database:user[:password:port] [-node ...] [-schema myschema] [-schema myschema2...]
 First node is assumed to be the master.
 Default schema is \"public\"\n";
 
-&usage if(!GetOptions('node=s@'=>\@nodes, 'schema=s' => \$schema));
+&usage if ( !GetOptions( 'node=s@' => \@nodes, 'schema=s' => \@schema ) );
 
 die "At least one node is required" if ( scalar(@nodes) < 1 );
 
-
+# If we get no schema, use public
+@schema = ('public') unless (@schema);
 
 my $nodeNumber = 1;
 my $parentString;
@@ -57,18 +59,23 @@ my $connectString = "dbi:Pg:dbname=$dataBase;host=$host;port=$dataBasePort";
 my $dbh = DBI->connect($connectString,$dataBaseUser,$dataBasePassword,
 		       {RaiseError => 0, PrintError => 0, AutoCommit => 1});
 die "connect: $DBI::errstr" if ( !defined($dbh) || $DBI::err );
-# Read in all the user 'normal' tables in $schema (public by default).
-my $tableQuery = $dbh->prepare("
+
+# Read in all the user 'normal' tables in @schema (public by default).
+# put all schemas between single quotes for the query
+my @protected_schema=map("'".$_."'",@schema);
+my $tableQuery = $dbh->prepare( "
 SELECT pg_namespace.nspname || '.' || pg_class.relname,pg_class.relkind,pg_class.relhaspkey 
 FROM pg_namespace,pg_class
 WHERE pg_class.reltype > 0
 AND pg_class.relnamespace = pg_catalog.pg_namespace.oid
 AND (pg_class.relkind = 'r' OR pg_class.relkind = 'S')
-AND pg_namespace.nspname = '$schema' AND pg_namespace.oid = pg_class.relnamespace");
+AND pg_namespace.nspname IN (" . join(',',@protected_schema) . ") AND pg_namespace.oid = pg_class.relnamespace"
+);
 
 die "prepare(tableQuery): $DBI::errstr" if ( !defined($tableQuery) || $DBI::err );
 die "execute(tableQuery): $DBI::errstr" if ( !$tableQuery->execute() );
-die "No objects to replicate found in schema \"$schema\"\n" if ($tableQuery->rows <= 0);
+die "No objects to replicate found in schema(s) \"" . join(',',@schema) . "\"\n"
+  if ( $tableQuery->rows <= 0 );
 
 my @tablesWithIndexes;
 my @tablesWithoutIndexes;
