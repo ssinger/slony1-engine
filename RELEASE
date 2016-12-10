@@ -1,4 +1,11 @@
 #+OPTIONS: ^:{}
+*2.2.6
+
+   - Bug 352 :: Issues with PostgreSQL "head" (what shall become 9.5 or so).  It is pretty usual for #include files to shift a bit and for functions to change arguments a bit.
+   - Bug 349 :: Issue with quoting of cluster name - only hit when processing DDL
+   - Bug 359 :: Additional parameter to GetConfigOptionByName() in HEAD
+   - slonik_build_env can now accept multiple -schema options on the command line
+
 * 2.2.5
   - PG 9.5 makefile fix for win32
   - PG 9.6 header file fix
