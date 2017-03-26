@@ -151,7 +151,8 @@ typedef struct slony_I_cluster_status
 	text	   *cmdtype_I;
 	text	   *cmdtype_U;
 	text	   *cmdtype_D;
-
+	bool	   event_txn;
+	
 	struct slony_I_cluster_status *next;
 }	Slony_I_ClusterStatus;
 
@@ -257,6 +258,12 @@ versionFunc(createEvent) (PG_FUNCTION_ARGS)
 	if (!TransactionIdEquals(cs->currentXid, newXid))
 	{
 		cs->currentXid = newXid;
+		cs->event_txn = true;
+	}
+
+	if(!cs->event_txn)
+	{
+		elog(ERROR,"createEvent called in a data transaction");
 	}
 
 	/*
@@ -467,8 +474,13 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 		}
 
 		cs->currentXid = newXid;
+		cs->event_txn=false;
 	}
 
+	if(cs->event_txn)
+	{
+		elog(ERROR,"Slony-I: log trigger called in an event transaction");
+	}
 	/*
 	 * Save the current datestyle setting and switch to ISO (if not already)
 	 */
