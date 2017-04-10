@@ -26,6 +26,7 @@ coordinator.includeFile('disorder/tests/MergeSet.js');
 coordinator.includeFile('disorder/tests/BulkAddingTest.js');
 coordinator.includeFile('disorder/tests/WaitForTest.js');
 coordinator.includeFile('disorder/tests/MultinodeFailover.js');
+coordinator.includeFile('disorder/tests/MultinodeCascadeFailover.js');
 coordinator.includeFile('disorder/tests/Resubscribe.js');
 coordinator.includeFile('disorder/tests/SiteFailover.js');
 coordinator.includeFile('disorder/tests/DropNode.js');
@@ -57,6 +58,7 @@ var tests =
      ,new BulkAddingTest(coordinator,results)
 	 ,new WaitForTest(coordinator,results)
 	 ,new MultinodeFailover(coordinator,results)
+	 ,new MultinodeCascadeFailover(coordinator,results)
 	 ,new Resubscribe(coordinator,results)
 	 ,new SiteFailover(coordinator,results)
 	 ,new DropNode(coordinator,results)
@@ -67,8 +69,9 @@ var tests =
      //,new CleanupTest(coordinator,results) //cleanup_interval does not (yet) do what the test wants
     ];
 
-//tests=[new Failover(coordinator,results),
-//	   new MultinodeFailover(coordinator,results)
+//tests=[//new Failover(coordinator,results),
+//	new MultinodeCascadeFailover(coordinator,results)
+//];
 //	   ,new SiteFailover(coordinator,results)];
 
 var basicTest = new BasicTest(coordinator,results);
