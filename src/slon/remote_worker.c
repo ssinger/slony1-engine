@@ -301,6 +301,8 @@ remoteWorkerThread_main(void *cdata)
 	char		seqbuf[64];
 	bool		event_ok;
 	bool		need_reloadListen = false;
+	bool		need_reloadSets = false;
+	
 	char		conn_symname[32];
 
 	SlonSyncStatus sync_status = SYNC_INITIAL;
@@ -1276,8 +1278,14 @@ remoteWorkerThread_main(void *cdata)
 								 rtcfg_namespace,
 								 rtcfg_namespace,
 								 failed_node, node->no_id, seq_no_c);
-
+				slon_log(SLON_INFO, "remoteWorkerThread_%d FAILOVER_NODE finished %d\n"
+							 ,node->no_id,
+							 failed_node);
+				/**
+				 * The list of set origins has now changed.
+				 */
 				need_reloadListen = true;
+				need_reloadSets = true;
 			}
 			else if (strcmp(event->ev_type, "SUBSCRIBE_SET") == 0)
 			{
@@ -1515,6 +1523,11 @@ remoteWorkerThread_main(void *cdata)
 			{
 				rtcfg_reloadListen(local_dbconn);
 				need_reloadListen = false;
+			}
+			if(need_reloadSets)
+			{
+				rtcfg_reloadSets(local_dbconn);
+				need_reloadSets = true;
 			}
 		}
 

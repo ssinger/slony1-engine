@@ -478,6 +478,7 @@ extern void rtcfg_storeSet(int set_id, int set_origin, char *set_comment);
 extern void rtcfg_dropSet(int set_id);
 extern void rtcfg_moveSet(int set_id, int old_origin, int new_origin,
 			  int sub_provider);
+extern void rtcfg_reloadSets(PGconn *db);
 
 extern void rtcfg_storeSubscribe(int sub_set, int sub_provider,
 					 char *sub_forward);
