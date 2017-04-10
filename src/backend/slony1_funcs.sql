@@ -793,7 +793,7 @@ $$ language plpgsql
 
 comment on function @NAMESPACE@.storeNode(p_no_id int4, p_no_comment text) is
 'no_id - Node ID #
-no_comment - Human-oriented comment
+no_comment - Human-oriented commentb
 
 Generate the STORE_NODE event for node no_id';
 
@@ -1526,13 +1526,24 @@ begin
 	-- provider for all subscriptions served
 	-- by the failed node. (otherwise it
 	-- wouldn't be a allowable backup node).
+--	delete from @NAMESPACE@.sl_subscribe
+--		   where sub_receiver=p_backup_node;
+		   
 	update @NAMESPACE@.sl_subscribe	       
 	       set sub_provider=p_backup_node
 	       from @NAMESPACE@.sl_node
 	       where sub_provider=p_failed_node
 	       and sl_node.no_id=sub_receiver
-	       and sl_node.no_failed=false;	
-
+	       and sl_node.no_failed=false
+		   and sub_receiver<>p_backup_node;
+		   
+	update @NAMESPACE@.sl_subscribe	       
+	       set sub_provider=(select set_origin from
+		   	   @NAMESPACE@.sl_set where set_id=
+			   sub_set)
+			where sub_provider=p_failed_node
+			and sub_receiver=p_backup_node;
+		   
 	update @NAMESPACE@.sl_node
 		   set no_active=false WHERE 
 		   no_id=p_failed_node;

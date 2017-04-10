@@ -772,6 +772,54 @@ rtcfg_dropSet(int set_id)
 	rtcfg_unlock();
 }
 
+/* ------
+ * rtcfg_reloadSets
+ */
+void rtcfg_reloadSets(PGconn * db)
+{
+	SlonDString query;
+	PGresult   *res;
+	int			i,
+				n;
+	SlonSet    *set;
+	
+	rtcfg_lock();
+	
+	/*
+	 * Read configuration table sl_set
+	 */
+	slon_mkquery(&query,
+				 "select set_id, set_origin, set_comment "
+				 "from %s.sl_set",
+				 rtcfg_namespace);
+	res = PQexec(db, dstring_data(&query));
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		slon_log(SLON_FATAL, "main: Cannot get set config - %s\n",
+				 PQresultErrorMessage(res));
+		PQclear(res);
+		dstring_free(&query);
+		slon_retry();
+	}
+	for (i = 0, n = PQntuples(res); i < n; i++)
+	{
+		int			set_id = (int) strtol(PQgetvalue(res, i, 0), NULL, 10);
+		int			set_origin = (int) strtol(PQgetvalue(res, i, 1), NULL, 10);
+		for (set = rtcfg_set_list_head; set; set = set->next)
+		{
+			if (set->set_id == set_id)
+			{
+				set->set_origin=set_origin;				
+			}
+		}/*for set in array*/
+	}/*for tuple*/
+	PQclear(res);
+	rtcfg_unlock();
+}
+
+
+
+
 /* ----------
  * rtcfg_moveSet
  * ----------
