@@ -151,7 +151,9 @@ typedef struct slony_I_cluster_status
 	text	   *cmdtype_I;
 	text	   *cmdtype_U;
 	text	   *cmdtype_D;
-	bool	   event_txn;
+	bool		event_txn;
+	bool		apply_init;
+	bool		log_init;
 	
 	struct slony_I_cluster_status *next;
 }	Slony_I_ClusterStatus;
@@ -255,9 +257,18 @@ versionFunc(createEvent) (PG_FUNCTION_ARGS)
 	/*
 	 * Do the following only once per transaction.
 	 */
-	if (!TransactionIdEquals(cs->currentXid, newXid))
+	if (!TransactionIdEquals(cs->currentXid, newXid)  )
 	{
 		cs->currentXid = newXid;
+		cs->event_txn = true;
+		cs->apply_init = false;
+		cs->log_init = false;
+	}
+	else if (!cs->log_init)
+	{
+		/**
+		 * This transaction has been setup for apply but not logging.
+		 */
 		cs->event_txn = true;
 	}
 
@@ -436,10 +447,28 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 	 */
 	cs = getClusterStatus(cluster_name, PLAN_INSERT_LOG_STATUS);
 
+	bool initRequired = false;
+	if(!TransactionIdEquals(cs->currentXid, newXid))
+	{
+		initRequired = true;
+		cs->apply_init = false;
+		cs->event_txn=false;
+		cs->log_init = true;
+	}
+	else if (!cs->log_init)
+	{
+		initRequired = true;
+	}
+
+	if(cs->event_txn)
+	{
+		elog(ERROR,"Slony-I: log trigger called in an event transaction");
+	}
+	
 	/*
 	 * Do the following only once per transaction.
 	 */
-	if (!TransactionIdEquals(cs->currentXid, newXid))
+	if (initRequired)
 	{
 		int32		log_status;
 		bool		isnull;
@@ -474,13 +503,11 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 		}
 
 		cs->currentXid = newXid;
-		cs->event_txn=false;
+		cs->event_txn = false;
+		cs->log_init = true;
 	}
 
-	if(cs->event_txn)
-	{
-		elog(ERROR,"Slony-I: log trigger called in an event transaction");
-	}
+
 	/*
 	 * Save the current datestyle setting and switch to ISO (if not already)
 	 */
@@ -931,7 +958,19 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 	/*
 	 * Do the following only once per transaction.
 	 */
-	if (!TransactionIdEquals(cs->currentXid, newXid))
+	bool planInitRequired = false;
+	if(!TransactionIdEquals(cs->currentXid, newXid))
+	{
+		planInitRequired = true;
+		cs->log_init = false;
+		cs->event_txn=false;
+	}
+	else if (!cs->apply_init)
+	{
+		planInitRequired = true;
+	}
+	
+	if (planInitRequired)
 	{
 		HASHCTL		hctl;
 
@@ -992,6 +1031,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 		apply_num_evict = 0;
 
 		cs->currentXid = newXid;
+		cs->apply_init = true;
 	}
 
 	/*
