@@ -784,7 +784,7 @@ void rtcfg_reloadSets(PGconn * db)
 	SlonSet    *set;
 	
 	rtcfg_lock();
-	
+	dstring_init(&query);	
 	/*
 	 * Read configuration table sl_set
 	 */
@@ -815,6 +815,7 @@ void rtcfg_reloadSets(PGconn * db)
 	}/*for tuple*/
 	PQclear(res);
 	rtcfg_unlock();
+	dstring_free(&query);
 }
 
 
