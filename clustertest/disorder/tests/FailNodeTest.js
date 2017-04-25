@@ -292,7 +292,6 @@ FailNodeTest.prototype.reAddNode = function(node_id,origin,provider) {
 	var slonik=this.coordinator.createSlonik('re-add node',slonikPreamble,slonikScript);
 	slonik.run();
 	this.coordinator.join(slonik);
-	
 	slonikScript =  'store node(id=' + node_id + ',event node=' + provider+');\n' 
 		+ 'store path(server=' + node_id + ',client=' + provider
 		+ ',conninfo=@CONNINFO' + node_id+');\n'

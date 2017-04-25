@@ -141,14 +141,11 @@ MultinodeFailover.prototype.runTest = function() {
     this.moveSet(1,1,2);
 	this.dropNode(5,1);
 	this.nodeCount=4;
-	var resubscribeSlonik = 'resubscribe node(origin=2,provider=2,receiver=1);\n'
-		+ 'resubscribe node(origin=2,provider=2,receiver=3);\n'
-	    + 'resubscribe node(origin=2,provider=3,receiver=4);\n';
-	var slonikPreamble = this.getSlonikPreamble();
-	var slonik=this.coordinator.createSlonik('failover',slonikPreamble,resubscribeSlonik);
-	slonik.run();
-	this.coordinator.join(slonik);
-	this.testResults.assertCheck('failover passes',slonik.getReturnCode(),0);	
+	this.resubscribe(2,2,1);
+	this.resubscribe(2,2,3);
+	this.resubscribe(2,3,4);
+	
+	
 	this.currentOrigin='db2';
 	load=this.generateLoad();
 	java.lang.Thread.sleep(1000);
