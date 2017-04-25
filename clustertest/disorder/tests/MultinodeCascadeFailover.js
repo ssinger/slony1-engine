@@ -25,6 +25,8 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.prepareDb(['db6']);
 	this.setupReplication();
 
+
+
 	this.addCompletePaths();
 	/**
 	 * Start the slons.
@@ -49,17 +51,19 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	 *       5      6
 	 */
 	this.subscribeSet(1,1, 1, [ 2, 3,4 ]);
-	this.subscribeSet(1,1, 3, [ 5, 6 ]);
+	this.subscribeSet(1,1, 3, [5,  6 ]);
 	this.slonikSync(1,1);
+	for(var j=1; j<100;j++) {
 	var load = this.generateLoad();
 	java.lang.Thread.sleep(10*1000);
 	this.slonikSync(1,1);
-	//stop slon 3, to make sure
+	//stop slon 1, to make sure
 	//3 and 5,6 aren't ahead of 2
 	//If that happens nodes 5 might get unsubscribed
 	//
-	this.slonArray[3-1].stop();
-	this.coordinator.join(this.slonArray[3-1]);
+	this.slonArray[0].stop();
+		this.coordinator.join(this.slonArray[0]);
+	java.lang.Thread.sleep(20*1000);
 	this.failover(1,2,3,5);
 	/**
 	 * At the end of this we should have
@@ -79,13 +83,38 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.compareDb('db2','db5');
 	this.compareDb('db2','db6');
 	this.compareDb('db2','db4');
+
+		if(this.testResults.getFailureCount() > 0) {
+			exit(-1);
+		}
+		this.dropTwoNodes(1,3,2);	
+	this.reAddNode(1,2,2);
+		this.reAddNode(3,2,2);
+		this.slonikSync(1,2);
+	this.addCompletePaths();
+		this.moveSet(1,2,1);
+		this.resubscribe(1,1,3);
+    this.resubscribe(1,3,4);
+    this.resubscribe(1,3,2);
+	this.resubscribe(1,3,5);
+	this.resubscribe(1,3,6);
+	this.currentOrigin='db1';
+	}//j
+	this.unsubscribe(3,1);
+	load=this.generateLoad();
+	java.lang.Thread.sleep(1000*10);
+	load.stop();	
+	this.coordinator.join(load);
+	this.slonikSync(1,2);
+	//should fail.
+	this.failover(2,3,5,1);
+
+
+	
 	for ( var idx = 1; idx <= this.getNodeCount(); idx++) {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);		
 	}
-	this.dropDb(['db6']);
-
-	
 }
 
 MultinodeCascadeFailover.prototype.failover=function(originA,backupA,originB,backupB) 

@@ -810,4 +810,31 @@ BasicTest.prototype.updateReviewTable=function(node_id,text) {
 		stat.close();
 		connection.close();
 	}
-	this.coordinator.log('updating review table on ' + node_id + " - complete");}
+	this.coordinator.log('updating review table on ' + node_id + " - complete");
+}
+
+BasicTest.prototype.unsubscribe=function(node,set)
+{
+	var slonikPreamble = this.getSlonikPreamble();
+	var slonikScript = 'echo \'BasicTest.prototype.unsubscribe\';\n';
+	slonikScript += 'UNSUBSCRIBE SET(id='  + set  + ',receiver=' + node +');\n';
+	var slonik=this.coordinator.createSlonik('unsubscribe',slonikPreamble,slonikScript);
+	slonik.run();
+	this.coordinator.join(slonik);
+	this.testResults.assertCheck('unsubscribe passes',slonik.getReturnCode(),0);	
+
+}
+
+BasicTest.prototype.resubscribe=function(origin,provider,receiver)
+{
+	var slonikPreamble = this.getSlonikPreamble();
+	var slonikScript = 'echo \'BasicTest.prototype.resubscribe\';\n';
+	var slonikScript = 'resubscribe node(origin=' + origin + ',provider='
+		+provider + ',receiver=' + receiver+');\n';
+		
+	var slonik=this.coordinator.createSlonik('unsubscribe',slonikPreamble,slonikScript);
+	slonik.run();
+	this.coordinator.join(slonik);
+	this.testResults.assertCheck('resubscribe passes',slonik.getReturnCode(),0);	
+
+}
