@@ -140,10 +140,9 @@ if test -n "$PG_CONFIG_LOCATION"; then
     
     PG_CONFIGURE=`$PG_CONFIG_LOCATION --configure`
     pg_config_version=`$PG_CONFIG_LOCATION --version`
-    PG_VERSION=`expr "$pg_config_version" : '[[^0-9]]*\([[0-9]]*\.[[0-9]]*\)'`
-
+    PG_VERSION=`expr "$pg_config_version" : '[[^0-9]]*\([[0-9\.]]*\)'`
     AC_MSG_CHECKING(for correct version of PostgreSQL)
-    PG_VERSION_MAJOR=`echo $PG_VERSION | cut -d. -f1`
+    PG_VERSION_MAJOR=`echo $PG_VERSION | sed -e 's|\([[0-9]]*\)\(\.*.*\)|\1|'`
     PG_VERSION_MINOR=`echo $PG_VERSION | cut -d. -f2`
     if test "$PG_VERSION_MAJOR" = "7"; then
 	    AC_MSG_RESULT("error")

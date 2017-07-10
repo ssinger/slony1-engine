@@ -441,7 +441,8 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 	int			minor = 0;
 	int			patch = 0;
 	int			version = 0;
-
+	int			scanres=0;
+	
 	if (db_begin_xact(stmt, adminfo, false) < 0)
 		return -1;
 
@@ -452,9 +453,12 @@ db_get_version(SlonikStmt * stmt, SlonikAdmInfo * adminfo)
 
 	if (res == NULL)
 		return -1;
-
-	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2 &&
-		sscanf(PQgetvalue(res, 0, 0), "EnterpriseDB %d.%d.%d", &major, &minor, &patch) < 2)
+	scanres=sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch);
+	if(scanres < 1)
+	{
+		scanres=sscanf(PQgetvalue(res, 0, 0), "EnterpriseDB %d.%d.%d", &major, &minor, &patch);
+	}
+	if ( scanres < 1)
 	{
 		fprintf(stderr, "%s:%d: failed to parse %s for DB version\n",
 				stmt->stmt_filename, stmt->stmt_lno,

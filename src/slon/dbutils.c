@@ -614,6 +614,7 @@ db_get_version(PGconn *conn)
 	int			major = 0;
 	int			minor = 0;
 	int			patch = 0;
+	int			scanres=0;
 
 	dstring_init(&query);
 	slon_mkquery(&query, "SELECT version();");
@@ -624,8 +625,12 @@ db_get_version(PGconn *conn)
 		PQclear(res);
 		return -1;
 	}
-	if (sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch) < 2 &&
-		sscanf(PQgetvalue(res, 0, 0), "EnterpriseDB %d.%d.%d", &major, &minor, &patch) < 2)
+	scanres=sscanf(PQgetvalue(res, 0, 0), "PostgreSQL %d.%d.%d", &major, &minor, &patch);
+	if(scanres < 1)
+	{
+		scanres=sscanf(PQgetvalue(res, 0, 0), "EnterpriseDB %d.%d.%d", &major, &minor, &patch);
+	}
+	if ( scanres < 1)
 	{
 		PQclear(res);
 		return -1;
