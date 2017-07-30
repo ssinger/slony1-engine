@@ -1,10 +1,15 @@
 #+OPTIONS: ^:{}
 *2.2.6
 
-   - Bug 352 :: Issues with PostgreSQL "head" (what shall become 9.5 or so).  It is pretty usual for #include files to shift a bit and for functions to change arguments a bit.
-   - Bug 349 :: Issue with quoting of cluster name - only hit when processing DDL
-   - Bug 359 :: Additional parameter to GetConfigOptionByName() in HEAD
    - slonik_build_env can now accept multiple -schema options on the command line
+   - Support for PG10. This involved changes to PG version detection
+   - Disallow createEvent and data changes in the same transaction.
+     This also fixes some issues when the logApply trigger invokes the
+     data change trigger by inserting into a table with a trigger that
+     in turns inserts into another replicated table.
+   - Fix some failover issues when doing a multi-node failover
+     with a cascaded node. 
+   - Bug 341 - suppress log trigger/deny when running in 'local' mode
 
 * 2.2.5
   - PG 9.5 makefile fix for win32
