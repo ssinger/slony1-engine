@@ -793,7 +793,7 @@ $$ language plpgsql
 
 comment on function @NAMESPACE@.storeNode(p_no_id int4, p_no_comment text) is
 'no_id - Node ID #
-no_comment - Human-oriented commentb
+no_comment - Human-oriented comment
 
 Generate the STORE_NODE event for node no_id';
 
