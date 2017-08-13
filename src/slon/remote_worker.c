@@ -3834,6 +3834,9 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		int			need_union;
 		int			sl_log_no;
 
+
+		provider_query = &(provider->helper_query);
+		dstring_reset(provider_query);
 		/**
 		 * ONLY use the event_provider.
 		 * If this provider has a set then that should be the
@@ -3854,8 +3857,7 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 				 node->no_id, provider->no_id);
 
 		need_union = 0;
-		provider_query = &(provider->helper_query);
-		dstring_reset(provider_query);
+	
 		(void) slon_mkquery(provider_query,
 							"COPY ( ");
 
@@ -4336,7 +4338,10 @@ sync_event(SlonNode * node, SlonConn * local_conn,
 		 * instead of starting the helpers we want to
 		 * perform the COPY on each provider.
 		 */
-		num_errors += sync_helper((void *) provider, local_dbconn);
+		if(strcmp("",dstring_data(&provider->helper_query))!=0)
+		{
+			num_errors += sync_helper((void *) provider, local_dbconn);
+		}
 	}
 
 
