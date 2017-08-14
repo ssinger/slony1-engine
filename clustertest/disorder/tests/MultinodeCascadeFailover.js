@@ -53,7 +53,6 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.subscribeSet(1,1, 1, [ 2, 3,4 ]);
 	this.subscribeSet(1,1, 3, [5,  6 ]);
 	this.slonikSync(1,1);
-	for(var j=1; j<100;j++) {
 	var load = this.generateLoad();
 	java.lang.Thread.sleep(10*1000);
 	this.slonikSync(1,1);
@@ -84,23 +83,19 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.compareDb('db2','db6');
 	this.compareDb('db2','db4');
 
-		if(this.testResults.getFailureCount() > 0) {
-			exit(-1);
-		}
-		this.dropTwoNodes(1,3,2);	
+	this.dropTwoNodes(1,3,2);	
 	this.reAddNode(1,2,2);
-		this.reAddNode(3,2,2);
-		this.slonikSync(1,2);
+	this.reAddNode(3,2,2);
+	this.slonikSync(1,2);
 	this.addCompletePaths();
-		this.moveSet(1,2,1);
-		this.resubscribe(1,1,3);
-    this.resubscribe(1,3,4);
-    this.resubscribe(1,3,2);
+	this.moveSet(1,2,1);
+	this.resubscribe(1,1,3);
+        this.resubscribe(1,3,4);
+        this.resubscribe(1,3,2);
 	this.resubscribe(1,3,5);
 	this.resubscribe(1,3,6);
 	this.currentOrigin='db1';
-	}//j
-	this.unsubscribe(3,1);
+	//this.unsubscribe(3,1);
 	load=this.generateLoad();
 	java.lang.Thread.sleep(1000*10);
 	load.stop();	
