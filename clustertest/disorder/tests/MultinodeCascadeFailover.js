@@ -6,7 +6,6 @@ MultinodeCascadeFailover = function(coordinator, testResults) {
 	Failover.call(this, coordinator, testResults);
 	this.testDescription='Test the FAILOVER command.  This test will try FAILOVER'
 		+' with multiple nodes failing and cascading';
-	this.compareQueryList.push(['select i_id,comments from disorder.do_item_review order by i_id','i_id']);
 	this.nodeCount=5;
 }
 MultinodeCascadeFailover.prototype = new Failover();
@@ -82,6 +81,9 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.compareDb('db2','db5');
 	this.compareDb('db2','db6');
 	this.compareDb('db2','db4');
+	if(this.testResults.getFailureCount() > 0) {
+                      exit(-1);
+	}
 
 	this.dropTwoNodes(1,3,2);	
 	this.reAddNode(1,2,2);
@@ -95,6 +97,7 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.resubscribe(1,3,5);
 	this.resubscribe(1,3,6);
 	this.currentOrigin='db1';
+	this.slonikSync(1,1);
 	//this.unsubscribe(3,1);
 	load=this.generateLoad();
 	java.lang.Thread.sleep(1000*10);
