@@ -81,7 +81,7 @@ MultinodeFailover.prototype.runTest = function() {
 	this.addCompletePaths();
 	this.subscribeSet(2,3,3,[2]);
 	this.moveSet(2,3,2);
-
+	this.slonikSync(2,2);
 
 	/**
 	 * generate some load (node1) and
@@ -144,7 +144,10 @@ MultinodeFailover.prototype.runTest = function() {
 	this.resubscribe(2,2,1);
 	this.resubscribe(2,2,3);
 	this.resubscribe(2,3,4);
-	
+	//make sure the resubscribe propogates
+	//before we start failing.
+	this.slonikSync(2,2);
+
 	
 	this.currentOrigin='db2';
 	load=this.generateLoad();
