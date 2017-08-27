@@ -10,6 +10,7 @@
    - Fix some failover issues when doing a multi-node failover
      with a cascaded node. 
    - Bug 341 - suppress log trigger/deny when running in 'local' mode
+   - Fix issue when receiving DDL from non origin nodes 
 
 * 2.2.5
   - PG 9.5 makefile fix for win32
