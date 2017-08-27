@@ -81,9 +81,6 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 	this.compareDb('db2','db5');
 	this.compareDb('db2','db6');
 	this.compareDb('db2','db4');
-	if(this.testResults.getFailureCount() > 0) {
-                      exit(-1);
-	}
 
 	this.dropTwoNodes(1,3,2);	
 	this.reAddNode(1,2,2);
@@ -113,6 +110,7 @@ MultinodeCascadeFailover.prototype.runTest = function() {
 		this.slonArray[idx - 1].stop();
 		this.coordinator.join(this.slonArray[idx - 1]);		
 	}
+	this.dropDb(['db6']);
 }
 
 MultinodeCascadeFailover.prototype.failover=function(originA,backupA,originB,backupB) 
