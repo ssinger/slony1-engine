@@ -2,7 +2,6 @@
 #
 # Author: Mark Stosberg
 # Based on work by: Christopher Browne
-# Parts Copyright 2008 Summerault, LLC
 # Parts Copyright 2004-2009 Afilias Canada
 
 use Getopt::Long;
