@@ -262,6 +262,29 @@ static struct config_bool ConfigureNamesBool[] =
 		&monitor_threads,
 		true
 	},
+	{
+	{
+			(const char *) "enable_version_check",
+			gettext_noop("Should services check release versions "
+			"and fail on differences?"),
+			NULL,
+			SLON_C_BOOL,
+                },
+		&enable_version_check,
+		true
+	},
+	{
+		{
+			(const char *) "remote_listen_serializable_transactions",
+			gettext_noop("Determines if the remote listener should use serializable transactions. "
+				"This setting trades between strict isolation and avoiding blocking "
+				"for lock management."),
+			NULL,
+			SLON_C_BOOL,
+		},
+		&remote_listen_serializable_transactions,
+		true
+	},
 	{{0}}
 };
 
