@@ -223,8 +223,18 @@ main(int argc, const char *argv[])
                 get_share_path(myfull_path, share_path);
         }
 #else
-	strcpy(share_path, PGSHARE);
+	char *pgHome = getenv("PG_HOME");
+	if (pgHome)
+	{
+		snprintf(share_path, MAXPGPATH-1, "%s/share", pgHome);
+		share_path[MAXPGPATH-1] = '\0';
+	} 
+	else 
+	{
+		strcpy(share_path, PGSHARE);
+	}
 #endif
+printf("Share path is %s\n",share_path);
 
 	if (optind < argc)
 	{

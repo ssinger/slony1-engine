@@ -26,6 +26,8 @@ extern int	desired_sync_time;
 extern int	quit_sync_provider;
 extern int	quit_sync_finalsync;
 extern bool keep_alive;
+extern bool     enable_version_check;
+extern bool 	remote_listen_serializable_transactions;
 extern int	keep_alive_idle;
 extern int	keep_alive_interval;
 extern int	keep_alive_count;
