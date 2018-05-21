@@ -31,6 +31,7 @@
 #include "slon.h"
 
 bool		keep_alive;
+bool		enable_version_check;
 int			keep_alive_idle;
 int			keep_alive_count;
 int			keep_alive_interval;
@@ -388,6 +389,11 @@ db_checkSchemaVersion(PGconn *conn)
 	char		query[1024];
 	PGresult   *res;
 	int			retval = 0;
+
+	if (! enable_version_check)
+	{
+		return 0;
+	}
 
 	/*
 	 * Select the version number from the schema
