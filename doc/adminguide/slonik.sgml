@@ -92,6 +92,23 @@
  </refsect1>
 
  <refsect1>
+   <title>Environment Variables</title>
+   <variablelist>
+	<varlistentry>
+	  <term>PGHOME</term>
+	  <listitem>
+	    <para>Sets the path to the postgresql HOME directory that
+	      contains the subdirectory share with the slony .sql scripts.
+	      When this is unset Slonik will try to determine the path of the
+	      postgresql share files based on the compiled in defaults or
+	      based on the location of the slonik binary.
+	    </para>
+	  </listitem>
+	</varlistentry>
+   </variablelist>
+   </refsect1>
+ 
+ <refsect1>
   <title>Exit Status</title>
 
   <para>

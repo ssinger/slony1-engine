@@ -297,6 +297,39 @@
 		  Setting this parameter has no effect on Win32 systems.
 		  </para>
 		</listitem>
+	</varlistentry>
+	
+	<varlistentry id="slon-config-remote-listen-serializable" xreflabel="slon_conf_remote_listen_serializable">
+	  <term><varname>remote_listen_serializable_transactions</varname> (<type>integer</type>)</term>
+	 <indexterm> <primary><varname>remote_listen_serializable_transactions</varname></primary></indexterm>
+	  <listitem>
+		<para>
+		  Sets if the remote_listen connection should use
+		  read only serializable deferrable transactions(true)
+		  or read only repetable read transactions(false).
+		  The default setting is true.  This allows postgresql
+		  to defer the start of a transaction to avoid serialization
+		  issues.  Repeatable read transactions will provide less
+		  locking contention for some workloads.
+		  </para>
+		</listitem>
+	</varlistentry>
+
+	<varlistentry id="slon-config-enable-version-check" xreflabel="slon_conf_enable_version_check">
+	  <term><varname>enable_version_check</varname> (<type>integer</type>)</term>
+	 <indexterm> <primary><varname>enable_version_check</varname></primary></indexterm>
+	  <listitem>
+		<para>
+		  Sets if slon should check the slony version used in each database.
+		  Slon normally requires that all nodes have the exact same version
+		  of slony installed.  When this setting is true (the default) slon
+		  will check this when it establishes a connection to a database.
+		  Set this to false to disable checking of the version.
+		  When this setting is false users are responsible for determining if the
+		  different versions of slony they have instaled are compatible with each
+		  other. 
+		  </para>
+		</listitem>
 	  </varlistentry>
 
   </variablelist>
