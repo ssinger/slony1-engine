@@ -122,6 +122,10 @@ extern DLLIMPORT Node *newNodeMacroHolder;
 #define TEXTARRAYOID 1009
 #endif
 
+#if PG_VERSION_MAJOR <11
+#define ALLOCSET_START_SMALL_SIZES  \
+	ALLOCSET_SMALL_MINSIZE, ALLOCSET_SMALL_INITSIZE, ALLOCSET_DEFAULT_MAXSIZE
+#endif
 
 /* ----
  * Slony_I_ClusterStatus -
@@ -222,6 +226,9 @@ getClusterStatus(Name cluster_name,
 static const char *slon_quote_identifier(const char *ident);
 static int prepareLogPlan(Slony_I_ClusterStatus * cs,
 			   int log_status);
+
+static bool isDropped(Relation rel,int att_num);
+static int  typeMod(Relation rel, int att_num);
 
 Datum
 versionFunc(createEvent) (PG_FUNCTION_ARGS)
@@ -564,7 +571,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			/*
 			 * Skip dropped columns
 			 */
-			if (tupdesc->attrs[i]->attisdropped)
+			if (isDropped(tg->tg_relation,i))
 				continue;
 
 			/*
@@ -626,7 +633,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			/*
 			 * Ignore dropped columns
 			 */
-			if (tupdesc->attrs[i]->attisdropped)
+			if (isDropped(tg->tg_relation,i))
 				continue;
 
 			old_value = SPI_getbinval(old_row, tupdesc, i + 1, &old_isnull);
@@ -721,7 +728,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			/*
 			 * Ignore dropped columns
 			 */
-			if (tupdesc->attrs[i]->attisdropped)
+			if (isDropped(tg->tg_relation,i))
 				continue;
 
 			attkind_idx++;
@@ -770,7 +777,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 		 */
 		for (i = 0, attkind_idx = -1; i < tg->tg_relation->rd_att->natts; i++)
 		{
-			if (tupdesc->attrs[i]->attisdropped)
+			if (isDropped(tg->tg_relation,i))
 				continue;
 
 			attkind_idx++;
@@ -1009,9 +1016,8 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 			applyCacheContext = AllocSetContextCreate(
 													  TopMemoryContext,
 												  "Slony-I apply query keys",
-													ALLOCSET_DEFAULT_MINSIZE,
-												   ALLOCSET_DEFAULT_INITSIZE,
-												   ALLOCSET_DEFAULT_MAXSIZE);
+													  ALLOCSET_START_SMALL_SIZES);
+
 		}
 		else
 		{
@@ -1176,7 +1182,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 				for (i = 0; (i + 2) < seqargsn; i = i + 3)
 				{
 					Datum		call_args[3];
-					bool		call_nulls[3];
+					char 	call_nulls[3];
 
 					call_args[0] = DirectFunctionCall1(int4in,
 								   DirectFunctionCall1(textout, seqargs[i]));
@@ -1185,9 +1191,9 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					call_args[2] = DirectFunctionCall1(int8in,
 							   DirectFunctionCall1(textout, seqargs[i + 2]));
 
-					call_nulls[0] = 0;
-					call_nulls[1] = 0;
-					call_nulls[2] = 0;
+					call_nulls[0] = '\0';
+					call_nulls[1] = '\0';
+					call_nulls[2] = '\0';
 
 					if (SPI_execp(plan, call_args, call_nulls, 0) < 0)
 					{
@@ -1603,7 +1609,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
 					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
-						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
+						typeMod(target_rel,colnum-1);
 
 					/*
 					 * Add the parameter to the query string
@@ -1670,7 +1676,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
 					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
-						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
+						typeMod(target_rel,colnum-1);
 
 					/*
 					 * Special case if there were no columns updated. We tell
@@ -1767,7 +1773,8 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					fmgr_info(typinput, &(cacheEnt->finfo_input[i / 2]));
 					MemoryContextSwitchTo(oldContext);
 					cacheEnt->typmod[i / 2] =
-						target_rel->rd_att->attrs[colnum - 1]->atttypmod;
+						typeMod(target_rel,colnum - 1 );
+
 					sprintf(applyQueryPos, "%s%s = $%d",
 							(i > 0) ? " AND " : "",
 							slon_quote_identifier(colname),
@@ -2884,8 +2891,35 @@ versionFunc(slon_decode_tgargs) (PG_FUNCTION_ARGS)
 	PG_RETURN_ARRAYTYPE_P(out_array);
 }
 
+bool isDropped(Relation rel,int att_num)
+{
+
+#if PG_VERSION_MAJOR >= 11
+	Form_pg_attribute attr = TupleDescAttr(rel->rd_att,
+										   att_num);
+	return attr->attisdropped;
+
+#else
+	TupleDesc tupdesc = rel->rd_att;
+	return tupdesc->attrs[att_num]->attisdropped;
+#endif
+
+}
 
 
+int typeMod(Relation rel, int att_num)
+{
+#if PG_VERSION_MAJOR >= 11
+	Form_pg_attribute attr = TupleDescAttr(rel->rd_att,
+										   att_num);
+	return attr->atttypmod;
+
+#else
+	TupleDesc tupdesc = rel->rd_att;
+	return tupdesc->attrs[att_num]->atttypmod;
+#endif
+	
+}
 /*
  * Local Variables:
  *	tab-width: 4
