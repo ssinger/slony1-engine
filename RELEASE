@@ -1,4 +1,9 @@
 #+OPTIONS: ^:{}
+2.2.7
+
+  - Fix warning with flex 2.6+
+  - Fix compile errors with PG11
+
 *2.2.6
 
    - slonik_build_env can now accept multiple -schema options on the command line
