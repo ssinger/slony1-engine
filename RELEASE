@@ -3,6 +3,9 @@
 
   - Fix warning with flex 2.6+
   - Fix compile errors with PG11
+  - Fix bug in with regex in 'set add sequence' when
+    specifying the sequence as a regular expression.
+    It was not being escaped properly
 
 *2.2.6
 
