@@ -4368,7 +4368,7 @@ slonik_set_add_sequence(SlonikStmt_set_add_sequence * stmt)
 		 */
 		slon_mkquery(&query, "select sequence_schema || '.' || sequence_name "
 					 "from information_schema.sequences where "
-					 "sequence_schema || '.'||sequence_name ~ '%s' "
+					 "sequence_schema || '.'||sequence_name ~ E'%s' "
 					 "order by 1", stmt->sequences);
 		result = db_exec_select((SlonikStmt *) stmt, adminfo1, &query);
 		if (result == NULL)
