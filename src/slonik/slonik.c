@@ -183,15 +183,15 @@ main(int argc, const char *argv[])
 {
 	extern int	optind;
 	int			opt;
-
-	while ((opt = getopt(argc, (char **) argv, "hvw")) != EOF)
+	const char * pgshare=NULL;
+	
+	while ((opt = getopt(argc, (char **) argv, "hvws:")) != EOF)
 	{
 		switch (opt)
 		{
 			case 'h':
 				parser_errors++;
-				break;
-
+				break;				
 			case 'v':
 				printf("slonik version %s\n", SLONY_I_VERSION_STRING);
 				exit(0);
@@ -199,7 +199,9 @@ main(int argc, const char *argv[])
 			case 'w':
 				auto_wait_disabled = 1;
 				break;
-
+			case 's':
+				pgshare = optarg;
+				break;
 			default:
 				printf("unknown option '%c'\n", opt);
 				parser_errors++;
@@ -214,28 +216,23 @@ main(int argc, const char *argv[])
 	/*
 	 * We need to find a share directory like PostgreSQL.
 	 */
-        if (find_my_exec(argv[0],myfull_path) < 0)
-        {
-                strcpy(share_path, PGSHARE);
-        }
-        else
-        {
-                get_share_path(myfull_path, share_path);
-        }
-#else
-	char *pgHome = getenv("PG_HOME");
-	if (pgHome)
-	{
-		snprintf(share_path, MAXPGPATH-1, "%s/share", pgHome);
-		share_path[MAXPGPATH-1] = '\0';
-	} 
-	else 
+	if (find_my_exec(argv[0],myfull_path) < 0)
 	{
 		strcpy(share_path, PGSHARE);
 	}
+	else
+	{
+		get_share_path(myfull_path, share_path);
+	}
+#else	
+	strcpy(share_path, PGSHARE);	
 #endif
-printf("Share path is %s\n",share_path);
-
+	if (pgshare)
+	{
+		snprintf(share_path, MAXPGPATH-1, "%s", pgshare);
+		share_path[MAXPGPATH-1] = '\0';
+	} 
+	
 	if (optind < argc)
 	{
 		while (optind < argc)
