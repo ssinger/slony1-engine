@@ -6,6 +6,14 @@
   - Fix bug in with regex in 'set add sequence' when
     specifying the sequence as a regular expression.
     It was not being escaped properly
+  - Add option to Slonik to specify the PGSHARE directory on
+    the command line.
+  - Add slon config setting remote_listen_serializable_transactions
+    to use read committed instead of read-only-serializable deferable
+    transactions(default true)
+  - Add slon config setting enable_version_check to disable
+    the slony version check that ensures all nodes run the
+    same slony version (default true, version check enabled)
 
 *2.2.6
 
