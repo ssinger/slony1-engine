@@ -92,6 +92,22 @@
  </refsect1>
 
  <refsect1>
+   <title>Environment Variables</title>
+   <variablelist>
+	<varlistentry>
+	  <term>SLONY_SHARE_DIR</term>
+	  <listitem>
+	    <para>Sets the path to the directory containing the slony .sql scripts.
+	      When this is unset Slonik will try to determine the path of the
+	      postgresql share files based on the compiled in defaults or
+	      based on the location of the slonik binary. Usually the share
+		  directory under the Postgresql installation.
+	    </para>
+	  </listitem>
+	</varlistentry>
+   </variablelist>
+   </refsect1>
+ 
   <title>Exit Status</title>
 
   <para>
