@@ -214,17 +214,17 @@ main(int argc, const char *argv[])
 	/*
 	 * We need to find a share directory like PostgreSQL.
 	 */
-        if (find_my_exec(argv[0],myfull_path) < 0)
-        {
-                strcpy(share_path, PGSHARE);
-        }
-        else
-        {
-                get_share_path(myfull_path, share_path);
-        }
-#else
+	if (find_my_exec(argv[0],myfull_path) < 0)
+	{
 		strcpy(share_path, PGSHARE);
-		
+	}
+	else
+	{
+		get_share_path(myfull_path, share_path);
+	}
+#else
+	strcpy(share_path, PGSHARE);
+	
 #endif
 	char *slonyShare = getenv("SLONY_SHARE_DIR");
 	if (slonyShare)
