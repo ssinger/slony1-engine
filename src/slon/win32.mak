@@ -20,7 +20,7 @@ OBJS = 	slon.obj		\
 
 
 
-CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /I..\..\ /I$(PG_INC) /I$(PG_INC)/server /I$(PG_INC)/server/port/win32  /I$(PTHREADS_INC) /MD /Zi 
+CPP_FLAGS=/c /D MSVC /D WIN32 /D PGSHARE=$(PGSHARE) /D YY_NO_UNISTD_H /D HAVE_STRUCT_TIMESPEC  /I..\..\ /I$(PG_INC) /I$(PG_INC)/server /I$(PG_INC)/server/port/win32  /I$(PTHREADS_INC) /MD /Zi 
 
 slon.obj: slon.c
 	$(CPP) $(CPP_FLAGS)  slon.c

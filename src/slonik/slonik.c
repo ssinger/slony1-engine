@@ -67,8 +67,13 @@ static char share_path[MAXPGPATH];
 static char myfull_path[MAXPGPATH];
 #endif
 
-
-
+#ifdef _MSC_VER
+FILE * __iob_func() {
+	
+	FILE  result[] = {*stdin,*stdout,*stderr};
+	return result;
+}
+#endif
 
 typedef struct
 {

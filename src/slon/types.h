@@ -17,10 +17,11 @@
  *		XXX This is supposed to be part of stddef.h, but isn't on
  *		some systems (like SunOS 4).
  */
+ #ifndef _MSC_VER
 #ifndef offsetof
 #define offsetof(type, field)	((long) &((type *)0)->field)
 #endif   /* offsetof */
-
+#endif
 /*
  * intN
  *		Signed integer, EXACTLY N BITS IN SIZE,

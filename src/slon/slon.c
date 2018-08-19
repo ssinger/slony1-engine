@@ -32,6 +32,16 @@
 #include <winsock2.h>
 #include "port/win32service.h"
 #define sleep(x) Sleep(x*1000)
+/**
+ * some versions of MSVC seem to need these defined
+ * to finish linking.
+ */
+FILE * __iob_func() {
+	
+	FILE  result[] = {*stdin,*stdout,*stderr};
+	return result;
+}
+
 #endif
 
 #include "libpq-fe.h"

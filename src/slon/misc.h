@@ -37,9 +37,10 @@ extern int	slon_scanint64(char *str, int64 *result);
 /* Adjustment windows */
 #ifdef WIN32
 #define sleep(x) Sleep(x*1000)
-#define strtoll(x,y,z) (__int64) strtol(x,y,z)
+
 #define strncasecmp(x,y,z)	strnicmp(x,y,z)
 #endif
+
 
 /*
  * Local Variables:
