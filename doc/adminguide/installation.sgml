@@ -218,8 +218,9 @@ scanner generated files.  The Win32 makefiles do not currently support
 building these).</para></listitem>
 <listitem><para>&postgres; binaries, headers and libraries. </para></listitem>
 <listitem><para> <ulink url="http://sources.redhat.com/pthreads-win32">pthreads for win32</ulink></para></listitem>
-<listitem><para>The Microsoft SDK 6.1 or Visual Studio 2008 (other versions
-might work)</para></listitem>
+<listitem><para>Visual Studio(2017 has been tested against the current version of Slony and PostgreSQL 10 x64).
+The Microsoft SDK 6.1 or Visual Studio 2008 had been tested against earlier versions
+(other versions might work). </para></listitem>
 <listitem><para><ulink url="http://sourceforge.net/projects/gettext/">gettext 
 for win32</ulink> or <ulink url="http://ftp.acc.umu.se/pub/GNOME/binaries/win64/dependencies/">gettext for win64</para></listitem>
 </itemizedlist>
@@ -281,8 +282,11 @@ copy slony1_funcs.v84.sql c:\Program Files\Postgresql\9.1\share\slony1_funcs.v84
 </para>
 
 <para>
-pthreadVC.dll from the pthreads-win32 package also needs to be copied to the
-directory you install the slon.exe and slonik.exe binaries in
+pthreadVC.dll or pthreadVC2.dll from the pthreads-win32 package also needs to be copied to the
+directory you install the slon.exe and slonik.exe binaries in.
+
+The Visual C++ redistributable might also be required.
+
 </para>
 
 </sect2>
