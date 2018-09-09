@@ -2083,25 +2083,25 @@ load_slony_base(SlonikStmt * stmt, int no_id)
 		use_major = 8;
 		use_minor = 3;
 	}
-	else if ((adminfo->pg_version >= 80400) && (adminfo->pg_version < 80500))	/* 8.4 */
+	else if ((adminfo->pg_version >= 80400) && (adminfo->pg_version < 90000))	/* 8.4 */
 	{
 		use_major = 8;
-		use_minor = 4;   
-	}		
-	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 110000)) /* 10 */
+		use_minor = 4;
+	}
+	else if ((adminfo->pg_version >= 90000) && (adminfo->pg_version < 120000)) /* 11 */
 	{
 		/**
-		 * 9.0 and 9.1 and 9.2, 9.3,9.4,9.5,9.6,10 are so far just like 8.4
+		 * 9.0 through 11 are so far just like 8.4
 		 **/
 		use_major = 8;
 		use_minor = 4;
 	}
-	else	/* above 9.4 ??? */
+	else	/* above 11 */
 	{
 		use_major = 8;
 		use_minor = 4;
 		printf("%s:%d: Possible unsupported PostgreSQL "
-			   "version (%d) %d.%d, defaulting to 8.4 support\n",
+			   "version (%d) %d.%d, defaulting to support for latest\n",
 			   stmt->stmt_filename, stmt->stmt_lno, adminfo->pg_version,
 		(adminfo->pg_version / 10000), ((adminfo->pg_version % 10000) / 100));
 	}
