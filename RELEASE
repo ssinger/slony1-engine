@@ -1,4 +1,8 @@
 #+OPTIONS: ^:{}
+2.2.8
+
+  - Fix pg 8.4 messagaging in slonik
+
 2.2.7
 
   - Fix warning with flex 2.6+
