@@ -170,7 +170,7 @@
     <listitem>
      <para>
       This controls the maximum <command>SYNC</command> group size,
-      <envar>sync_group_maxsize</envar>; defaults to 6.  Thus, if a
+      <envar>sync_group_maxsize</envar>; defaults to 20.  Thus, if a
       particular node is behind by 200 <command>SYNC</command>s, it
       will try to group them together into groups of a maximum size of
       <envar>sync_group_maxsize</envar>.  This can be expected to
@@ -178,7 +178,7 @@
       <command>COMMIT</command>.
      </para>
      <para>
-      The default of 6 is probably suitable for small systems that can
+      The default of 20 is probably suitable for small systems that can
       devote only very limited bits of memory to
       <application>slon</application>.  If you have plenty of memory,
       it would be reasonable to increase this, as it will increase the

@@ -32,7 +32,7 @@ sync_interval_timeout=2000
 # a smaller batch.  And if there is only one SYNC available, even -g60 
 # will apply just that one. As soon as a subscriber catches up, it will 
 # apply every single SYNC by itself.
-# Range:  [0,100], default: 6
+# Range:  [0,10000], default: 20
 sync_group_maxsize=5
 
 # Size above which an sl_log_? row's log_cmddata is considered large.

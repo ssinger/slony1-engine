@@ -370,7 +370,7 @@
       </indexterm>
       <listitem>
         <para>Check for updates at least this often in milliseconds. 
-          Range: [10-60000], default 100
+          Range: [10-60000], default 2000
         </para>
 
         <para> This parameter is primarily of concern on nodes that
@@ -403,7 +403,7 @@
           high frequent <option>-s</option> check won't detect that.
           Thus, the need for
           <envar>sync_interval_timeout</envar>. Range: [0-120000],
-          default 1000
+          default 10000
         </para>
 
         <para> This parameter is likely to be primarily of concern on

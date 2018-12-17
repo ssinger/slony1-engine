@@ -36,12 +36,12 @@ cat <<_EOF_ > $conffile
 # Range: [0,100], default: 3
 #vac_frequency=3
 
-# Debug log level (higher value ==> more output).  Range: [0,4], default 2
+# Debug log level (higher value ==> more output).  Range: [0,4], default 0
 #log_level=2
 
 # Check for updates at least this often in milliseconds.
-# Range: [10-60000], default 100
-#sync_interval=1000
+# Range: [10-60000], default 2000
+#sync_interval=2000
 
 # Maximum amount of time in milliseconds before issuing a SYNC event, 
 # This prevents a possible race condition in which the action sequence 
@@ -53,7 +53,7 @@ cat <<_EOF_ > $conffile
 # next SYNC.  But if all application activity suddenly stops, 
 # there will be no more sequence bumps, so the high frequent -s check 
 # won't detect that.  Thus, the need for sync_interval_timeout.
-# Range: [0-120000], default 1000
+# Range: [0-120000], default 10000
 #sync_interval_timeout=10000
 
 # Maximum number of SYNC events to group together when/if a subscriber
@@ -62,8 +62,8 @@ cat <<_EOF_ > $conffile
 # a smaller batch.  And if there is only one SYNC available, even -g60 
 # will apply just that one. As soon as a subscriber catches up, it will 
 # apply every single SYNC by itself.
-# Range:  [0,100], default: 6
-#sync_group_maxsize=6
+# Range:  [0,100], default: 20
+#sync_group_maxsize=20
 
 # Size above which an sl_log_? row's log_cmddata is considered large.
 # Up to 500 rows of this size are allowed in memory at once. Rows larger
