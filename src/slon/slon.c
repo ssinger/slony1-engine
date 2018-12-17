@@ -121,10 +121,10 @@ Usage(char *const argv[])
 	fprintf(stderr, "    -h                    print usage message and exit\n");
 	fprintf(stderr, "    -v                    print version and exit\n");
 	fprintf(stderr, "    -d <debuglevel>       verbosity of logging (1..4)\n");
-	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 10000)\n");
-	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 60000)\n");
+	fprintf(stderr, "    -s <milliseconds>     SYNC check interval (default 2000)\n");
+	fprintf(stderr, "    -t <milliseconds>     SYNC interval timeout (default 10000)\n");
 	fprintf(stderr, "    -o <milliseconds>     desired subscriber SYNC processing time\n");
-	fprintf(stderr, "    -g <num>              maximum SYNC group size (default 6)\n");
+	fprintf(stderr, "    -g <num>              maximum SYNC group size (default 20)\n");
 	fprintf(stderr, "    -c <num>              how often to vacuum in cleanup cycles\n");
 	fprintf(stderr, "    -p <filename>         slon pid file\n");
 	fprintf(stderr, "    -f <filename>         slon configuration file\n");

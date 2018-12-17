@@ -250,8 +250,8 @@ log_timestamp  0    # multilog will insert a tai64n timestamp
 # Event Tuning
 
 # Check for updates at least this often in milliseconds.
-# Range: [10-60000], default 100
-#sync_interval 100 
+# Range: [10-60000], default 2000
+#sync_interval=2000
 
 # Maximum amount of time in milliseconds before issuing a SYNC event, 
 # This prevents a possible race condition in which the action sequence is
@@ -263,16 +263,16 @@ log_timestamp  0    # multilog will insert a tai64n timestamp
 # activity suddenly stops, there will be no more sequence bumps, so the
 # high frequent -s check won't detect that. Thus, the need for
 # sync_interval_timeout.
-# Range: [0-120000], default 1000
-#sync_interval_timeout 1000 
+# Range: [0-120000], default 10000
+#sync_interval_timeout=10000
 
 # Maximum number of SYNC events to group together when/if a subscriber falls
 # behind. SYNCs are batched only if there are that many available and if they
 # are contiguous. Every other event type in between leads to a smaller batch.
 # And if there is only one SYNC available, even -g60 will apply just that one.
 # As soon as a subscriber catches up, it will apply every single SYNC by itself.
-# Range: [0,10000], default: 6
-#sync_group_maxsize 6
+# Range:  [0,100], default: 20
+#sync_group_maxsize=20
 
 # Sets how many cleanup cycles to run before a vacuum is done. 0 disables the
 # builtin vacuum, intended to be used with the pg_autovacuum daemon.
