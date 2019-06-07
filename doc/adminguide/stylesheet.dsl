@@ -194,10 +194,10 @@
       (make empty-element gi: "HR")
       (empty-sosofo)))
 
-;; Add character encoding and time of creation into HTML header
+;; Add character encoding into HTML header
 (define %html-header-tags% 
   (list (list "META" '("HTTP-EQUIV" "Content-Type") '("CONTENT" "text/html; charset=ISO-8859-1"))
-	(list "META" '("NAME" "creation") (list "CONTENT" (time->string (time) #t)))))
+	))
 
 ;; Create an index
 (define html-index #t)
