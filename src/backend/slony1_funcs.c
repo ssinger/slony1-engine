@@ -29,6 +29,9 @@
 #include "catalog/pg_operator.h"
 #include "catalog/pg_type.h"
 #include "catalog/namespace.h"
+#if PG_VERSION_MAJOR >= 12
+#include "catalog/pg_collation_d.h"
+#endif
 #include "access/xact.h"
 #include "access/transam.h"
 #include "access/hash.h"
@@ -230,6 +233,25 @@ static int prepareLogPlan(Slony_I_ClusterStatus * cs,
 static bool isDropped(Relation rel,int att_num);
 static int  typeMod(Relation rel, int att_num);
 
+
+#if PG_VERSION_MAJOR < 12
+#define SlonDirectFunctionCall1(func,arg1) \
+	DirectFunctionCall1(func,arg1)
+#define SlonDirectFunctionCall2(func,arg1,arg2) \
+	DirectFunctionCall2(func,arg1,arg2)
+#define SlonFunctionCall2(func,arg1,arg2) \
+	FunctionCall2(func,arg1,arg2)
+#else
+#define SlonDirectFunctionCall1(func,arg1) \
+	DirectFunctionCall1Coll(func,C_COLLATION_OID,arg1)
+#define SlonDirectFunctionCall2(func,arg1,arg2) \
+	DirectFunctionCall2Coll(func,C_COLLATION_OID,arg1,arg2)
+#define SlonFunctionCall2(func,arg1,arg2) \
+	FunctionCall2Coll(func,C_COLLATION_OID,arg1,arg2)
+#endif
+
+
+
 Datum
 versionFunc(createEvent) (PG_FUNCTION_ARGS)
 {
@@ -320,7 +342,7 @@ versionFunc(createEvent) (PG_FUNCTION_ARGS)
 	 */
 	if (PG_NARGS() > 1 && !PG_ARGISNULL(1))
 	{
-		ev_type_c = DatumGetPointer(DirectFunctionCall1(
+		ev_type_c = DatumGetPointer(SlonDirectFunctionCall1(
 											   textout, PG_GETARG_DATUM(1)));
 		if (strcmp(ev_type_c, "SYNC") == 0 ||
 			strcmp(ev_type_c, "ENABLE_SUBSCRIPTION") == 0)
@@ -443,7 +465,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 	/*
 	 * Get all the trigger arguments
 	 */
-	cluster_name = DatumGetName(DirectFunctionCall1(namein,
+	cluster_name = DatumGetName(SlonDirectFunctionCall1(namein,
 								CStringGetDatum(tg->tg_trigger->tgargs[0])));
 	tab_id = strtol(tg->tg_trigger->tgargs[1], NULL, 10);
 	attkind = tg->tg_trigger->tgargs[2];
@@ -577,7 +599,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			/*
 			 * Add the column name
 			 */
-			*cmdargselem++ = DirectFunctionCall1(textin,
+			*cmdargselem++ = SlonDirectFunctionCall1(textin,
 								 CStringGetDatum(SPI_fname(tupdesc, i + 1)));
 			*cmdnullselem++ = false;
 
@@ -591,7 +613,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			}
 			else
 			{
-				*cmdargselem++ = DirectFunctionCall1(textin,
+				*cmdargselem++ = SlonDirectFunctionCall1(textin,
 												 CStringGetDatum(col_value));
 				*cmdnullselem++ = false;
 			}
@@ -689,7 +711,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 				 */
 				if (OidIsValid(opr_oid))
 				{
-					if (DatumGetBool(FunctionCall2(opr_finfo_p,
+					if (DatumGetBool(SlonFunctionCall2(opr_finfo_p,
 												   old_value, new_value)))
 						continue;
 				}
@@ -703,7 +725,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 				}
 			}
 
-			*cmdargselem++ = DirectFunctionCall1(textin,
+			*cmdargselem++ = SlonDirectFunctionCall1(textin,
 								 CStringGetDatum(SPI_fname(tupdesc, i + 1)));
 			*cmdnullselem++ = false;
 			if (new_isnull)
@@ -713,7 +735,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			}
 			else
 			{
-				*cmdargselem++ = DirectFunctionCall1(textin,
+				*cmdargselem++ = SlonDirectFunctionCall1(textin,
 					 CStringGetDatum(SPI_getvalue(new_row, tupdesc, i + 1)));
 				*cmdnullselem++ = false;
 			}
@@ -742,11 +764,11 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 				elog(ERROR, "Slony-I: old key column %s.%s IS NULL on UPDATE",
 					 NameStr(tg->tg_relation->rd_rel->relname), col_ident);
 
-			*cmdargselem++ = DirectFunctionCall1(textin,
+			*cmdargselem++ = SlonDirectFunctionCall1(textin,
 												 CStringGetDatum(col_ident));
 			*cmdnullselem++ = false;
 
-			*cmdargselem++ = DirectFunctionCall1(textin,
+			*cmdargselem++ = SlonDirectFunctionCall1(textin,
 												 CStringGetDatum(col_value));
 			*cmdnullselem++ = false;
 		}
@@ -786,7 +808,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			if (attkind[attkind_idx] != 'k')
 				continue;
 
-			*cmdargselem++ = DirectFunctionCall1(textin,
+			*cmdargselem++ = SlonDirectFunctionCall1(textin,
 					 CStringGetDatum(col_ident = SPI_fname(tupdesc, i + 1)));
 			*cmdnullselem++ = false;
 
@@ -794,7 +816,7 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 			if (col_value == NULL)
 				elog(ERROR, "Slony-I: old key column %s.%s IS NULL on DELETE",
 					 NameStr(tg->tg_relation->rd_rel->relname), col_ident);
-			*cmdargselem++ = DirectFunctionCall1(textin,
+			*cmdargselem++ = SlonDirectFunctionCall1(textin,
 												 CStringGetDatum(col_value));
 			*cmdnullselem++ = false;
 		}
@@ -826,10 +848,10 @@ versionFunc(logTrigger) (PG_FUNCTION_ARGS)
 	cmdlbs[0] = 1;
 
 	log_param[0] = Int32GetDatum(tab_id);
-	log_param[1] = DirectFunctionCall1(textin,
+	log_param[1] = SlonDirectFunctionCall1(textin,
 									   CStringGetDatum(get_namespace_name(
 									RelationGetNamespace(tg->tg_relation))));
-	log_param[2] = DirectFunctionCall1(textin,
+	log_param[2] = SlonDirectFunctionCall1(textin,
 				  CStringGetDatum(RelationGetRelationName(tg->tg_relation)));
 	log_param[3] = PointerGetDatum(cmdtype);
 	log_param[4] = Int32GetDatum(cmdupdncols);
@@ -958,7 +980,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 	 * Get or create the cluster status information and make sure it has the
 	 * SPI plans that we need here.
 	 */
-	cluster_name = DatumGetName(DirectFunctionCall1(namein,
+	cluster_name = DatumGetName(SlonDirectFunctionCall1(namein,
 								CStringGetDatum(tg->tg_trigger->tgargs[0])));
 	cs = getClusterStatus(cluster_name, PLAN_APPLY_QUERIES);
 
@@ -1090,15 +1112,15 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 		seqargsn = 0;
 		if (cmdargsn >= 2)
 		{
-			delim_text = DirectFunctionCall1(textin, CStringGetDatum(","));
+			delim_text = SlonDirectFunctionCall1(textin, CStringGetDatum(","));
 			if ((!cmdargsnulls[1]))
 			{
-				char	   *astr = DatumGetCString(DirectFunctionCall1(textout,
+				char	   *astr = DatumGetCString(SlonDirectFunctionCall1(textout,
 																cmdargs[1]));
 
 				if (strcmp(astr, ""))
 				{
-					array_holder = DirectFunctionCall2(text_to_array, cmdargs[1],
+					array_holder = SlonDirectFunctionCall2(text_to_array, cmdargs[1],
 													   delim_text);
 					deconstruct_array(DatumGetArrayTypeP(array_holder),
 									  TEXTOID, -1, false, 'i',
@@ -1110,12 +1132,12 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 		{
 			if ((!cmdargsnulls[2]))
 			{
-				char	   *astr = DatumGetCString(DirectFunctionCall1(textout,
+				char	   *astr = DatumGetCString(SlonDirectFunctionCall1(textout,
 																cmdargs[2]));
 
 				if (strcmp(astr, ""))
 				{
-					array_holder = DirectFunctionCall2(text_to_array, cmdargs[2],
+					array_holder = SlonDirectFunctionCall2(text_to_array, cmdargs[2],
 													   delim_text);
 					deconstruct_array(DatumGetArrayTypeP(array_holder),
 									  TEXTOID, -1, false, 'i',
@@ -1127,7 +1149,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 		/*
 		 * The first element is the DDL statement itself.
 		 */
-		ddl_script = DatumGetCString(DirectFunctionCall1(
+		ddl_script = DatumGetCString(SlonDirectFunctionCall1(
 													   textout, cmdargs[0]));
 
 		/*
@@ -1139,8 +1161,8 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 			for (i = 0; i < nodeargsn; i++)
 			{
 				int32		nodeId = DatumGetInt32(
-												   DirectFunctionCall1(int4in,
-								 DirectFunctionCall1(textout, nodeargs[i])));
+												   SlonDirectFunctionCall1(int4in,
+								 SlonDirectFunctionCall1(textout, nodeargs[i])));
 
 				if (nodeId == cs->localNodeId)
 				{
@@ -1184,12 +1206,12 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					Datum		call_args[3];
 					char 	call_nulls[3];
 
-					call_args[0] = DirectFunctionCall1(int4in,
-								   DirectFunctionCall1(textout, seqargs[i]));
-					call_args[1] = DirectFunctionCall1(int4in,
-							   DirectFunctionCall1(textout, seqargs[i + 1]));
-					call_args[2] = DirectFunctionCall1(int8in,
-							   DirectFunctionCall1(textout, seqargs[i + 2]));
+					call_args[0] = SlonDirectFunctionCall1(int4in,
+								   SlonDirectFunctionCall1(textout, seqargs[i]));
+					call_args[1] = SlonDirectFunctionCall1(int4in,
+							   SlonDirectFunctionCall1(textout, seqargs[i + 1]));
+					call_args[2] = SlonDirectFunctionCall1(int8in,
+							   SlonDirectFunctionCall1(textout, seqargs[i + 2]));
 
 					call_nulls[0] = '\0';
 					call_nulls[1] = '\0';
@@ -1288,8 +1310,8 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 			for (i = 1; i < cmdargsn; i++)
 			{
 				int32		nodeId = DatumGetInt32(
-												   DirectFunctionCall1(int4in,
-								  DirectFunctionCall1(textout, cmdargs[i])));
+												   SlonDirectFunctionCall1(int4in,
+								  SlonDirectFunctionCall1(textout, cmdargs[i])));
 
 				if (nodeId == cs->localNodeId)
 				{
@@ -1400,7 +1422,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 		{
 			applyQueryIncrease();
 
-			colname = DatumGetCString(DirectFunctionCall1(
+			colname = DatumGetCString(SlonDirectFunctionCall1(
 													   textout, cmdargs[i]));
 			snprintf(applyQueryPos, applyQuerySize - (applyQueryPos - applyQuery),
 					 ",%s", slon_quote_identifier(colname));
@@ -1569,7 +1591,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 
 					if (cmdargsnulls[i])
 						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
-					querycolnames[i / 2] = DatumGetCString(DirectFunctionCall1(
+					querycolnames[i / 2] = DatumGetCString(SlonDirectFunctionCall1(
 													   textout, cmdargs[i]));
 					colname = (char *) slon_quote_identifier(querycolnames[i / 2]);
 					strcpy(applyQueryPos, colname);
@@ -1663,7 +1685,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					 */
 					if (cmdargsnulls[i])
 						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
-					colname = DatumGetCString(DirectFunctionCall1(
+					colname = DatumGetCString(SlonDirectFunctionCall1(
 													   textout, cmdargs[i]));
 					colnum = SPI_fnumber(target_rel->rd_att, colname);
 					coltype = SPI_gettypeid(target_rel->rd_att, colnum);
@@ -1760,7 +1782,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 					 */
 					if (cmdargsnulls[i])
 						elog(ERROR, "Slony-I: column name in log_cmdargs is NULL");
-					colname = DatumGetCString(DirectFunctionCall1(
+					colname = DatumGetCString(SlonDirectFunctionCall1(
 													   textout, cmdargs[i]));
 					colnum = SPI_fnumber(target_rel->rd_att, colname);
 					coltype = SPI_gettypeid(target_rel->rd_att, colnum);
@@ -1935,7 +1957,7 @@ versionFunc(logApply) (PG_FUNCTION_ARGS)
 				}
 				else
 				{
-					tmpval = DatumGetCString(DirectFunctionCall1(textout,
+					tmpval = DatumGetCString(SlonDirectFunctionCall1(textout,
 															cmdargs[i + 1]));
 					queryvals[i / 2] = InputFunctionCall(
 											 &(cacheEnt->finfo_input[i / 2]),
@@ -2439,7 +2461,7 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 	 */
 	for (cs = clusterStatusList; cs; cs = cs->next)
 	{
-		if ((bool) DirectFunctionCall2(nameeq,
+		if ((bool) SlonDirectFunctionCall2(nameeq,
 									   NameGetDatum(&(cs->clustername)),
 									   NameGetDatum(cluster_name)) == true)
 		{
@@ -2472,9 +2494,9 @@ getClusterStatus(Name cluster_name, int need_plan_mask)
 		/*
 		 * ... and the quoted identifier of it for building queries
 		 */
-		cs->clusterident = strdup(DatumGetCString(DirectFunctionCall1(textout,
-											 DirectFunctionCall1(quote_ident,
-																 DirectFunctionCall1(textin, CStringGetDatum(NameStr(*cluster_name)))))));
+		cs->clusterident = strdup(DatumGetCString(SlonDirectFunctionCall1(textout,
+											 SlonDirectFunctionCall1(quote_ident,
+																 SlonDirectFunctionCall1(textin, CStringGetDatum(NameStr(*cluster_name)))))));
 
 		/*
 		 * Get our local node ID
