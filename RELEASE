@@ -3,6 +3,8 @@
 
   - Fix pg 8.4 messagaging in slonik
   - Fix documnted default config values for slon
+  - Add PG12 support
+  - Makefile changes to  enable vpath builds
 
 2.2.7
 
