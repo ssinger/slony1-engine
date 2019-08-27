@@ -5,6 +5,8 @@
   - Fix documnted default config values for slon
   - Add PG12 support
   - Makefile changes to  enable vpath builds
+  - The win32 makefiles no longer define HAVE_PGPORT. win32
+    users of slonik should set the SLONY_SHARE_DIR environment variable
 
 2.2.7
 
