@@ -92,7 +92,7 @@ subdir=$(slony_subdir)
 LDFLAGS +=   -lpq @NLSLIB@
 
 ifeq ($(GCC), yes)
-    CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations
+    CFLAGS += -Wall -Wmissing-prototypes -Wmissing-declarations -fno-common
 endif
 
 # Installation.

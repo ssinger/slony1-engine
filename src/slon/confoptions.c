@@ -24,7 +24,17 @@ static double real_placeholder;
 void		dump_configuration(void);
 void		build_conf_variables(void);
 
+char	   *Syslog_ident;
+char	   *Syslog_facility;
+int			Use_syslog;
 
+bool		logpid;
+bool		logtimestamp;
+bool		drop_indices;
+char	   *log_timestamp_format;
+char	   *sql_on_connection;
+char	   *lag_interval;
+char	   *command_on_logarchive;
 
 static struct config_int ConfigureNamesInt[] =
 {
