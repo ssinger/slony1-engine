@@ -43,18 +43,8 @@ extern int	apply_cache_size;
 extern int	vac_frequency;
 extern char *cleanup_interval;
 
-char	   *Syslog_ident;
-char	   *Syslog_facility;
-int			Use_syslog;
 
-bool		logpid;
-bool		logtimestamp;
-bool		drop_indices;
-char	   *log_timestamp_format;
-char	   *sql_on_connection;
-char	   *lag_interval;
-char	   *command_on_logarchive;
-
+extern char	   *command_on_logarchive;
 enum config_type
 {
 	SLON_C_BOOL,
