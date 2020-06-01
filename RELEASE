@@ -1,4 +1,9 @@
 #+OPTIONS: ^:{}
+2.2.9
+
+ - Compile with -fno-common by default. Fix
+   compile errors caused by defining variables in headers
+
 2.2.8
 
   - Fix pg 8.4 messagaging in slonik
