@@ -64,14 +64,40 @@ die "connect: $DBI::errstr" if ( !defined($dbh) || $DBI::err );
 # Read in all the user 'normal' tables in @schema (public by default).
 # put all schemas between single quotes for the query
 my @protected_schema=map("'".$_."'",@schema);
-my $tableQuery = $dbh->prepare( "
+
+
+my $server_version_query = $dbh->prepare("show server_version_num")
+    or die("unable to determine server version");
+$server_version_query->execute() or die "unable to determine server version";
+my $version_row = $server_version_query->fetchrow_arrayref();
+my $server_version = @$version_row[0];
+$server_version_query->finish();
+
+    
+my $tableQuery;
+if ($server_version >= 110000) {
+    $tableQuery = $dbh->prepare("
+SELECT n.nspname || '.' || c.relname,c.relkind,
+   EXISTS (SELECT 1 FROM pg_constraint WHERE contype='p' AND conrelid=c.oid) AS relhaspkey
+FROM pg_namespace n ,pg_class c                                                    
+WHERE c.reltype > 0                                                      
+AND c.relnamespace = n.oid                         
+AND (c.relkind = 'r' OR c.relkind = 'S')
+AND n.nspname IN (" . join(',',@protected_schema) . ") 
+AND n.oid = c.relnamespace;
+");
+}
+else {
+
+    $tableQuery = $dbh->prepare( "
 SELECT pg_namespace.nspname || '.' || pg_class.relname,pg_class.relkind,pg_class.relhaspkey 
 FROM pg_namespace,pg_class
 WHERE pg_class.reltype > 0
 AND pg_class.relnamespace = pg_catalog.pg_namespace.oid
 AND (pg_class.relkind = 'r' OR pg_class.relkind = 'S')
 AND pg_namespace.nspname IN (" . join(',',@protected_schema) . ") AND pg_namespace.oid = pg_class.relnamespace"
-);
+	);
+}
 
 die "prepare(tableQuery): $DBI::errstr"
   if ( !defined($tableQuery) || $DBI::err );
