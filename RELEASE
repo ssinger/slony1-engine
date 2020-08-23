@@ -3,6 +3,7 @@
 
  - Compile with -fno-common by default. Fix
    compile errors caused by defining variables in headers
+ - Adjust slonik_build_env.pl so it works with PG11+
 
 2.2.8
 
