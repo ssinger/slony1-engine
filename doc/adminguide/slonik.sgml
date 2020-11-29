@@ -108,7 +108,7 @@
    </variablelist>
    </refsect1>
  
-  <title>Exit Status</title>
+  <refsect1><title>Exit Status</title>
 
   <para>
    <application>slonik</application> returns 0 to the shell if it
