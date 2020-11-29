@@ -2827,7 +2827,7 @@ FAILOVER(
 
     <para> The contents of the script are split into individual
     statements which are logged into the table <xref
-    linkend=tablel.sl-log-script>, and are processed individually,
+    linkend=table.sl-log-script>, and are processed individually,
     followed by the command <command>RESET ALL;</command>.</para>
     
     <para> See also the warnings in &rddlchanges;.</para>
