@@ -1,10 +1,16 @@
 #+OPTIONS: ^:{}
+
+2.2.10
+
+ - Remove unsupported warning on PG13
+
+
 2.2.9
 
  - Compile with -fno-common by default. Fix
    compile errors caused by defining variables in headers
  - Adjust slonik_build_env.pl so it works with PG11+
- - Remove unsupported warning on PG13
+ - Remove unsupported warning on PG12
 
 2.2.8
 
