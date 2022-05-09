@@ -112,7 +112,7 @@ on this table: </para>
 
 <programlisting>
 psql -U $PGBENCHUSER -h $MASTERHOST -d $MASTERDBNAME -c "begin; alter table
-pgbench_history add column id serial; update history set id =
+pgbench_history add column id serial; update pgbench_history set id =
 nextval('pgbench_history_id_seq'); alter table pgbench_history add primary key(id);
 commit;"
 </programlisting>
