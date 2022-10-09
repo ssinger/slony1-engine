@@ -44,7 +44,9 @@
 #include "utils/memutils.h"
 #include "utils/hsearch.h"
 #include "utils/timestamp.h"
+#if PG_VERSION_MAJOR < 10
 #include "utils/int8.h"
+#endif
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
