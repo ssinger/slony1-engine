@@ -527,17 +527,6 @@ else
    AC_MSG_RESULT([problem: set_config_option has incompatible args])
 fi
 
-AC_MSG_CHECKING(for standard_conforming_strings)
-if test -z "$ac_cv_standard_conforming_strings"; then
-  AC_EGREP_HEADER(standard_conforming_strings, 
-    parser/gramparse.h, 
-    [AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_STANDARDCONFORMINGSTRINGS)],
-    AC_MSG_RESULT(no)
-    )
-fi
-
-
 AC_CHECK_DECLS([GetTopTransactionId],[],[],[
 #include "postgres.h"
 #include "access/xact.h"
