@@ -101,7 +101,7 @@ DropPath.prototype.verifyPath=function(server,client,expectPath) {
 	var rs=undefined;
 	try {
 		rs = stat.executeQuery("SELECT COUNT(*) FROM _" + this.getClusterName()
-				+ '.sl_path where pa_client=' + client + 'AND pa_server=' + server);
+				+ '.sl_path where pa_client=' + client + ' AND pa_server=' + server);
 		rs.next();
 		var count = rs.getInt(1);
 		this.testResults.assertCheck('no path exists between ' + client + ' and ' + server
