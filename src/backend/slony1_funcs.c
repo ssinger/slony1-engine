@@ -44,7 +44,6 @@
 #include "utils/memutils.h"
 #include "utils/hsearch.h"
 #include "utils/timestamp.h"
-#include "utils/int8.h"
 #ifdef HAVE_GETACTIVESNAPSHOT
 #include "utils/snapmgr.h"
 #endif
