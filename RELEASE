@@ -1,5 +1,11 @@
 #+OPTIONS: ^:{}
 
+2.2.11
+
+  - Add support for PG 15
+  - Remove standard_conforming_strings autoconf check
+  - Fix typo in admin guide
+
 2.2.10
 
  - Remove unsupported warning on PG13
