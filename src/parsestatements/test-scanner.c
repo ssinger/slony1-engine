@@ -3,7 +3,7 @@
 #include "scanner.h"
 
 char		foo[65536];
-extern int	STMTS[1024];
+extern int	STMTS[MAXSTATEMENTS];
 extern int	statements;
 
 int
